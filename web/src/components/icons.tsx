@@ -17,7 +17,12 @@ export type IconName =
   | 'alert'
   | 'ticket'
   | 'map'
-  | 'back';
+  | 'back'
+  | 'chevron'
+  | 'share'
+  | 'link'
+  | 'help'
+  | 'copy';
 
 const paths: Record<IconName, ReactNode> = {
   walk: (
@@ -111,6 +116,30 @@ const paths: Record<IconName, ReactNode> = {
   back: (
     <>
       <path d="M19 12H5m6 6-6-6 6-6" />
+    </>
+  ),
+  chevron: <path d="m6 9 6 6 6-6" />,
+  share: (
+    <>
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+    </>
+  ),
+  link: (
+    <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+  ),
+  help: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </>
   ),
   spark: (
