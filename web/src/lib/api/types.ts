@@ -1,5 +1,5 @@
 /**
- * TypeScript mirror of the UnimoreGo FastAPI contract (api/schemas.py, v0.4).
+ * TypeScript mirror of the UnimoreGo FastAPI contract (api/schemas.py, v0.5).
  * Keep in sync with the OpenAPI schema served at /openapi.json.
  */
 
@@ -64,10 +64,10 @@ export interface TrainDetails {
   number: string;
   category: string;
   operator: string;
-  /** R, RV, IC, ICN, FR */
+  /** R, RV, IC, ICN, EC, FR */
   code?: string;
   category_group?: TrainCategoryGroup;
-  /** True when a regional ticket is not enough (IC/FR). */
+  /** True when a regional ticket is not enough (IC/EC/FR). */
   different_ticket?: boolean;
   /** PDF page the run comes from. */
   source?: string;
@@ -94,11 +94,35 @@ export interface Itinerary {
   legs: Leg[];
   /** Travel date YYYY-MM-DD. */
   date?: string;
+  /** Door-to-door minutes, from leaving to arriving (v0.5). */
+  duration_min?: number;
+  /** Train changes, 0 = direct (v0.5). */
+  changes?: number;
 }
 
 export interface NearbySolution {
   kind: 'previous' | 'next';
   itinerary: Itinerary;
+  /** Italian explanation, e.g. "Stessa ora di lezione, lunedì 26/10/2026 …" (v0.5). */
+  label?: string;
+}
+
+export type NoticeLevel = 'error' | 'warning' | 'info';
+
+/** Deduplicated, merged notice; the list is sorted by priority (v0.5). */
+export interface Notice {
+  /** out_of_validity, no_service, calendar_note, home_far, home_unknown, festive_day,
+   * same_city, estimate, generic, not_realtime */
+  code: string;
+  level: NoticeLevel;
+  message: string;
+}
+
+/** How the station time limit was computed (v0.5). */
+export interface Calculation {
+  station: string;
+  time: ClockTime;
+  summary: string;
 }
 
 /** Response of POST /api/plan. */
@@ -106,6 +130,9 @@ export interface PlanResponse {
   planner?: PlannerName;
   itineraries: Itinerary[];
   nearby?: NearbySolution[];
+  calculation?: Calculation | null;
+  notices?: Notice[];
+  /** Legacy v0.4 list: "non in tempo reale" first, then the notices. */
   warnings: string[];
 }
 
