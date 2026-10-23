@@ -16,6 +16,11 @@ from engine.models import Campus, Station, TrainRun
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
+def station_key(name: str) -> str:
+    """Matching key for station names ("Reggio Emilia FS" == "Reggio Emilia")."""
+    return name.lower().strip().replace(" fs", "")
+
+
 class TrainRepository(ABC):
     """Abstract interface for accessing train timetable data."""
 
@@ -104,13 +109,11 @@ class JsonTrainRepository(TrainRepository):
         ]
 
     def get_trains(self, from_station: str, to_station: str) -> list[TrainRun]:
-        from_norm = from_station.lower().strip().replace(" fs", "")
-        to_norm = to_station.lower().strip().replace(" fs", "")
+        key = (station_key(from_station), station_key(to_station))
         return [
             t
             for t in self._trains
-            if t.from_station.lower().strip().replace(" fs", "") == from_norm
-            and t.to_station.lower().strip().replace(" fs", "") == to_norm
+            if (station_key(t.from_station), station_key(t.to_station)) == key
         ]
 
     def all_trains(self) -> list[TrainRun]:

@@ -10,9 +10,11 @@ import pytest
 
 from engine.journeys import JourneyPlanner, PlanningContext
 from engine.models import Itinerary, Leg, PlanRequest, PlanResult
+from engine.notices import GENERIC, notice
 from engine.planner import Planner
 from engine.repositories import JsonLocationRepository, JsonSegmentRepository, JsonTrainRepository
 from engine.train_categories import HIGH_SPEED, INTERCITY, REGIONAL
+from tests.fakes import ExtendedTrainRepository, synthetic_run
 
 REGIONAL_ONLY = frozenset({REGIONAL})
 
@@ -112,18 +114,29 @@ def test_category_hint_in_no_train_warning(planner: Planner) -> None:
 # --- calendar notes ------------------------------------------------------------------
 
 
-def test_calendar_note_removes_run_after_its_end_date(planner: Planner) -> None:
-    # RV 3907: "Nota 35: si effettua fino al 16/11" (PDF page 75)
-    result = planner.plan(req(target_date="2026-11-17", train_categories=REGIONAL_ONLY))
-    numbers = [train(it).train.train for it in result.itineraries]
-    assert "3907" not in numbers
-    assert numbers[0] == "17405"
+def test_calendar_note_suspends_run_on_listed_dates(planner: Planner) -> None:
+    # FR 9303 07:23: "Nota 33: Si effettua dal 15/11. Sospeso il 21/11, il 22/11 ..." (page 74)
+    friday = [
+        train(it).train.train for it in planner.plan(req(target_date="2026-11-20")).itineraries
+    ]
+    saturday = planner.plan(req(target_date="2026-11-21")).itineraries
+    assert "9303" in friday
+    assert "9303" not in [train(it).train.train for it in saturday]
 
 
-def test_uninterpretable_note_is_reported_on_the_leg(planner: Planner) -> None:
-    result = planner.plan(req())
-    fr = next(it for it in result.itineraries if train(it).train.category == "Frecciarossa")
-    assert fr.legs[1].notes and "pag. 74" in train(fr).notes[0]
+def test_period_variant_keeps_the_train_after_the_change_date(planner: Planner) -> None:
+    # RV 3907: "fino al 16/11" (nota 35) and "dal 17/11" (nota 26), same times (page 75)
+    for day in ("2026-11-16", "2026-11-17"):
+        result = planner.plan(req(target_date=day, train_categories=REGIONAL_ONLY))
+        assert train(result.itineraries[0]).train.train == "3907"
+
+
+def test_uninterpretable_note_is_reported_on_the_leg() -> None:
+    repo = ExtendedTrainRepository([synthetic_run()])
+    custom = Planner(repo, JsonLocationRepository(), JsonSegmentRepository())
+    result = custom.plan(req())
+    synthetic = next(it for it in result.itineraries if train(it).train.train == "99999")
+    assert train(synthetic).notes and "pag. 74" in train(synthetic).notes[0]
 
 
 def test_duplicate_slots_are_shown_once(planner: Planner) -> None:
@@ -136,28 +149,80 @@ def test_duplicate_slots_are_shown_once(planner: Planner) -> None:
 # --- robustness: night, holidays, validity ---------------------------------------
 
 
-def test_night_lesson_offers_previous_and_next(planner: Planner) -> None:
+def test_night_lesson_offers_the_first_train_with_its_delay(planner: Planner) -> None:
     result = planner.plan(req(target_time="05:00", train_categories=REGIONAL_ONLY))
     assert result.itineraries == ()
-    assert any(w.startswith("Nessun treno utile") for w in result.warnings)
-    previous, following = result.nearby
-    assert previous.kind == "previous" and previous.itinerary.service_date == "2026-10-25"
-    assert train(previous.itinerary).depart == "22:43"
+    assert any(w.startswith("Nessun treno da Reggio Emilia FS") for w in result.warnings)
+    # No regional train reaches Modena by 04:38 on any day: no "previous" solution.
+    (following,) = result.nearby
     assert following.kind == "next" and following.itinerary.service_date == "2026-10-26"
-    assert train(following.itinerary).depart == "06:19"
-    assert following.itinerary.slack_min < 0  # arrives after the lesson start
+    lateness = -following.itinerary.slack_min
+    assert 0 < lateness <= 60
+    assert f"{lateness} min di ritardo" in following.label
 
 
-def test_weekday_holiday_warns_and_uses_sunday_runs(planner: Planner) -> None:
-    result = planner.plan(req(target_date="2026-12-08", train_categories=REGIONAL_ONLY))
-    assert any("festivo (Immacolata Concezione)" in w for w in result.warnings)
+def test_no_train_message_explains_the_calculation(planner: Planner) -> None:
+    result = planner.plan(
+        req(target_time="05:00", margin_minutes=10, last_mile_mode="walk", first_mile_mode="walk")
+    )
+    expected = (
+        "Calcolo: lezione alle 05:00 − 10 min di anticipo − 53 min a piedi dalla stazione alla "
+        "sede = arrivo a Modena FS entro le 03:57."
+    )
+    assert result.calculation is not None and result.calculation.summary == expected
+    assert result.calculation.time == "03:57"
+    (no_service,) = [n for n in result.notices if n.code == "no_service"]
+    assert "entro le 03:57 di lunedì 26/10/2026" in no_service.message
+    assert expected in no_service.message
+
+
+def test_calculation_arithmetic_and_omitted_zero_terms(planner: Planner) -> None:
+    with_margin = planner.plan(req(margin_minutes=15)).calculation
+    assert with_margin is not None
+    assert with_margin.time == "07:53"  # 08:30 - 15 - 22 (bike Modena FS -> DIEF)
+    assert "15 min di anticipo" in with_margin.summary
+    no_margin = planner.plan(req(margin_minutes=0)).calculation
+    assert no_margin is not None and no_margin.time == "08:08"
+    assert "anticipo" not in no_margin.summary
+
+
+def test_far_lesson_late_train_is_replaced_by_next_working_day(planner: Planner) -> None:
+    # Lesson 05:00 with only high-speed trains: the first FR is hours late, so the
+    # same lesson time on the next working day is proposed instead (no 22:xx trains).
+    result = planner.plan(req(target_time="05:00", train_categories=frozenset({HIGH_SPEED})))
     assert result.itineraries == ()
-    assert {n.kind for n in result.nearby} == {"previous", "next"}
+    assert all(n.itinerary.service_date != "2026-10-26" for n in result.nearby)
 
 
-def test_sunday_warning(planner: Planner) -> None:
-    result = planner.plan(req(target_date="2026-10-25"))
-    assert any("domenica" in w for w in result.warnings)
+def test_weekday_holiday_is_informational_and_has_trains(planner: Planner) -> None:
+    # The PDF (quadri 1-2) has no day symbols: trains run on holidays too.
+    result = planner.plan(req(target_date="2026-12-08", train_categories=REGIONAL_ONLY))
+    (festive,) = [n for n in result.notices if n.code == "festive_day"]
+    assert "festivo (Immacolata Concezione)" in festive.message and festive.level == "info"
+    assert train(result.itineraries[0]).train.train == "3907"
+
+
+def test_sunday_lesson_is_planned_without_a_sunday_warning(planner: Planner) -> None:
+    # Review B1: Sunday 25/10, Modena FS -> Palazzo Dossetti, lesson 09:00, walk.
+    result = planner.plan(
+        req(
+            target_date="2026-10-25",
+            target_time="09:00",
+            destination_campus_id="palazzo_dossetti",
+            origin_station_id="modena_fs",
+            first_mile_mode="walk",
+            last_mile_mode="walk",
+            margin_minutes=10,
+        )
+    )
+    best = result.itineraries[0]
+    assert (best.leave_at, train(best).train.train, train(best).depart) == (
+        "07:55",
+        "3902",
+        "08:00",
+    )
+    assert result.calculation is not None and result.calculation.time == "08:31"
+    assert not any("domenica" in w.lower() for w in result.warnings)
 
 
 def test_after_validity_has_explicit_warning_and_previous_solution(planner: Planner) -> None:
@@ -168,9 +233,34 @@ def test_after_validity_has_explicit_warning_and_previous_solution(planner: Plan
     assert result.nearby[0].itinerary.service_date == "2026-12-12"
 
 
-def test_far_future_date_has_no_nearby_solutions(planner: Planner) -> None:
+def test_out_of_validity_sunday_has_one_primary_notice(planner: Planner) -> None:
+    # Review B4: Sunday 20/12 used to show validity + Sunday + "no train" warnings.
+    result = planner.plan(req(target_date="2026-12-20"))
+    codes = [n.code for n in result.notices]
+    assert codes[0] == "out_of_validity"
+    assert "no_service" not in codes and "festive_day" not in codes
+    (previous,) = result.nearby
+    assert previous.itinerary.service_date == "2026-12-12"
+    assert previous.itinerary.slack_min >= 0  # same lesson time on that day
+    assert "sabato 12/12/2026 (giorno feriale precedente)" in previous.label
+
+
+def test_before_validity_searches_forward_from_the_first_day(planner: Planner) -> None:
+    result = planner.plan(req(target_date="2026-10-10"))
+    assert [n.kind for n in result.nearby] == ["next"]
+    assert result.nearby[0].itinerary.service_date == "2026-10-17"
+
+
+def test_far_future_date_offers_the_last_covered_working_day(planner: Planner) -> None:
     result = planner.plan(req(target_date="2027-03-01"))
-    assert result.itineraries == () and result.nearby == ()
+    assert result.itineraries == ()
+    assert [n.itinerary.service_date for n in result.nearby] == ["2026-12-12"]
+
+
+def test_itinerary_duration_and_changes(planner: Planner) -> None:
+    best = planner.plan(req(train_categories=REGIONAL_ONLY)).itineraries[0]
+    assert best.door_to_door_minutes == 39  # 07:39 -> 08:18
+    assert best.changes == 0
 
 
 # --- same city: never a train ----------------------------------------------------------
@@ -252,12 +342,24 @@ def test_return_trip_too_late_offers_previous_and_next(planner: Planner) -> None
     assert result.itineraries == ()
     previous, following = result.nearby
     assert previous.kind == "previous" and previous.itinerary.slack_min < 0
+    assert "prima della fine della lezione" in previous.label
     assert following.kind == "next" and following.itinerary.service_date == "2026-10-27"
+    assert following.label == "Primo treno di martedì 27/10/2026."
+
+
+def test_return_calculation(planner: Planner) -> None:
+    result = planner.plan(req(target_time="13:00"), "depart_after")
+    assert result.calculation is not None
+    assert result.calculation.summary == (
+        "Calcolo: fine lezione alle 13:00 + 22 min in bici fino alla stazione + 5 min in "
+        "stazione = treni da Modena FS dalle 13:27."
+    )
 
 
 def test_return_trip_without_trains_that_day_searches_previous_days(planner: Planner) -> None:
     result = planner.plan(req(target_date="2026-12-14", target_time="13:00"), "depart_after")
     assert [n.kind for n in result.nearby] == ["previous"]
+    assert result.nearby[0].label == "Ultimo treno di sabato 12/12/2026."
     assert result.nearby[0].itinerary.service_date == "2026-12-12"
 
 
@@ -268,7 +370,9 @@ class _EchoPlanner(JourneyPlanner):
     name = "echo"
 
     def plan(self, request: PlanRequest, ctx: PlanningContext) -> PlanResult:
-        return PlanResult(self.name, (), (f"campus={request.destination_campus_id}",))
+        return PlanResult(
+            self.name, (), (notice(GENERIC, f"campus={request.destination_campus_id}"),)
+        )
 
 
 def test_planners_are_registered_by_name(planner: Planner) -> None:

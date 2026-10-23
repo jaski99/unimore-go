@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from engine.legs import ActiveLegPlanner, haversine_distance_m
 from engine.models import PlanRequest, Station
+from engine.notices import HOME_FAR, Notice, notice
 from engine.repositories import LocationRepository
 
 FAR_FROM_STATION_M = 10_000.0
@@ -32,9 +33,13 @@ class HomeEndpoint:
     coords: tuple[float, float] | None
     is_station: bool  # the user starts/ends at the station itself
     station_leg_minutes: int  # home<->station minutes (0 when is_station)
-    warnings: tuple[str, ...] = ()
+    notices: tuple[Notice, ...] = ()
     # Set when station_leg_minutes was estimated (only relevant if a train is used).
     estimate_note: str | None = None
+
+    @property
+    def warnings(self) -> tuple[str, ...]:
+        return tuple(n.message for n in self.notices)
 
     @property
     def point(self) -> tuple[float, float]:
@@ -88,13 +93,16 @@ class OriginResolver:
 
         if request.origin_coords is not None:
             station, distance = self.nearest_station(request.origin_coords)
-            warnings: list[str] = []
+            notices: list[Notice] = []
             if distance > FAR_FROM_STATION_M:
-                warnings.append(
-                    "Attenzione: casa si trova a oltre 10 km dalla stazione più vicina "
-                    f"({station.name}); i tempi stimati potrebbero essere poco affidabili."
+                notices.append(
+                    notice(
+                        HOME_FAR,
+                        "Casa si trova a oltre 10 km dalla stazione coperta più vicina "
+                        f"({station.name}); i tempi stimati potrebbero essere poco affidabili.",
+                    )
                 )
-            return self._home(request, station, request.origin_city or station.city, warnings)
+            return self._home(request, station, request.origin_city or station.city, notices)
 
         # No origin given: city hint or the classic commuter from the other city.
         city = request.origin_city or (
@@ -117,7 +125,7 @@ class OriginResolver:
         request: PlanRequest,
         station: Station,
         city: str,
-        warnings: list[str],
+        notices: list[Notice],
     ) -> HomeEndpoint:
         minutes = request.first_mile_minutes
         estimate_note = None
@@ -139,6 +147,6 @@ class OriginResolver:
             coords=request.origin_coords,
             is_station=False,
             station_leg_minutes=minutes,
-            warnings=tuple(warnings),
+            notices=tuple(notices),
             estimate_note=estimate_note,
         )

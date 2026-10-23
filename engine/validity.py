@@ -13,10 +13,17 @@ from datetime import date
 
 from engine.models import TrainRun, parse_date_str
 
+WEEKDAYS_IT = ("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")
+
 
 def format_it_date(day: date) -> str:
     """Format a date as DD/MM/YYYY (Italian convention)."""
     return day.strftime("%d/%m/%Y")
+
+
+def format_it_weekday_date(day: date) -> str:
+    """Weekday and date, e.g. "domenica 25/10/2026" (locale independent)."""
+    return f"{WEEKDAYS_IT[day.weekday()]} {format_it_date(day)}"
 
 
 @dataclass(frozen=True)
@@ -41,16 +48,16 @@ class TimetableValidity:
 
     def warning_for(self, day: date) -> str | None:
         """Explicit Italian warning when ``day`` is outside the window."""
+        window = f"valido dal {format_it_date(self.valid_from)} al {format_it_date(self.valid_to)}"
         if day > self.valid_to:
             return (
-                f"Attenzione: il {format_it_date(day)} è dopo la fine di validità dell'orario "
-                f"caricato ({format_it_date(self.valid_to)}). Non ci sono dati sui treni per "
-                "questa data: controlla il nuovo orario Trenitalia."
+                f"Il {format_it_weekday_date(day)} è dopo la fine di validità dell'orario caricato "
+                f"({window}): non ci sono dati sui treni per questa data. Controlla il nuovo "
+                "orario Trenitalia; qui sotto trovi la soluzione più vicina nel periodo coperto."
             )
         if day < self.valid_from:
             return (
-                f"Attenzione: il {format_it_date(day)} è prima dell'inizio di validità dell'orario "
-                f"caricato ({format_it_date(self.valid_from)}). Non ci sono dati sui treni per "
-                "questa data."
+                f"Il {format_it_weekday_date(day)} è prima dell'inizio di validità dell'orario "
+                f"caricato ({window}): non ci sono dati sui treni per questa data."
             )
         return None

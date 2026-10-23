@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, time
 
+from engine.notices import Notice
+
 
 def time_to_minutes(t: time) -> int:
     """Convert a time object to minutes from midnight."""
@@ -147,6 +149,22 @@ class Itinerary:
     def total_travel_minutes(self) -> int:
         return sum(leg.minutes for leg in self.legs)
 
+    @property
+    def door_to_door_minutes(self) -> int:
+        """Minutes from leaving to arriving (legs are contiguous; may cross midnight)."""
+        delta = (
+            self.arrive_time.hour * 60
+            + self.arrive_time.minute
+            - self.leave_time.hour * 60
+            - self.leave_time.minute
+        )
+        return delta % (24 * 60)
+
+    @property
+    def changes(self) -> int:
+        """Number of train changes (0 = direct train or no train at all)."""
+        return max(0, sum(1 for leg in self.legs if leg.leg_type == "train") - 1)
+
 
 @dataclass(frozen=True)
 class PlanRequest:
@@ -188,6 +206,20 @@ class NearbySolution:
 
     kind: str  # "previous" | "next"
     itinerary: Itinerary
+    label: str = ""  # Italian explanation, e.g. "Stesso orario, giorno feriale successivo"
+
+
+@dataclass(frozen=True)
+class Calculation:
+    """How the station time limit was derived, in words the user can check.
+
+    ``arrive_by``: lesson start - margin - last leg = be at the campus station by.
+    ``depart_after``: lesson end + leg to the station + station time = train from.
+    """
+
+    station: str
+    time: str  # HH:MM
+    summary: str
 
 
 @dataclass(frozen=True)
@@ -196,5 +228,11 @@ class PlanResult:
 
     planner: str
     itineraries: tuple[Itinerary, ...]
-    warnings: tuple[str, ...] = ()
+    notices: tuple[Notice, ...] = ()
     nearby: tuple[NearbySolution, ...] = ()
+    calculation: Calculation | None = None
+
+    @property
+    def warnings(self) -> tuple[str, ...]:
+        """Notice messages in priority order (kept for v0.4 callers)."""
+        return tuple(n.message for n in self.notices)

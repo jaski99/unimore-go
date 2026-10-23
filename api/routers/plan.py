@@ -12,6 +12,8 @@ from api.errors import APIError, error_response_docs
 from api.mappers import plan_response
 from api.schemas import OriginCoords, OriginStation, PlanRequestSchema, PlanResponseSchema
 from engine.models import PlanRequest
+from engine.notices import INFO, notice
+from engine.notices import NOT_REALTIME as NOT_REALTIME_CODE
 from engine.planner import Planner
 from engine.repositories import LocationRepository
 from engine.train_categories import normalize_groups
@@ -79,4 +81,4 @@ async def plan_trip(
         train_categories=normalize_groups(body.train_categories),
     )
     result = planner.plan(request, body.planner_name)
-    return plan_response(result, [NOT_REALTIME])
+    return plan_response(result, [notice(NOT_REALTIME_CODE, NOT_REALTIME, INFO)])

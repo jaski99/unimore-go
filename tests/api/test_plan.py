@@ -216,10 +216,15 @@ def test_plan_no_trains_available_warning() -> None:
     data = response.json()
     assert len(data["itineraries"]) == 0
     warnings = data["warnings"]
-    assert any("Nessun treno utile" in w for w in warnings)
-    kinds = [n["kind"] for n in data["nearby"]]
-    assert kinds == ["previous", "next"]
-    assert data["nearby"][0]["itinerary"]["date"] == "2026-10-25"
+    assert any("Nessun treno da Reggio Emilia FS" in w for w in warnings)
+    assert data["calculation"]["time"] == "03:57"  # 05:00 - 10 - 53 (walk Modena FS -> DIEF)
+    # No evening train of the day before: the first train of the day (R 17401
+    # 04:43, page 74) reaches the campus 50 min late, which is proposed as "next".
+    (following,) = data["nearby"]
+    assert following["kind"] == "next"
+    assert following["itinerary"]["date"] == "2026-10-26"
+    assert following["itinerary"]["slack_min"] == -50
+    assert "50 min di ritardo" in following["label"]
 
 
 def test_plan_dependency_override() -> None:

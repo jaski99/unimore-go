@@ -6,7 +6,9 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from api.deps import get_train_repository
 from api.main import app
+from tests.fakes import ExtendedTrainRepository, synthetic_run
 
 client = TestClient(app)
 
@@ -68,14 +70,47 @@ def test_unknown_category_rejected() -> None:
 
 
 def test_uninterpretable_calendar_note_on_leg() -> None:
-    data = post().json()
-    fr_leg = next(
+    # Every note of the real timetable is interpretable: inject a synthetic run.
+    app.dependency_overrides[get_train_repository] = lambda: ExtendedTrainRepository(
+        [synthetic_run()]
+    )
+    try:
+        data = post().json()
+    finally:
+        app.dependency_overrides.clear()
+    leg = next(
         leg
         for it in data["itineraries"]
         for leg in it["legs"]
-        if leg["train"] and leg["train"]["code"] == "FR"
+        if leg["train"] and leg["train"]["number"] == "99999"
     )
-    assert any("non interpretata" in n and "pag. 74" in n for n in fr_leg["notes"])
+    assert any("non interpretata" in n and "pag. 74" in n for n in leg["notes"])
+
+
+def test_response_explains_the_calculation_and_totals() -> None:
+    data = post().json()
+    assert data["calculation"] == {
+        "station": "Modena FS",
+        "time": "07:58",
+        "summary": (
+            "Calcolo: lezione alle 08:30 − 10 min di anticipo − 22 min in bici dalla stazione "
+            "alla sede = arrivo a Modena FS entro le 07:58."
+        ),
+    }
+    first = data["itineraries"][0]
+    assert (first["duration_min"], first["changes"]) == (39, 0)
+
+
+def test_notices_are_ordered_and_not_realtime_is_last() -> None:
+    data = post(arrive_by="2026-12-20T08:30:00").json()
+    codes = [n["code"] for n in data["notices"]]
+    assert codes == ["out_of_validity", "not_realtime"]
+    assert data["notices"][0]["level"] == "warning"
+    # Legacy list: "non in tempo reale" first, then the same notices.
+    assert data["warnings"][0].startswith("Orari pianificati")
+    assert len(data["warnings"]) == 2
+    (nearby,) = data["nearby"]
+    assert nearby["label"].startswith("Stessa ora di lezione, sabato 12/12/2026")
 
 
 def test_return_trip_depart_after() -> None:

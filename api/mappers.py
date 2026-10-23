@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from api.schemas import (
+    CalculationSchema,
     ItinerarySchema,
     LegSchema,
     NearbySchema,
+    NoticeSchema,
     PlanResponseSchema,
     TrainInfoSchema,
 )
 from engine.models import Itinerary, Leg, PlanResult, TrainRun
+from engine.notices import GENERIC, Notice, NoticeComposer, notice
 from engine.service_calendar import pdf_reference
 from engine.train_categories import category_code, category_group, requires_different_ticket
 
@@ -46,20 +49,44 @@ def itinerary_schema(itinerary: Itinerary) -> ItinerarySchema:
         slack_min=itinerary.slack_min,
         legs=[leg_schema(leg) for leg in itinerary.legs],
         date=itinerary.service_date,
+        duration_min=itinerary.door_to_door_minutes,
+        changes=itinerary.changes,
     )
 
 
-def plan_response(result: PlanResult, leading_warnings: list[str]) -> PlanResponseSchema:
-    warnings = list(leading_warnings)
-    for warning in [*result.warnings, *(w for it in result.itineraries for w in it.warnings)]:
-        if warning not in warnings:
-            warnings.append(warning)
+def plan_response(
+    result: PlanResult,
+    trailing: list[Notice],
+    composer: NoticeComposer | None = None,
+) -> PlanResponseSchema:
+    """Build the response; ``trailing`` notices (e.g. "non in tempo reale") go last
+    in ``notices`` but first in the legacy ``warnings`` list (v0.4 contract)."""
+    extra = [notice(GENERIC, w) for it in result.itineraries for w in it.warnings]
+    notices = (composer or NoticeComposer()).compose([*result.notices, *extra, *trailing])
+    leading = [n.message for n in trailing]
+    warnings = leading + [n.message for n in notices if n.message not in leading]
+    calculation = result.calculation
     return PlanResponseSchema(
         planner=result.planner,  # type: ignore[arg-type]
         itineraries=[itinerary_schema(it) for it in result.itineraries[:3]],
         nearby=[
-            NearbySchema(kind=n.kind, itinerary=itinerary_schema(n.itinerary))  # type: ignore[arg-type]
+            NearbySchema(
+                kind=n.kind,  # type: ignore[arg-type]
+                itinerary=itinerary_schema(n.itinerary),
+                label=n.label,
+            )
             for n in result.nearby
+        ],
+        calculation=(
+            CalculationSchema(
+                station=calculation.station, time=calculation.time, summary=calculation.summary
+            )
+            if calculation
+            else None
+        ),
+        notices=[
+            NoticeSchema(code=n.code, level=n.level, message=n.message)  # type: ignore[arg-type]
+            for n in notices
         ],
         warnings=warnings,
     )

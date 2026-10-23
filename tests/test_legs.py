@@ -165,14 +165,19 @@ def test_train_leg_planner_with_calendar_categories_and_slots() -> None:
     assert all(t.category.startswith("Regionale") for t in monday)
     departures = [t.depart for t in monday]
     assert departures == sorted(departures) and len(departures) == len(set(departures))
-    # Tuesday 22:43 slot: R 3947 (no limitation) wins over R 3945 (truncated note)
+    # 22:43 slot: three PDF columns (R 3945 "sospeso lun/ven/sab/festivi", R 3947,
+    # R 3951 "lun/ven/sab", page 77) collapse into one slot per day.
     tuesday = planner.running_trains(trains, "2026-10-27", frozenset({REGIONAL}))
-    assert [t.train for t in tuesday if t.depart == "22:43"] == ["3947"]
+    assert len([t for t in tuesday if t.depart == "22:43"]) == 1
+    monday_late = {t.train for t in monday if t.depart == "22:43"}
+    assert len(monday_late) == 1 and "3945" not in monday_late
 
-    # RV 3907 runs "fino al 16/11" (PDF page 75)
-    assert "3907" in {t.train for t in monday}
-    assert "3907" not in {t.train for t in planner.running_trains(trains, "2026-11-17")}
+    # FR 9303 07:23 is suspended on 21/11 (nota 33, page 74)
+    assert "9303" in {t.train for t in planner.running_trains(trains, "2026-11-20")}
+    assert "9303" not in {t.train for t in planner.running_trains(trains, "2026-11-21")}
 
-    fr = next(t for t in trains if t.category == "Frecciarossa")
-    assert planner.build_train_leg(fr).notes  # ambiguous FR note -> warning on the leg
+    from tests.fakes import synthetic_run
+
+    fr = synthetic_run()
+    assert planner.build_train_leg(fr).notes  # uninterpretable note -> warning on the leg
     assert TrainLegPlanner().build_train_leg(fr).notes == ()

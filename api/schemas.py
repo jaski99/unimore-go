@@ -253,6 +253,10 @@ class ItinerarySchema(BaseModel):
     )
     legs: list[LegSchema] = Field(..., description="Tratti sequenziali del viaggio")
     date: str = Field("", description="Data del viaggio (YYYY-MM-DD)", examples=["2026-10-26"])
+    duration_min: int = Field(
+        0, description="Durata porta a porta in minuti (dall'uscita all'arrivo)", examples=[44]
+    )
+    changes: int = Field(0, description="Numero di cambi di treno (0 = diretto)", examples=[0])
 
 
 class NearbySchema(BaseModel):
@@ -260,6 +264,41 @@ class NearbySchema(BaseModel):
 
     kind: Literal["previous", "next"] = Field(..., description="Soluzione precedente o successiva")
     itinerary: ItinerarySchema
+    label: str = Field(
+        "",
+        description="Spiegazione in italiano della soluzione alternativa",
+        examples=["Stessa ora di lezione, lunedì 26/10/2026 (giorno feriale successivo)."],
+    )
+
+
+class NoticeSchema(BaseModel):
+    """A user-facing notice with a stable code and a severity level."""
+
+    code: str = Field(
+        ...,
+        description=(
+            "Codice stabile: out_of_validity, no_service, calendar_note, home_far, "
+            "home_unknown, festive_day, same_city, estimate, generic, not_realtime"
+        ),
+        examples=["no_service"],
+    )
+    level: Literal["error", "warning", "info"] = Field(..., description="Gravità")
+    message: str = Field(..., description="Testo in italiano")
+
+
+class CalculationSchema(BaseModel):
+    """How the station time limit was computed (shown to the user)."""
+
+    station: str = Field(..., description="Stazione della sede", examples=["Modena FS"])
+    time: str = Field(..., description="Orario limite (HH:MM)", examples=["08:31"])
+    summary: str = Field(
+        ...,
+        description="Spiegazione del calcolo in italiano",
+        examples=[
+            "Calcolo: lezione alle 09:00 − 10 min di anticipo − 19 min a piedi dalla stazione "
+            "alla sede = arrivo a Modena FS entro le 08:31."
+        ],
+    )
 
 
 class PlanResponseSchema(BaseModel):
@@ -279,9 +318,22 @@ class PlanResponseSchema(BaseModel):
         default_factory=list,
         description="Se non c'è un treno utile: soluzione precedente e/o successiva (anche altri giorni)",
     )
+    calculation: CalculationSchema | None = Field(
+        None, description="Calcolo dell'orario limite in stazione (assente per percorsi diretti)"
+    )
+    notices: list[NoticeSchema] = Field(
+        default_factory=list,
+        description=(
+            "Avvisi deduplicati e fusi, ordinati per priorità (il primo è il più importante); "
+            "l'avviso 'non in tempo reale' è sempre l'ultimo"
+        ),
+    )
     warnings: list[str] = Field(
         default_factory=list,
-        description="Avvisi operativi in italiano (orari non realtime, validità, stime)",
+        description=(
+            "Compatibilità v0.4: testi degli avvisi; il primo è sempre 'non in tempo reale', "
+            "poi gli avvisi in ordine di priorità"
+        ),
         examples=[
             "Orari pianificati da bollettino ufficiale Trenitalia (non in tempo reale).",
             "Stima primo tratto casa->stazione: 10 minuti in bicicletta basata su distanza stradale stimata (~2.1 km).",

@@ -6,14 +6,29 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from engine.holidays import holiday_name
+from engine.holidays import holiday_name, is_festive
 from engine.legs import ActiveLegPlanner, TrainLegPlanner
 from engine.models import Campus, PlanRequest, Station, TrainRun, time_to_minutes
+from engine.notices import (
+    ESTIMATE,
+    FESTIVE_DAY,
+    HOME_UNKNOWN,
+    OUT_OF_VALIDITY,
+    SAME_CITY,
+    Notice,
+    NoticeComposer,
+    notice,
+)
 from engine.origin import MODE_LABELS, HomeEndpoint, OriginResolver
 from engine.repositories import LocationRepository, TrainRepository
 from engine.validity import TimetableValidity, format_it_date
 
 SEARCH_DAYS = 7  # how far previous/next solutions are searched
+
+
+def is_working_day(day: date) -> bool:
+    """Trenitalia "giorno lavorativo": Monday to Saturday, national holidays excluded."""
+    return not is_festive(day)
 
 
 def run_minutes(train: TrainRun) -> tuple[int, int]:
@@ -36,7 +51,11 @@ class Journey:
     home_mode: str
     campus_mode: str
     campus_leg_minutes: int  # campus station <-> campus
-    warnings: tuple[str, ...]
+    notices: tuple[Notice, ...]
+
+    @property
+    def campus_mode_label(self) -> str:
+        return MODE_LABELS.get(self.campus_mode, self.campus_mode)
 
     def offset_min(self, day: date) -> int:
         """Minutes between the start of ``day`` and the start of the request day."""
@@ -54,7 +73,9 @@ class PlanningContext:
         default_active: ActiveLegPlanner,
         train_leg_planner: TrainLegPlanner,
         validity: TimetableValidity | None,
+        composer: NoticeComposer | None = None,
     ) -> None:
+        self.composer = composer or NoticeComposer()
         self.train_repo = train_repo
         self.location_repo = location_repo
         self.active_planners = dict(active_planners)
@@ -79,8 +100,21 @@ class PlanningContext:
         return self.train_leg_planner.running_trains(trains, day, categories)
 
     def search_days(self, day: date, direction: int) -> list[date]:
-        """Days before (direction=-1) or after (+1) ``day`` within the search horizon."""
-        return [day + timedelta(days=direction * i) for i in range(1, SEARCH_DAYS + 1)]
+        """Days before (direction=-1) or after (+1) ``day`` within the search horizon.
+
+        Outside the timetable validity the search starts from its nearest edge,
+        so a date after ``valid_to`` still finds the last covered days.
+        """
+        start = day
+        if self.validity is not None:
+            if direction < 0 and day > self.validity.valid_to:
+                start = self.validity.valid_to + timedelta(days=1)
+            elif direction > 0 and day < self.validity.valid_from:
+                start = self.validity.valid_from - timedelta(days=1)
+        return [start + timedelta(days=direction * i) for i in range(1, SEARCH_DAYS + 1)]
+
+    def compose(self, notices: list[Notice]) -> tuple[Notice, ...]:
+        return self.composer.compose(notices)
 
     def campus_station(self, campus: Campus) -> Station:
         station = self.location_repo.get_station_by_name(campus.reference_station)
@@ -102,27 +136,31 @@ class PlanningContext:
             destination_coords=(campus.lat, campus.lon),
         )
 
-        warnings = list(home.warnings)
+        notices = list(home.notices)
         if self.validity is not None:
             out_of_range = self.validity.warning_for(day)
             if out_of_range:
-                warnings.append(out_of_range)
+                notices.append(notice(OUT_OF_VALIDITY, out_of_range))
         if not same_city:
             if home.estimate_note:
-                warnings.append(home.estimate_note)
+                notices.append(notice(ESTIMATE, home.estimate_note))
             holiday = holiday_name(day)
-            if holiday or day.weekday() == 6:
-                label = f"festivo ({holiday})" if holiday else "domenica"
-                warnings.append(
-                    f"Il {format_it_date(day)} è {label}: l'orario caricato descrive soprattutto "
-                    "il servizio feriale, quindi vengono usate solo le corse segnate anche di "
-                    "domenica. Verifica sul PDF Trenitalia."
+            if holiday:
+                notices.append(
+                    notice(
+                        FESTIVE_DAY,
+                        f"Il {format_it_date(day)} è festivo ({holiday}): valgono le corse e le "
+                        "note del PDF per i giorni festivi.",
+                    )
                 )
         else:
             mode_label = MODE_LABELS.get(campus_mode, campus_mode)
-            warnings.append(
-                f"Casa e sede sono nella stessa città ({campus.city}): percorso diretto "
-                f"{mode_label}, nessun treno."
+            notices.append(
+                notice(
+                    SAME_CITY,
+                    f"Casa e sede sono nella stessa città ({campus.city}): percorso diretto "
+                    f"{mode_label}, nessun treno.",
+                )
             )
 
         return Journey(
@@ -136,19 +174,23 @@ class PlanningContext:
             home_mode=self.active_planner(request.first_mile_mode).mode,
             campus_mode=campus_mode,
             campus_leg_minutes=campus_leg_minutes,
-            warnings=tuple(warnings),
+            notices=tuple(notices),
         )
 
-    def direct_minutes(self, journey: Journey) -> tuple[int, str, list[str]]:
-        """Same-city direct leg: minutes, home-side label and extra warnings."""
+    def direct_minutes(self, journey: Journey) -> tuple[int, str, list[Notice]]:
+        """Same-city direct leg: minutes, home-side label and extra notices."""
         home = journey.home
-        warnings: list[str] = []
+        notices: list[Notice] = []
         label = home.label
         if not home.is_station and home.coords is None:
             label = home.station.name
-            warnings.append(
-                "Posizione di casa non indicata: il percorso è calcolato dalla stazione "
-                f"{home.station.name}. Inserisci l'indirizzo o tocca la mappa per un tempo preciso."
+            notices.append(
+                notice(
+                    HOME_UNKNOWN,
+                    "Posizione di casa non indicata: il percorso è calcolato dalla stazione "
+                    f"{home.station.name}. Inserisci l'indirizzo o tocca la mappa per un tempo "
+                    "preciso.",
+                )
             )
         minutes = self.active_planner(journey.campus_mode).calculate_minutes(
             origin_id=home.station.id if home.is_station or home.coords is None else None,
@@ -156,4 +198,4 @@ class PlanningContext:
             origin_coords=home.point,
             destination_coords=(journey.campus.lat, journey.campus.lon),
         )
-        return minutes, label, warnings
+        return minutes, label, notices
