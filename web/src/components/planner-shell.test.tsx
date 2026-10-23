@@ -1,10 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fixtures from '@/lib/api/mock-fixtures.json';
 import type { PlanService } from '@/lib/api/plan-service';
 import type { PlanResponse } from '@/lib/api/types';
-import { prefillMessage, PlannerShell } from './planner-shell';
+import { INVALID_LINK_MESSAGE, prefillMessage, PlannerShell } from './planner-shell';
 
 const service = vi.hoisted(() => ({
   getHealth: vi.fn(),
@@ -24,19 +24,42 @@ vi.mock('./map-panel', () => ({
   ),
 }));
 
+const PREFS = 'unimorego.planner.v1';
+const SHARED =
+  '/?sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-25&ora=09%3A00&mezzo=piedi&verso=andata';
+const demo = fixtures.demo.response as PlanResponse;
+const goBack = () => {
+  window.history.back();
+};
+
 beforeEach(() => {
   window.localStorage.clear();
+  window.history.replaceState(null, '', '/');
   service.getHealth.mockResolvedValue(fixtures.health);
   service.getCampuses.mockResolvedValue(fixtures.campuses);
   service.getStations.mockResolvedValue(fixtures.stations);
-  service.createPlan.mockResolvedValue(fixtures.demo.response as PlanResponse);
+  service.createPlan.mockResolvedValue(demo);
   service.geocode.mockResolvedValue({ results: [], attribution: '' });
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
+});
 
-describe('PlannerShell', () => {
-  it('al primo accesso calcola subito con i valori predefiniti (zero tocchi)', async () => {
+const formReady = () => screen.findByRole('button', { name: /Calcola quando uscire/ });
+
+describe('PlannerShell: niente risultato finché non si preme Calcola (B2)', () => {
+  it('all’apertura mostra solo il modulo; il calcolo parte al clic e aggiorna l’URL', async () => {
+    const user = userEvent.setup();
     render(<PlannerShell />);
+    const submit = await formReady();
+    expect(screen.getByText('Il tuo tragitto, senza corse')).toBeInTheDocument();
+    expect(service.createPlan).not.toHaveBeenCalled();
+    expect(window.location.search).toBe('');
+    expect(screen.getByText('Oggi')).toBeInTheDocument();
+    expect(screen.getByTestId('map')).toHaveTextContent('2 punti');
+
+    await user.click(submit);
     expect(
       await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' }),
     ).toBeInTheDocument();
@@ -46,58 +69,157 @@ describe('PlannerShell', () => {
       station_buffer_min: 5,
       train_categories: ['regional'],
     });
-    // The answer comes before the form in the DOM (mobile order).
-    const result = document.getElementById('result')!;
-    const form = document.getElementById('plan-form')!;
-    expect(result.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(window.location.search).toMatch(
+      /^\?sede=dief&stazione=reggio_fs&data=\d{4}-\d\d-\d\d&ora=08%3A30&mezzo=bici&verso=andata$/,
+    );
+    // DOM (= mobile) order: form, result, map, schedule (C7, B6).
+    const ids = ['plan-form', 'result', 'map'].map(
+      (id) => document.getElementById(id) ?? screen.getByTestId(id),
+    );
+    expect(ids[0].compareDocumentPosition(ids[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(ids[1].compareDocumentPosition(ids[2]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByTestId('map')).toHaveTextContent('3 punti');
+    expect(screen.getByRole('button', { name: 'Copia link' })).toBeInTheDocument();
   });
 
-  it('ricorda le preferenze e le usa al ritorno', async () => {
+  it('dopo il ricaricamento ricorda sede, stazione, mezzo e anticipo; la data è oggi', async () => {
+    const user = userEvent.setup();
     window.localStorage.setItem(
-      'unimorego.planner.v1',
-      JSON.stringify({ mode: 'walk', stationBufferMin: 10, regionalOnly: false }),
+      PREFS,
+      JSON.stringify({
+        campusId: 'economia_biagi',
+        stationId: 'rubiera',
+        mode: 'walk',
+        marginMin: 20,
+        stationBufferMin: 10,
+        regionalOnly: false,
+        date: '2020-01-01',
+      }),
     );
     render(<PlannerShell />);
+    await user.click(await formReady());
     await waitFor(() => expect(service.createPlan).toHaveBeenCalled());
     expect(service.createPlan.mock.calls[0][0]).toMatchObject({
+      campus_id: 'economia_biagi',
+      origin: { station_id: 'rubiera' },
       mode: 'walk',
+      margin_min: 20,
       station_buffer_min: 10,
       train_categories: ['regional', 'intercity', 'high_speed'],
     });
+    expect(service.createPlan.mock.calls[0][0].arrive_by).not.toContain('2020-01-01');
     expect(screen.getByRole('button', { name: 'A piedi' })).toHaveAttribute('aria-pressed', 'true');
   });
+});
 
-  it('ricalcola il ritorno su richiesta e salva la scelta', async () => {
+describe('PlannerShell: ricerca nell’URL (B3)', () => {
+  it('un link condiviso calcola subito, senza toccare le preferenze salvate', async () => {
+    window.localStorage.setItem(PREFS, JSON.stringify({ campusId: 'dief', mode: 'bike' }));
+    window.history.replaceState(null, '', SHARED);
+    render(<PlannerShell />);
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledOnce());
+    expect(service.createPlan.mock.calls[0][0]).toMatchObject({
+      campus_id: 'palazzo_dossetti',
+      origin: { station_id: 'modena_fs' },
+      arrive_by: '2026-10-25T09:00:00+01:00',
+      mode: 'walk',
+    });
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' }),
+    ).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem(PREFS)!)).toMatchObject({
+      campusId: 'dief',
+      mode: 'bike',
+    });
+  });
+
+  it('un link con una sede sconosciuta non calcola e lo dice', async () => {
+    window.history.replaceState(null, '', '/?sede=inesistente&data=2026-10-26&ora=08%3A30');
+    render(<PlannerShell />);
+    expect(await screen.findByText(INVALID_LINK_MESSAGE)).toBeInTheDocument();
+    expect(service.createPlan).not.toHaveBeenCalled();
+  });
+
+  it('Indietro e Avanti ripristinano la ricerca della voce di cronologia', async () => {
     const user = userEvent.setup();
     render(<PlannerShell />);
+    await user.click(await formReady());
     await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
-    service.createPlan.mockResolvedValueOnce({
-      ...(fixtures.demo.response as PlanResponse),
-      planner: 'depart_after',
+    await user.click(screen.getByRole('button', { name: 'A piedi' }));
+    await user.click(screen.getByRole('button', { name: /Calcola quando uscire/ }));
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledTimes(2));
+    expect(window.location.search).toContain('mezzo=piedi');
+
+    goBack();
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledTimes(3));
+    expect(service.createPlan.mock.calls[2][0]).toMatchObject({ mode: 'bike' });
+    expect(screen.getByRole('button', { name: 'In bici' })).toHaveAttribute('aria-pressed', 'true');
+
+    goBack();
+    await waitFor(() =>
+      expect(screen.getByText('Il tuo tragitto, senza corse')).toBeInTheDocument(),
+    );
+    expect(service.createPlan).toHaveBeenCalledTimes(3);
+
+    window.history.forward();
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledTimes(4));
+    expect(service.createPlan.mock.calls[3][0]).toMatchObject({ mode: 'bike' });
+  });
+});
+
+describe('PlannerShell: andata e ritorno (C3)', () => {
+  it('"Calcola il ritorno" usa le stesse impostazioni e una fine lezione modificabile', async () => {
+    const user = userEvent.setup();
+    render(<PlannerShell />);
+    await user.click(await formReady());
+    await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
+    const returnBox = screen.getByRole('region', { name: 'E per tornare?' });
+    const hours = within(returnBox).getByRole('combobox', { name: 'Ore' });
+    expect(hours).toHaveValue('10');
+    await user.selectOptions(hours, '13');
+    service.createPlan.mockResolvedValueOnce({ ...demo, planner: 'depart_after' });
+    await user.click(within(returnBox).getByRole('button', { name: 'Calcola il ritorno' }));
+    expect(
+      await within(returnBox).findByRole('heading', { level: 3, name: 'Parti alle 07:39' }),
+    ).toBeInTheDocument();
+    const request = service.createPlan.mock.calls[1][0];
+    expect(request).toMatchObject({
+      campus_id: 'dief',
+      origin: { station_id: 'reggio_fs' },
+      mode: 'bike',
     });
+    expect(request.depart_after).toMatch(/T13:30:00/);
+    expect(window.location.search).toContain('ritorno=13%3A30');
+    // The outbound result stays on screen above the return.
+    expect(screen.getByRole('heading', { level: 2, name: 'Esci alle 07:39' })).toBeInTheDocument();
+  });
+
+  it('il ritorno come ricerca principale si ricorda', async () => {
+    const user = userEvent.setup();
+    render(<PlannerShell />);
+    await formReady();
+    service.createPlan.mockResolvedValueOnce({ ...demo, planner: 'depart_after' });
     await user.click(screen.getByRole('button', { name: /Ritorno/ }));
     await user.click(screen.getByRole('button', { name: /Calcola quando partire/ }));
     expect(
       await screen.findByRole('heading', { level: 2, name: 'Parti alle 07:39' }),
     ).toBeInTheDocument();
-    expect(service.createPlan.mock.calls[1][0]).toHaveProperty('depart_after');
-    expect(JSON.parse(window.localStorage.getItem('unimorego.planner.v1')!)).toMatchObject({
-      direction: 'return',
-    });
+    expect(service.createPlan.mock.calls[0][0]).toHaveProperty('depart_after');
+    expect(screen.queryByRole('region', { name: 'E per tornare?' })).not.toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem(PREFS)!)).toMatchObject({ direction: 'return' });
   });
+});
 
+describe('PlannerShell: mobile ed errori', () => {
   it('su mobile porta in vista il risultato dopo il calcolo', async () => {
     const user = userEvent.setup();
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('max-width') }));
     const scroll = vi.fn();
     Element.prototype.scrollIntoView = scroll;
     render(<PlannerShell />);
-    await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
-    await user.click(screen.getByRole('button', { name: /Calcola quando uscire/ }));
+    await user.click(await formReady());
     expect(scroll).toHaveBeenCalled();
     expect(scroll.mock.contexts[0]).toBe(document.getElementById('result'));
-    vi.unstubAllGlobals();
   });
 
   it('mostra un errore recuperabile se il catalogo non si carica', async () => {

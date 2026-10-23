@@ -7,9 +7,12 @@ import {
   validatePlannerValues,
   type PlannerValues,
 } from '@/lib/plan-request';
+import { formatLongDate } from '@/lib/time-format';
 import { CampusSearch } from './campus-search';
+import { HelpTip } from './help-tip';
 import { HomeLocationField } from './home-location-field';
 import { Icon } from './icons';
+import { TimeSelect } from './time-select';
 
 interface PlanFormProps {
   values: PlannerValues;
@@ -18,8 +21,11 @@ interface PlanFormProps {
   stations: Station[];
   onSubmit: () => void;
   loading: boolean;
-  /** Last day covered by the timetable (YYYY-MM-DD), from /api/health. */
+  /** First and last day covered by the timetable (YYYY-MM-DD), from /api/health. */
+  validFrom?: string;
   validTo?: string;
+  /** Today (YYYY-MM-DD, Europe/Rome): the default date, shown as "Oggi". */
+  today: string;
   onSearchAddress: (query: string) => Promise<GeocodeResult[]>;
   onPickOnMap: () => void;
   pickingOnMap: boolean;
@@ -34,7 +40,9 @@ export function PlanForm({
   stations,
   onSubmit,
   loading,
+  validFrom,
   validTo,
+  today,
   onSearchAddress,
   onPickOnMap,
   pickingOnMap,
@@ -44,6 +52,8 @@ export function PlanForm({
   const error = validatePlannerValues(values);
   const afterValidity = !!validTo && !!values.date && values.date > validTo;
   const showStation = values.originKind === 'station' || !values.home;
+  const isToday = values.date === today;
+  const shortDate = (date: string) => date.split('-').reverse().slice(0, 2).join('/');
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,24 +108,36 @@ export function PlanForm({
             type="date"
             required
             value={values.date}
-            aria-describedby={afterValidity ? 'validity-alert' : undefined}
+            aria-describedby={`date-readout${afterValidity ? ' validity-alert' : ''}`}
             onChange={(event) => onChange({ date: event.target.value })}
           />
         </div>
-        <div>
-          <label className="field-label" htmlFor="lesson-time">
-            {isReturn ? 'Fine lezione' : 'Inizio lezione'}
-          </label>
-          <input
-            id="lesson-time"
-            className="field-input"
-            type="time"
-            required
-            value={values.time}
-            onChange={(event) => onChange({ time: event.target.value })}
-          />
-        </div>
+        <TimeSelect
+          id="lesson-time"
+          label={isReturn ? 'Fine lezione' : 'Inizio lezione'}
+          value={values.time}
+          onChange={(time) => onChange({ time })}
+        />
       </div>
+      <p id="date-readout" className="date-readout" aria-live="polite">
+        {values.date ? (
+          <>
+            {isToday && <span className="today-badge">Oggi</span>}
+            <span className="first-letter:uppercase">{formatLongDate(values.date)}</span>
+            {!isToday && (
+              <button
+                type="button"
+                className="ml-auto font-semibold text-pine underline dark:text-emerald-300"
+                onClick={() => onChange({ date: today })}
+              >
+                Torna a oggi
+              </button>
+            )}
+          </>
+        ) : (
+          'Scegli il giorno della lezione.'
+        )}
+      </p>
       {afterValidity && (
         <p id="validity-alert" role="alert" className="alert-box">
           <Icon name="alert" className="h-5 w-5 shrink-0" />
@@ -201,6 +223,13 @@ export function PlanForm({
                 </option>
               ))}
             </select>
+            <p id="coverage-note" className="field-hint">
+              Stazioni coperte: {stations.map((station) => station.name).join(' · ')}
+              {validFrom && validTo
+                ? ` · orario Trenitalia ${shortDate(validFrom)}–${validTo.split('-').reverse().join('/')}`
+                : ''}
+              . Le altre stazioni non hanno ancora un orario verificato.
+            </p>
           </div>
         )}
       </fieldset>
@@ -243,9 +272,15 @@ export function PlanForm({
         </label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="field-label" htmlFor="station-buffer">
-              Tempo in stazione
-            </label>
+            <div className="mb-2 flex items-center">
+              <label className="field-label mb-0" htmlFor="station-buffer">
+                Tempo in stazione
+              </label>
+              <HelpTip label="Tempo in stazione">
+                Minuti tra l’arrivo in stazione e la partenza del treno (biglietto, binario,
+                sottopasso). Al ritorno li aggiungiamo dopo il tragitto dalla sede alla stazione.
+              </HelpTip>
+            </div>
             <div className="relative">
               <input
                 id="station-buffer"
@@ -266,9 +301,15 @@ export function PlanForm({
           </div>
           {!isReturn && (
             <div>
-              <label className="field-label" htmlFor="margin">
-                Anticipo a lezione
-              </label>
+              <div className="mb-2 flex items-center">
+                <label className="field-label mb-0" htmlFor="margin">
+                  Anticipo a lezione
+                </label>
+                <HelpTip label="Anticipo a lezione" align="end">
+                  Quanti minuti prima dell’inizio vuoi essere in sede: li togliamo dall’ora della
+                  lezione per calcolare entro quando devi essere in stazione.
+                </HelpTip>
+              </div>
               <div className="relative">
                 <input
                   id="margin"

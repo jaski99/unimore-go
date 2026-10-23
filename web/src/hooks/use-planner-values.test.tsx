@@ -60,3 +60,59 @@ describe('usePlannerValues', () => {
     expect(result.current.values.campusId).toBe('dief');
   });
 });
+
+describe('usePlannerValues con la ricerca nell’URL', () => {
+  const search = () =>
+    '?sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-25&ora=09:00&mezzo=piedi';
+
+  it('applica il link sopra le preferenze, senza salvarlo e senza precompilare la lezione', async () => {
+    const storage = memoryStorage({
+      [PREFS]: JSON.stringify({ campusId: 'dief', marginMin: 15 }),
+      [SCHEDULE]: JSON.stringify([
+        { id: 'x', weekday: 1, time: '11:00', campusId: 'economia_biagi' },
+      ]),
+    });
+    const { result } = renderHook(() => usePlannerValues(() => storage, now, search));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.values).toMatchObject({
+      campusId: 'palazzo_dossetti',
+      stationId: 'modena_fs',
+      date: '2026-10-25',
+      time: '09:00',
+      mode: 'walk',
+      marginMin: 15,
+    });
+    expect(result.current.prefill).toBeNull();
+    expect(result.current.urlSearch?.patch.campusId).toBe('palazzo_dossetti');
+    expect(JSON.parse(storage.data[PREFS]).campusId).toBe('dief');
+  });
+
+  it('apply non salva, update sì (anche con modifiche ravvicinate)', async () => {
+    const storage = memoryStorage();
+    const { result } = renderHook(() =>
+      usePlannerValues(
+        () => storage,
+        now,
+        () => '',
+      ),
+    );
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.urlSearch).toBeNull();
+    act(() => {
+      result.current.apply({ campusId: 'economia_biagi' });
+    });
+    expect(storage.data[PREFS]).toBeUndefined();
+    act(() => {
+      result.current.update({ mode: 'walk' });
+      result.current.update({ marginMin: 20 });
+    });
+    expect(result.current.values).toMatchObject({
+      campusId: 'economia_biagi',
+      mode: 'walk',
+      marginMin: 20,
+    });
+    const saved = JSON.parse(storage.data[PREFS]);
+    expect(saved).toMatchObject({ mode: 'walk', marginMin: 20 });
+    expect(saved.date).toBeUndefined();
+  });
+});

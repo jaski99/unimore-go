@@ -35,7 +35,9 @@ function Harness({
       stations={STATIONS}
       onSubmit={onSubmit}
       loading={false}
+      validFrom="2026-10-17"
       validTo={validTo}
+      today="2026-10-26"
       onSearchAddress={vi.fn().mockResolvedValue([])}
       onPickOnMap={vi.fn()}
       pickingOnMap={false}
@@ -72,8 +74,8 @@ describe('PlanForm', () => {
     render(<Harness onValues={onValues} />);
     const campusSearch = screen.getByRole('combobox', { name: /Sede UNIMORE/ });
     await user.click(campusSearch);
-    await user.type(campusSearch, 'Marco Biagi');
-    await user.click(screen.getByRole('button', { name: /Marco Biagi/ }));
+    await user.keyboard('Marco Biagi');
+    await user.click(screen.getByRole('option', { name: /Marco Biagi/ }));
     await user.click(screen.getByRole('button', { name: 'A piedi' }));
     fireEvent.change(screen.getByLabelText('Tempo in stazione'), { target: { value: '12' } });
     await user.click(screen.getByRole('checkbox', { name: /Solo regionali/ }));
@@ -112,5 +114,45 @@ describe('PlanForm', () => {
     );
     expect(screen.getByText('Via Emilia 1')).toBeInTheDocument();
     expect(screen.queryByLabelText(/Stazione/)).not.toBeInTheDocument();
+  });
+
+  it('dice che la data è oggi; con un altro giorno lo scrive per esteso e offre "Torna a oggi"', async () => {
+    const user = userEvent.setup();
+    const onValues = vi.fn();
+    render(<Harness onValues={onValues} initial={{ date: '2026-10-26' }} />);
+    const readout = screen.getByText('Oggi').closest('p')!;
+    expect(readout).toHaveTextContent('Oggilunedì 26 ottobre 2026');
+    expect(screen.getByLabelText('Giorno')).toHaveAccessibleDescription(/Oggi/);
+    fireEvent.change(screen.getByLabelText('Giorno'), { target: { value: '2026-10-30' } });
+    expect(screen.queryByText('Oggi')).not.toBeInTheDocument();
+    expect(screen.getByText('venerdì 30 ottobre 2026')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Torna a oggi' }));
+    expect(onValues).toHaveBeenLastCalledWith(expect.objectContaining({ date: '2026-10-26' }));
+  });
+
+  it('orario a 24 ore con ore e minuti separati', async () => {
+    const user = userEvent.setup();
+    const onValues = vi.fn();
+    render(<Harness onValues={onValues} initial={{ time: '08:30' }} />);
+    const group = screen.getByRole('group', { name: 'Inizio lezione' });
+    expect(group).toBeInTheDocument();
+    await user.selectOptions(screen.getAllByRole('combobox', { name: 'Ore' })[0], '14');
+    expect(onValues).toHaveBeenLastCalledWith(expect.objectContaining({ time: '14:30' }));
+  });
+
+  it('dichiara le stazioni coperte e la validità dell’orario (C1)', () => {
+    render(<Harness />);
+    expect(screen.getByText(/Stazioni coperte:/)).toHaveTextContent(
+      'Stazioni coperte: Modena FS · Rubiera · Reggio Emilia FS · orario Trenitalia 17/10–12/12/2026.',
+    );
+  });
+
+  it('spiega tempo in stazione e anticipo con un aiuto al tocco', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole('button', { name: 'Che cos’è: Tempo in stazione' }));
+    expect(screen.getByText(/biglietto, binario,\s+sottopasso/)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Che cos’è: Anticipo a lezione' }));
+    expect(screen.getByText(/entro quando devi essere in stazione/)).toBeVisible();
   });
 });

@@ -13,6 +13,7 @@ describe('MockPlanService', () => {
     expect((await service.getStations()).map((station) => station.id).sort()).toEqual([
       'modena_fs',
       'reggio_fs',
+      'rubiera',
     ]);
     expect((await service.getHealth()).data_valid_to).toBe(fixtures.health.data_valid_to);
   });

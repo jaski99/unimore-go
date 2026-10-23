@@ -1,20 +1,29 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Campus, HealthResponse, Station } from '@/lib/api/types';
 import { apiConfig } from '@/lib/api/config';
 import { createPlanService } from '@/lib/api/plan-service';
 import type { LessonPrefill } from '@/lib/lesson-prefill';
-import { buildPlanRequest, validatePlannerValues } from '@/lib/plan-request';
+import {
+  buildPlanRequest,
+  returnTripValues,
+  validatePlannerValues,
+  type PlannerValues,
+} from '@/lib/plan-request';
 import { buildRoute } from '@/lib/route-geometry';
 import { LocalStorageScheduleStore } from '@/lib/schedule-store';
-import { formatDate, formatShortDate } from '@/lib/time-format';
+import { addMinutesClamped, formatDate, formatShortDate, todayInRome } from '@/lib/time-format';
+import { isCompleteSearch, parseSearch, serializeSearch, type UrlSearch } from '@/lib/url-state';
 import { usePlan } from '@/hooks/use-plan';
+import { shareUrl, useHistorySearch } from '@/hooks/use-history-search';
 import { usePlannerValues } from '@/hooks/use-planner-values';
 import { Icon } from './icons';
 import { MapPanel } from './map-panel';
 import { PlanForm } from './plan-form';
+import { ResultActions } from './result-actions';
 import { ResultPanel, type ResultContext } from './result-panel';
+import { ReturnTrip } from './return-trip';
 import { SchedulePanel, type LessonSelection } from './schedule-panel';
 
 const browserStorage = () => (typeof window === 'undefined' ? null : window.localStorage);
@@ -23,6 +32,9 @@ const isNarrowViewport = () =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(max-width: 1023px)').matches;
 
+export const INVALID_LINK_MESSAGE =
+  'Il link aperto è incompleto o contiene valori non validi: controlla i campi e premi Calcola.';
+
 export function prefillMessage(prefill: LessonPrefill | null): string | undefined {
   if (!prefill) return undefined;
   return prefill.today
@@ -30,10 +42,18 @@ export function prefillMessage(prefill: LessonPrefill | null): string | undefine
     : `Dal tuo orario: prossima lezione ${formatShortDate(prefill.date)} alle ${prefill.lesson.time}.`;
 }
 
+/** A search the user (or a link) actually ran: the result belongs to these values. */
+interface PlannedSearch {
+  values: PlannerValues;
+  /** Lesson end of the return view, once requested. */
+  returnTime?: string;
+}
+
 export function PlannerShell() {
   const service = useMemo(() => createPlanService(), []);
-  const { status, result, error, lastRequest, submit, retry } = usePlan(service);
-  const { values, update, ready, prefill } = usePlannerValues(browserStorage);
+  const outbound = usePlan(service);
+  const back = usePlan(service);
+  const { values, update, apply, ready, prefill, urlSearch } = usePlannerValues(browserStorage);
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -41,8 +61,12 @@ export function PlannerShell() {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [scheduleStore, setScheduleStore] = useState<LocalStorageScheduleStore | null>(null);
   const [picking, setPicking] = useState(false);
-  const [context, setContext] = useState<ResultContext | undefined>();
+  const [planned, setPlanned] = useState<PlannedSearch | null>(null);
+  const [returnTime, setReturnTime] = useState<string | null>(null);
+  const [linkNotice, setLinkNotice] = useState('');
+  const linkHandled = useRef(false);
   const demoMode = apiConfig.useMock;
+  const today = todayInRome();
 
   const loadCatalog = useCallback(async () => {
     setCatalogLoading(true);
@@ -78,28 +102,73 @@ export function PlannerShell() {
     [campuses],
   );
 
-  const plan = useCallback(() => {
-    if (validatePlannerValues(values)) return;
-    setContext({
-      planner: values.direction === 'return' ? 'depart_after' : 'arrive_by',
-      date: values.date,
-      time: values.time,
-      campusName: campusName(values.campusId),
-    });
-    void submit(buildPlanRequest(values));
-  }, [values, submit, campusName]);
+  /** A link may only run when it names a known campus (and station). */
+  const linkIsValid = useCallback(
+    (search: UrlSearch) =>
+      isCompleteSearch(search) &&
+      campuses.some((campus) => campus.id === search.patch.campusId) &&
+      (!search.patch.stationId ||
+        stations.some((station) => station.id === search.patch.stationId)),
+    [campuses, stations],
+  );
 
-  // First visit: answer straight away with saved preferences / today's lesson.
+  /** Run a search; the return view is planned too when a lesson end is given. */
+  const runSearch = useCallback(
+    (searchValues: PlannerValues, lessonEnd?: string) => {
+      if (validatePlannerValues(searchValues)) return false;
+      const withReturn = searchValues.direction === 'outbound' ? lessonEnd : undefined;
+      setPlanned({ values: searchValues, returnTime: withReturn });
+      void outbound.submit(buildPlanRequest(searchValues));
+      if (withReturn) {
+        setReturnTime(withReturn);
+        void back.submit(buildPlanRequest(returnTripValues(searchValues, withReturn)));
+      } else back.reset();
+      return true;
+    },
+    [outbound, back],
+  );
+
+  const clearSearch = useCallback(() => {
+    outbound.reset();
+    back.reset();
+    setPlanned(null);
+  }, [outbound, back]);
+
+  // Back/Forward: show the search of that history entry (or none).
+  const { push } = useHistorySearch((search) => {
+    const parsed = parseSearch(search);
+    const next = Object.keys(parsed.patch).length ? apply(parsed.patch) : values;
+    setLinkNotice('');
+    if (linkIsValid(parsed) && runSearch(next, parsed.returnTime)) return;
+    clearSearch();
+  });
+
+  // A shared link or a reload: plan straight away, only when the link is complete and valid.
   useEffect(() => {
-    if (!ready || catalogLoading || catalogError || status !== 'idle') return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off automatic plan after hydration.
-    plan();
-  }, [ready, catalogLoading, catalogError, status, plan]);
+    if (!ready || catalogLoading || catalogError || linkHandled.current) return;
+    linkHandled.current = true;
+    if (!urlSearch) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off run of the opened link.
+    const started = linkIsValid(urlSearch) && runSearch(values, urlSearch.returnTime);
+    if (!started) setLinkNotice(INVALID_LINK_MESSAGE);
+  }, [ready, catalogLoading, catalogError, urlSearch, linkIsValid, runSearch, values]);
 
   function handleSubmit() {
-    plan();
+    setLinkNotice('');
+    if (!runSearch(values)) return;
+    push(serializeSearch(values));
     if (isNarrowViewport())
       document.getElementById('result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const defaultReturnTime = planned ? addMinutesClamped(planned.values.time, 120) : '12:00';
+  const effectiveReturnTime = returnTime ?? defaultReturnTime;
+
+  function handleReturn() {
+    if (!planned) return;
+    setPlanned({ ...planned, returnTime: effectiveReturnTime });
+    void back.submit(buildPlanRequest(returnTripValues(planned.values, effectiveReturnTime)));
+    push(serializeSearch(planned.values, effectiveReturnTime));
   }
 
   function handleScheduleSelect(selection: LessonSelection) {
@@ -120,19 +189,39 @@ export function PlannerShell() {
 
   // While loading, `result` still belongs to the previous request: never mix them.
   const resultIsCurrent =
-    status === 'success' &&
-    !!lastRequest &&
-    JSON.stringify(lastRequest) === JSON.stringify(buildPlanRequest(values));
+    outbound.status === 'success' &&
+    !!outbound.lastRequest &&
+    JSON.stringify(outbound.lastRequest) === JSON.stringify(buildPlanRequest(values));
   const route = useMemo(
     () =>
       buildRoute(
         values,
         stations,
         campuses.find((campus) => campus.id === values.campusId),
-        resultIsCurrent ? result?.itineraries[0] : undefined,
+        resultIsCurrent ? outbound.result?.itineraries[0] : undefined,
       ),
-    [values, stations, campuses, resultIsCurrent, result],
+    [values, stations, campuses, resultIsCurrent, outbound.result],
   );
+
+  const context: ResultContext | undefined = planned
+    ? {
+        planner: planned.values.direction === 'return' ? 'depart_after' : 'arrive_by',
+        date: planned.values.date,
+        time: planned.values.time,
+        campusName: campusName(planned.values.campusId),
+        marginMin: planned.values.marginMin,
+      }
+    : undefined;
+  const link = planned ? shareUrl(serializeSearch(planned.values, planned.returnTime)) : '';
+  const destination = (values_: PlannerValues | undefined) => {
+    const campus = campuses.find((item) => item.id === values_?.campusId);
+    return campus?.name.match(/\(([^)]+)\)\s*$/)?.[1] ?? campus?.name;
+  };
+  const mainItinerary = outbound.result?.itineraries[0];
+  const returnItinerary = back.result?.itineraries[0];
+  const showReturn =
+    planned?.values.direction === 'outbound' &&
+    (outbound.status === 'success' || outbound.status === 'empty');
 
   return (
     <main className="min-h-screen bg-canvas text-ink dark:bg-slate-950 dark:text-slate-100">
@@ -184,7 +273,7 @@ export function PlannerShell() {
               al resto pensiamo noi.
             </p>
             <div className="mt-6 hidden flex-wrap gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 sm:flex">
-              <span className="hero-chip">Reggio Emilia FS ↔ Modena FS</span>
+              <span className="hero-chip">Reggio Emilia · Rubiera · Modena</span>
               <span className="hero-chip">Orario ufficiale Trenitalia</span>
               <span className="hero-chip">Andata e ritorno</span>
             </div>
@@ -212,17 +301,8 @@ export function PlannerShell() {
         </div>
       </section>
 
-      {/* DOM order = mobile order (answer first); desktop places it in two columns. */}
+      {/* DOM order = mobile order: form, then the answer and the map right under the button. */}
       <div className="planner-grid mx-auto max-w-7xl px-4 pb-12 sm:px-8">
-        <div id="result" className="planner-result scroll-mt-20">
-          <ResultPanel
-            status={status}
-            result={result}
-            error={error}
-            onRetry={retry}
-            context={context}
-          />
-        </div>
         <section
           id="plan-form"
           className="planner-form form-card scroll-mt-20"
@@ -236,6 +316,12 @@ export function PlannerShell() {
                 : 'Quando inizia la lezione?'}
             </h2>
           </div>
+          {linkNotice && (
+            <p role="alert" className="alert-box mb-4">
+              <Icon name="alert" className="h-5 w-5 shrink-0" />
+              <span>{linkNotice}</span>
+            </p>
+          )}
           {catalogLoading && (
             <div className="space-y-4" role="status" aria-label="Caricamento sedi e stazioni">
               {[1, 2, 3, 4].map((item) => (
@@ -265,8 +351,10 @@ export function PlannerShell() {
               campuses={campuses}
               stations={stations}
               onSubmit={handleSubmit}
-              loading={status === 'loading'}
+              loading={outbound.status === 'loading'}
+              validFrom={health?.data_valid_from}
               validTo={health?.data_valid_to}
+              today={today}
               onSearchAddress={(query) => service.geocode(query).then((found) => found.results)}
               onPickOnMap={() => setPicking((current) => !current)}
               pickingOnMap={picking}
@@ -274,6 +362,70 @@ export function PlannerShell() {
             />
           )}
         </section>
+        <div id="result" className="planner-result scroll-mt-20">
+          <ResultPanel
+            status={outbound.status}
+            result={outbound.result}
+            error={outbound.error}
+            onRetry={outbound.retry}
+            context={context}
+            actions={
+              mainItinerary && planned ? (
+                <ResultActions
+                  itinerary={mainItinerary}
+                  planner={context!.planner}
+                  date={planned.values.date}
+                  destination={
+                    planned.values.direction === 'outbound'
+                      ? destination(planned.values)
+                      : undefined
+                  }
+                  shareUrl={link}
+                />
+              ) : undefined
+            }
+            footer={
+              showReturn ? (
+                <ReturnTrip
+                  endTime={effectiveReturnTime}
+                  onEndTimeChange={setReturnTime}
+                  onCalculate={handleReturn}
+                  loading={back.status === 'loading'}
+                >
+                  {back.status !== 'idle' && (
+                    <ResultPanel
+                      nested
+                      status={back.status}
+                      result={back.result}
+                      error={back.error}
+                      onRetry={back.retry}
+                      context={
+                        planned
+                          ? {
+                              planner: 'depart_after',
+                              date: planned.values.date,
+                              time: planned.returnTime ?? effectiveReturnTime,
+                              campusName: campusName(planned.values.campusId),
+                            }
+                          : undefined
+                      }
+                      actions={
+                        returnItinerary && planned ? (
+                          <ResultActions
+                            itinerary={returnItinerary}
+                            planner="depart_after"
+                            date={planned.values.date}
+                            shareUrl={link}
+                          />
+                        ) : undefined
+                      }
+                    />
+                  )}
+                </ReturnTrip>
+              ) : undefined
+            }
+          />
+        </div>
         <div className="planner-map">
           {!catalogLoading && <MapPanel route={route} picking={picking} onPick={handlePick} />}
         </div>
