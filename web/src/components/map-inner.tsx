@@ -1,57 +1,94 @@
 'use client';
 
+import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo } from 'react';
-import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
-import type { Campus, Station } from '@/lib/api/types';
+import {
+  CircleMarker,
+  MapContainer,
+  Polyline,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet';
+import type { LatLon, Route } from '@/lib/route-geometry';
 
-export function MapInner({ campus, station }: { campus?: Campus; station?: Station }) {
-  const points = useMemo(
-    () => [
-      ...(station ? [{ lat: station.lat, lon: station.lon }] : []),
-      ...(campus ? [{ lat: campus.lat, lon: campus.lon }] : []),
-    ],
-    [campus, station],
-  );
-  const center: [number, number] = points.length ? [points[0].lat, points[0].lon] : [44.676, 10.78];
+const COLORS = { home: '#0284c7', station: '#126e5b', campus: '#ea580c' } as const;
+
+interface MapInnerProps {
+  route: Route;
+  picking: boolean;
+  onPick: (lat: number, lon: number) => void;
+}
+
+export function MapInner({ route, picking, onPick }: MapInnerProps) {
+  const positions = useMemo(() => route.points.map((point) => point.position), [route]);
+  const center: LatLon = positions[0] ?? [44.676, 10.78];
 
   return (
-    <MapContainer center={center} zoom={12} scrollWheelZoom={false} className="leaflet-map">
+    <MapContainer
+      center={center}
+      zoom={12}
+      scrollWheelZoom={false}
+      className={`leaflet-map ${picking ? 'cursor-crosshair' : ''}`}
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {station && (
+      {route.segments.map((segment, index) => (
+        <Polyline
+          key={`${segment.kind}-${index}`}
+          positions={[segment.from, segment.to]}
+          pathOptions={
+            segment.kind === 'train'
+              ? { color: '#126e5b', weight: 5, opacity: 0.85 }
+              : { color: '#334155', weight: 3, dashArray: '6 8', opacity: 0.9 }
+          }
+        />
+      ))}
+      {route.points.map((point) => (
         <CircleMarker
-          center={[station.lat, station.lon]}
-          radius={8}
-          pathOptions={{ color: '#126e5b', fillColor: '#126e5b', fillOpacity: 0.9 }}
+          key={`${point.kind}-${point.label}`}
+          center={point.position}
+          radius={point.kind === 'station' ? 7 : 9}
+          pathOptions={{
+            color: '#ffffff',
+            weight: 2,
+            fillColor: COLORS[point.kind],
+            fillOpacity: 1,
+          }}
         >
-          <Tooltip>{station.name}</Tooltip>
+          <Tooltip>{point.label}</Tooltip>
         </CircleMarker>
-      )}
-      {campus && (
-        <CircleMarker
-          center={[campus.lat, campus.lon]}
-          radius={8}
-          pathOptions={{ color: '#e18752', fillColor: '#e18752', fillOpacity: 0.95 }}
-        >
-          <Tooltip>{campus.name}</Tooltip>
-        </CircleMarker>
-      )}
-      <Bounds points={points} />
+      ))}
+      <FitAndResize positions={positions} />
+      <PickHandler picking={picking} onPick={onPick} />
     </MapContainer>
   );
 }
 
-function Bounds({ points }: { points: { lat: number; lon: number }[] }) {
+function FitAndResize({ positions }: { positions: LatLon[] }) {
   const map = useMap();
   useEffect(() => {
-    if (points.length > 1)
-      map.fitBounds(
-        points.map((point) => [point.lat, point.lon]),
-        { padding: [35, 35] },
-      );
-    else if (points.length === 1) map.setView([points[0].lat, points[0].lon], 14);
-  }, [map, points]);
+    // The container may get its final size after mount (lazy load, layout shifts).
+    map.invalidateSize();
+    if (positions.length > 1) map.fitBounds(positions, { padding: [30, 30] });
+    else if (positions.length === 1) map.setView(positions[0], 14);
+  }, [map, positions]);
+  useEffect(() => {
+    const resize = () => map.invalidateSize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, [map]);
+  return null;
+}
+
+function PickHandler({ picking, onPick }: Pick<MapInnerProps, 'picking' | 'onPick'>) {
+  useMapEvents({
+    click(event) {
+      if (picking) onPick(event.latlng.lat, event.latlng.lng);
+    },
+  });
   return null;
 }
