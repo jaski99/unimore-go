@@ -29,3 +29,29 @@ describe('formattazione Europe/Rome', () => {
     expect(getNextDateForWeekday(1, new Date(2026, 9, 23))).toBe('2026-10-26');
   });
 });
+
+describe('date di calendario Europe/Rome', () => {
+  it('calcola oggi, ora e giorno della settimana a Roma', async () => {
+    const { nowInRome, todayInRome } = await import('./time-format');
+    const now = new Date('2026-10-25T23:15:00Z'); // Monday 00:15 in Rome (CET)
+    expect(todayInRome(now)).toBe('2026-10-26');
+    expect(nowInRome(now)).toEqual({ date: '2026-10-26', time: '00:15', weekday: 1 });
+  });
+
+  it('somma giorni, ricava il giorno della settimana e formatta date brevi', async () => {
+    const { addDays, formatShortDate, weekdayOf } = await import('./time-format');
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(weekdayOf('2026-10-26')).toBe(1);
+    expect(weekdayOf('2026-11-01')).toBe(0);
+    expect(formatShortDate('2026-10-26')).toBe('lun 26 ott');
+  });
+
+  it('formatta le durate in minuti e ore', async () => {
+    const { formatDuration } = await import('./time-format');
+    expect(formatDuration(45)).toBe('45 min');
+    expect(formatDuration(-5)).toBe('5 min');
+    expect(formatDuration(60)).toBe('1 h');
+    expect(formatDuration(125)).toBe('2 h 05 min');
+  });
+});
