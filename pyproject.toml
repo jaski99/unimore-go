@@ -25,6 +25,10 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.4.0",
 ]
+# Only for tools/trenitalia_pdf.py (re-extracting data/trains.json from the PDF).
+data = [
+    "pymupdf>=1.24",
+]
 
 [project.scripts]
 unimore-api = "api.main:run"
