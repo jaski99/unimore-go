@@ -23,13 +23,19 @@ from api.routers import (
     plan_router,
     stations_router,
 )
+from api.routers.health import API_VERSION
+from api.settings import Settings
 
 
-def create_app() -> FastAPI:
-    """Application factory for UnimoreGo API."""
+def create_app(settings: Settings | None = None) -> FastAPI:
+    """Application factory for UnimoreGo API.
+
+    ``settings`` defaults to values read from the environment at call time.
+    """
+    settings = settings or Settings.from_env()
     app = FastAPI(
         title="UnimoreGo API",
-        version="0.2.0",
+        version=API_VERSION,
         description=(
             "API REST per studenti pendolari UNIMORE sull'asse Modena FS <-> Reggio Emilia FS. "
             "Calcola orario di uscita di casa (partenza + margine), treni utili e tratti attivi a piedi/bici."
@@ -39,18 +45,15 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json",
     )
 
-    # 1. CORS Configuration
-    cors_env = os.getenv("CORS_ORIGINS", "http://localhost:3000")
-    allowed_origins = [orig.strip() for orig in cors_env.split(",") if orig.strip()]
-    if not allowed_origins:
-        allowed_origins = ["http://localhost:3000"]
-
+    # 1. CORS: origins come from settings (env CORS_ORIGINS, comma separated).
+    # The frontend sends no cookies, so credentials stay disabled; this also
+    # keeps a wildcard origin from being combined with credentials.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_origins=list(settings.cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
     )
 
     # 2. Uniform Exception Handlers

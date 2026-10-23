@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Campus, PlanRequest, Station, TravelMode } from '@/lib/api/types';
-import { toRomeIso } from '@/lib/time-format';
+import { buildPlanRequest, DEFAULT_PLANNER_VALUES } from '@/lib/plan-request';
 import { CampusSearch } from './campus-search';
 import { Icon } from './icons';
 
@@ -11,20 +11,6 @@ export interface FormPrefill {
   campusId: string;
   date: string;
   time: string;
-}
-
-type OriginKind = 'home' | 'station' | 'location';
-
-interface PlannerValues {
-  campusId: string;
-  date: string;
-  time: string;
-  mode: TravelMode;
-  marginMin: number;
-  originKind: OriginKind;
-  stationId: string;
-  homeToStationMin: number;
-  coordinates: { lat: number; lon: number } | null;
 }
 
 interface PlanFormProps {
@@ -36,18 +22,6 @@ interface PlanFormProps {
   onSelectionChange: (selection: { campusId: string; stationId: string }) => void;
 }
 
-const initialValues: PlannerValues = {
-  campusId: 'dief',
-  date: '2026-10-26',
-  time: '08:30',
-  mode: 'bike',
-  marginMin: 10,
-  originKind: 'home',
-  stationId: 'reggio-emilia-fs',
-  homeToStationMin: 14,
-  coordinates: null,
-};
-
 export function PlanForm({
   campuses,
   stations,
@@ -56,7 +30,7 @@ export function PlanForm({
   loading,
   onSelectionChange,
 }: PlanFormProps) {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState(DEFAULT_PLANNER_VALUES);
   const [geoError, setGeoError] = useState('');
 
   useEffect(() => {
@@ -80,16 +54,7 @@ export function PlanForm({
   }, [onSelectionChange, values.campusId, values.stationId]);
 
   function chooseMode(mode: TravelMode) {
-    setValues((current) => ({
-      ...current,
-      mode,
-      homeToStationMin:
-        current.homeToStationMin === (current.mode === 'bike' ? 14 : 32)
-          ? mode === 'bike'
-            ? 14
-            : 32
-          : current.homeToStationMin,
-    }));
+    setValues((current) => ({ ...current, mode }));
   }
 
   function chooseLocation() {
@@ -113,18 +78,7 @@ export function PlanForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const origin =
-      values.originKind === 'location' && values.coordinates
-        ? values.coordinates
-        : { station_id: selectedStation.id };
-    onSubmit({
-      origin,
-      campus_id: values.campusId,
-      arrive_by: toRomeIso(values.date, values.time),
-      mode: values.mode,
-      margin_min: values.marginMin,
-      ...(values.originKind === 'home' ? { home_to_station_min: values.homeToStationMin } : {}),
-    });
+    onSubmit(buildPlanRequest({ ...values, stationId: selectedStation?.id ?? values.stationId }));
   }
 
   return (
@@ -326,7 +280,8 @@ export function PlanForm({
         )}
       </button>
       <p className="text-center text-xs leading-5 text-slate-500">
-        Orari mostrati nel prototipo: controlla sempre il servizio ferroviario prima di partire.
+        Orario programmato Trenitalia, non in tempo reale: verifica sempre ritardi e variazioni
+        prima di partire.
       </p>
     </form>
   );

@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Campus, HealthResponse, PlanRequest, Station } from '@/lib/api/types';
+import { apiConfig } from '@/lib/api/config';
 import { createPlanService } from '@/lib/api/plan-service';
+import { buildPlanRequest, DEFAULT_PLANNER_VALUES } from '@/lib/plan-request';
 import { LocalStorageScheduleStore } from '@/lib/schedule-store';
-import { toRomeIso } from '@/lib/time-format';
+import { formatDate } from '@/lib/time-format';
 import { usePlan } from '@/hooks/use-plan';
 import { Icon } from './icons';
 import { MapPanel } from './map-panel';
@@ -14,7 +16,7 @@ import { SchedulePanel } from './schedule-panel';
 
 export function PlannerShell() {
   const service = useMemo(() => createPlanService(), []);
-  const { status, result, error, submit, retry } = usePlan(service);
+  const { status, result, error, lastRequest, submit, retry } = usePlan(service);
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -22,9 +24,9 @@ export function PlannerShell() {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [scheduleStore, setScheduleStore] = useState<LocalStorageScheduleStore | null>(null);
   const [prefill, setPrefill] = useState<FormPrefill | null>(null);
-  const [selectedCampusId, setSelectedCampusId] = useState('dief');
-  const [selectedStationId, setSelectedStationId] = useState('reggio-emilia-fs');
-  const demoMode = process.env.NEXT_PUBLIC_API_MODE !== 'http';
+  const [selectedCampusId, setSelectedCampusId] = useState(DEFAULT_PLANNER_VALUES.campusId);
+  const [selectedStationId, setSelectedStationId] = useState(DEFAULT_PLANNER_VALUES.stationId);
+  const demoMode = apiConfig.useMock;
 
   const loadCatalog = useCallback(async () => {
     setCatalogLoading(true);
@@ -57,15 +59,7 @@ export function PlannerShell() {
 
   useEffect(() => {
     if (catalogLoading || catalogError || status !== 'idle') return;
-    const initialRequest: PlanRequest = {
-      origin: { station_id: 'reggio-emilia-fs' },
-      campus_id: 'dief',
-      arrive_by: toRomeIso('2026-10-26', '08:30'),
-      mode: 'bike',
-      margin_min: 10,
-      home_to_station_min: 14,
-    };
-    void submit(initialRequest);
+    void submit(buildPlanRequest(DEFAULT_PLANNER_VALUES));
   }, [catalogError, catalogLoading, status, submit]);
 
   const selectedCampus = campuses.find((campus) => campus.id === selectedCampusId);
@@ -110,7 +104,11 @@ export function PlannerShell() {
           <div className="flex items-center gap-2">
             <span className={`status-pill ${health?.status === 'ok' ? 'status-online' : ''}`}>
               <i />
-              {health?.status === 'ok' ? 'Dati collegati' : 'Dati locali'}
+              {demoMode
+                ? 'Dati registrati'
+                : health?.status === 'ok'
+                  ? 'API collegata'
+                  : 'API non raggiungibile'}
             </span>
             {demoMode && <span className="demo-pill">MODALITÀ MOCK</span>}
           </div>
@@ -134,7 +132,7 @@ export function PlannerShell() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
               <span className="hero-chip">Reggio Emilia FS ↔ Modena FS</span>
-              <span className="hero-chip">Solo treni regionali</span>
+              <span className="hero-chip">Orario ufficiale Trenitalia</span>
               <span className="hero-chip">Margine personalizzabile</span>
             </div>
           </div>
@@ -208,23 +206,30 @@ export function PlannerShell() {
               store={scheduleStore}
               campuses={campuses}
               stations={stations}
+              originStationId={selectedStationId}
               service={service}
               onSelectClass={handleScheduleSelect}
             />
           )}
         </div>
         <div className="space-y-6">
-          <ResultPanel status={status} result={result} error={error} onRetry={retry} />
+          <ResultPanel
+            status={status}
+            result={result}
+            error={error}
+            onRetry={retry}
+            lessonDateTime={lastRequest?.arrive_by}
+          />
           {!catalogLoading && <MapPanel campus={selectedCampus} station={selectedStation} />}
         </div>
       </div>
       <footer className="app-footer">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <span>UnimoreGo · prototipo portfolio, non un servizio di viaggio in tempo reale</span>
+          <span>UnimoreGo · progetto portfolio · orari programmati, non in tempo reale</span>
           <span>
             {health
-              ? `Dati mock disponibili al ${health.data_valid_to}`
-              : 'OpenStreetMap per la cartografia'}
+              ? `Orario Trenitalia valido fino a ${formatDate(`${health.data_valid_to}T12:00:00`)} · mappe © OpenStreetMap`
+              : 'Mappe © OpenStreetMap contributors'}
           </span>
         </div>
       </footer>

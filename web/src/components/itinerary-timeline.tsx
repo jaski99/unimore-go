@@ -1,13 +1,18 @@
 import type { Itinerary, Leg } from '@/lib/api/types';
-import { formatTime } from '@/lib/time-format';
+import { formatClock } from '@/lib/time-format';
 import { Icon } from './icons';
 
 const labels: Record<Leg['type'], string> = { walk: 'A piedi', bike: 'In bici', train: 'Treno' };
 
+/** Hide zero-length active legs (e.g. when the trip already starts at the station). */
+export function visibleLegs(legs: Leg[]): Leg[] {
+  return legs.filter((leg) => leg.type === 'train' || leg.minutes > 0);
+}
+
 export function ItineraryTimeline({ itinerary }: { itinerary: Itinerary }) {
   return (
     <ol className="timeline" aria-label="Tratte del viaggio">
-      {itinerary.legs.map((leg, index) => (
+      {visibleLegs(itinerary.legs).map((leg, index) => (
         <li className="timeline-item" key={`${leg.type}-${leg.depart}-${index}`}>
           <div className={`timeline-icon ${leg.type === 'train' ? 'timeline-icon-train' : ''}`}>
             <Icon name={leg.type} className="h-5 w-5" />
@@ -23,7 +28,7 @@ export function ItineraryTimeline({ itinerary }: { itinerary: Itinerary }) {
                 ) : null}
               </p>
               <span className="text-sm tabular-nums text-slate-600 dark:text-slate-300">
-                {formatTime(leg.depart)}–{formatTime(leg.arrive)}{' '}
+                {formatClock(leg.depart)}–{formatClock(leg.arrive)}{' '}
                 <span className="text-slate-400">· {leg.minutes} min</span>
               </span>
             </div>
@@ -32,7 +37,7 @@ export function ItineraryTimeline({ itinerary }: { itinerary: Itinerary }) {
             </p>
             {leg.train && (
               <p className="mt-1 text-xs text-slate-500">
-                {leg.train.operator} · corsa dimostrativa
+                {leg.train.operator} · orario programmato, non in tempo reale
               </p>
             )}
           </div>

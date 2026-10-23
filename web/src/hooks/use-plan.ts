@@ -34,5 +34,5 @@ export function usePlan(service: PlanService) {
     if (lastRequest) void submit(lastRequest);
   }, [lastRequest, submit]);
 
-  return { status, result, error, submit, retry };
+  return { status, result, error, lastRequest, submit, retry };
 }

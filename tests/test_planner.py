@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from engine.legs import ActiveLegPlanner
 from engine.models import PlanRequest
 from engine.planner import Planner
 from engine.repositories import (
@@ -270,3 +271,38 @@ def test_planner_first_mile_coords(planner: Planner):
     itineraries = planner.arrive_by(req)
     assert len(itineraries) > 0
     assert itineraries[0].legs[0].leg_type == "walk"
+
+
+class _FixedScooterPlanner(ActiveLegPlanner):
+    """Test double: a new active mode registered without touching Planner."""
+
+    @property
+    def mode(self) -> str:
+        return "scooter"
+
+    def calculate_minutes(self, *args, **kwargs) -> int:
+        return 7
+
+
+def test_new_active_mode_can_be_registered_without_changing_planner() -> None:
+    planner = Planner(
+        train_repo=JsonTrainRepository(),
+        location_repo=JsonLocationRepository(),
+        segment_repo=JsonSegmentRepository(),
+        active_planners={"scooter": _FixedScooterPlanner()},
+    )
+    req = PlanRequest(
+        target_date="2026-10-26",
+        target_time="08:30",
+        destination_campus_id="dief",
+        origin_city="Reggio Emilia",
+        first_mile_mode="scooter",
+        last_mile_mode="scooter",
+        margin_minutes=10,
+    )
+    best = planner.arrive_by(req)[0]
+    assert best.legs[-1].leg_type == "scooter"
+    assert best.legs[-1].minutes == 7
+    # Built-in modes stay available and unknown modes fall back to walking.
+    assert planner._get_active_planner("BIKE").mode == "bike"
+    assert planner._get_active_planner("hovercraft").mode == "walk"

@@ -1,4 +1,13 @@
 const ROME_TIME_ZONE = 'Europe/Rome';
+const CLOCK_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/**
+ * Display a time from the API. The contract sends Europe/Rome wall-clock
+ * "HH:MM" strings, shown verbatim; ISO date-times are converted to Rome time.
+ */
+export function formatClock(value: string): string {
+  return CLOCK_PATTERN.test(value) ? value : formatTime(value);
+}
 
 export function formatTime(value: string | Date): string {
   const date = value instanceof Date ? value : new Date(value);

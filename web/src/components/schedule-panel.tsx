@@ -5,7 +5,7 @@ import type { FormEvent } from 'react';
 import type { Campus, PlanRequest, Station } from '@/lib/api/types';
 import type { PlanService } from '@/lib/api/plan-service';
 import type { LocalStorageScheduleStore, ScheduledClass, Weekday } from '@/lib/schedule-store';
-import { formatDate, formatTime, getNextDateForWeekday, toRomeIso } from '@/lib/time-format';
+import { formatClock, formatDate, getNextDateForWeekday, toRomeIso } from '@/lib/time-format';
 import type { FormPrefill } from './plan-form';
 import { Icon } from './icons';
 
@@ -23,6 +23,8 @@ interface SchedulePanelProps {
   store: LocalStorageScheduleStore | null;
   campuses: Campus[];
   stations: Station[];
+  /** Station the commuter departs from (same as the main form). */
+  originStationId: string;
   service: PlanService;
   onSelectClass: (prefill: FormPrefill) => void;
 }
@@ -31,6 +33,7 @@ export function SchedulePanel({
   store,
   campuses,
   stations,
+  originStationId,
   service,
   onSelectClass,
 }: SchedulePanelProps) {
@@ -68,18 +71,14 @@ export function SchedulePanel({
       .sort((first, second) => first.at - second.at)[0];
     const request: PlanRequest = {
       origin: {
-        station_id:
-          stations.find(
-            (station) =>
-              station.city ===
-              campuses.find((campus) => campus.id === upcoming.lesson.campusId)?.city,
-          )?.id ?? stations[0].id,
+        station_id: stations.some((station) => station.id === originStationId)
+          ? originStationId
+          : stations[0].id,
       },
       campus_id: upcoming.lesson.campusId,
       arrive_by: toRomeIso(upcoming.date, upcoming.lesson.time),
       mode: 'bike',
       margin_min: 10,
-      home_to_station_min: 14,
     };
     setNextInfo({ lesson: upcoming.lesson, date: upcoming.date, leaveAt: null });
     void service
@@ -98,7 +97,7 @@ export function SchedulePanel({
     return () => {
       active = false;
     };
-  }, [lessons, campuses, stations, service]);
+  }, [lessons, stations, originStationId, service]);
 
   const nextCampus = useMemo(
     () => campuses.find((campus) => campus.id === nextInfo?.lesson.campusId),
@@ -152,11 +151,11 @@ export function SchedulePanel({
                 <>
                   esci alle{' '}
                   <strong className="text-pine dark:text-emerald-300">
-                    {formatTime(nextInfo.leaveAt)}
+                    {formatClock(nextInfo.leaveAt)}
                   </strong>
                 </>
               ) : (
-                'orario non disponibile nel mock'
+                'nessun treno trovato'
               )}
             </p>
           </div>
