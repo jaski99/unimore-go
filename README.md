@@ -130,13 +130,13 @@ Le dipendenze vanno in una sola direzione: `web → (HTTP) → api → engine`. 
 ### Limiti dei dati
 
 - **Non è in tempo reale.** Gli orari sono uno snapshot manuale del PDF ufficiale Trenitalia *Regionale Emilia*, edizione valida dal **17/10/2026 al 12/12/2026**: [Regionale_Emilia.pdf](https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf). Il PDF è stato verificato il 23/10/2026; il metodo è descritto in `docs/research/STATUS_treni.md`. Ritardi, soppressioni, scioperi e lavori non sono considerati. Fuori dal periodo di validità l'API aggiunge un avviso.
-- `data/trains.json` contiene 121 corse feriali (61 RE→MO, 60 MO→RE): Regionale, Regionale Veloce, Intercity, Intercity Notte e Frecciarossa. Le ultime tre categorie richiedono titoli di viaggio diversi dal regionale.
-- Il motore filtra per giorno della settimana, per `valid_from`/`valid_to` e per le **festività nazionali** (es. 1/11, 8/12).
-- **Note di calendario.** `calendar_rules` interpreta le note del PDF con una grammatica rigorosa: giorni, esclusioni, periodi, sospensioni, feriali e festivi. Sulle 121 corse:
-  - 11 hanno note interpretate;
-  - 55 hanno note solo informative;
-  - 55 hanno note **non interpretabili** (troncate o ambigue nella trascrizione). Per queste la corsa resta valida secondo i giorni strutturati e la risposta aggiunge un avviso con la pagina del PDF («Calendario da verificare»).
-  
+- `data/trains.json` contiene 402 corse estratte dal PDF Trenitalia (17/10–12/12/2026) tra Reggio Emilia FS, Rubiera e Modena FS, su tutti i giorni della settimana con le note di calendario del PDF: Regionale, Regionale Veloce, Intercity, Intercity Notte, EuroCity e Frecciarossa. Le ultime quattro categorie richiedono titoli di viaggio diversi dal regionale. Fonti e metodo: [`data/SOURCES.md`](data/SOURCES.md).
+- Il motore filtra per `valid_from`/`valid_to`, per le note di calendario e per le **festività nazionali** (es. 1/11, 8/12).
+- **Note di calendario.** `calendar_rules` interpreta le note del PDF con una grammatica rigorosa: giorni, elenchi di date, periodi, sospensioni, feriali e festivi. Sulle 402 corse:
+  - 287 hanno note interpretate;
+  - 115 hanno solo note informative (operatore);
+  - 0 hanno note non interpretabili. `tools/validate_data.py` rifiuta un dataset con note non interpretabili. Se in futuro una nota non fosse interpretabile, la corsa resterebbe valida e la risposta aggiungerebbe un avviso con la pagina del PDF.
+
   Nessun significato viene inventato.
 - **Categorie:** per default solo R/RV. IC/ICN/FR (biglietto diverso o supplemento) compaiono solo se richiesti, con badge.
 - Copertura: solo **Modena FS** e **Reggio Emilia FS** e 5 sedi (DIEF, Economia «Marco Biagi», Giurisprudenza, Palazzo Dossetti, Campus San Lazzaro).
@@ -224,12 +224,9 @@ Extension points:
 ### Data limitations
 
 - **Not real time.** Trains are a manual snapshot of the official Trenitalia *Regionale Emilia* PDF, valid **17/10/2026–12/12/2026**. Delays, cancellations and strikes are ignored, and the API warns when a date falls outside the validity window.
-- The snapshot has 121 weekday runs, including Intercity/Frecciarossa, which need non-regional tickets.
-- **Calendar notes.** PDF calendar notes are interpreted by a strict grammar (`calendar_rules`); national holidays are applied. Of 121 runs:
-  - 11 have interpreted notes;
-  - 55 have informational notes only;
-  - 55 have notes that cannot be interpreted. Those keep their structured weekdays, and the response adds a warning citing the PDF page. No meaning is invented.
-- Only Modena FS / Reggio Emilia FS and 5 campuses are covered.
+- The snapshot has 402 runs extracted from the PDF (`tools/trenitalia_pdf.py`, see `data/SOURCES.md`) between Reggio Emilia FS, Rubiera and Modena FS, on every day of the week. It includes Intercity/EuroCity/Frecciarossa, which need non-regional tickets.
+- **Calendar notes.** PDF calendar notes are interpreted by a strict grammar (`calendar_rules`); national holidays are applied. Of 402 runs, 287 have interpreted notes, 115 have informational notes only and 0 cannot be interpreted. The validator rejects uninterpretable notes; at runtime such a run would stay valid, with a warning citing the PDF page. No meaning is invented.
+- Only Reggio Emilia FS, Rubiera and Modena FS, plus 5 campuses, are covered.
 - Walking times come from OSRM durations; cycling is OSRM distance / 15 km/h.
 - **Station time.** It is a user setting (default 5 min), not measured data.
 - **Address search.** It uses the public Nominatim service (on submit only, 1 req/s, Modena/Reggio area). The home address stays in the browser.

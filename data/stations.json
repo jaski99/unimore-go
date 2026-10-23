@@ -9,6 +9,15 @@
     "uic_code": "830005032"
   },
   {
+    "id": "rubiera",
+    "name": "Rubiera",
+    "city": "Rubiera",
+    "lat": 44.6561256,
+    "lon": 10.7801896,
+    "address": "Stazione di Rubiera, 42048 Rubiera (RE)",
+    "uic_code": "830005031"
+  },
+  {
     "id": "reggio_fs",
     "name": "Reggio Emilia FS",
     "city": "Reggio Emilia",

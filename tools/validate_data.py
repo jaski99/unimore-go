@@ -1,7 +1,8 @@
 """Data validation script for UnimoreGo dataset files.
 
-Validates schema, time coherence (arrive > depart, duration 10-30 minutes),
-duplicate freedom, and geographic consistency across:
+Validates schema, time coherence (duration 3-45 minutes, overnight runs
+allowed), duplicate freedom, interpretable calendar notes and geographic
+consistency across:
 - data/trains.json
 - data/locations.json
 - data/stations.json
@@ -16,8 +17,12 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from datetime import date, time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from engine.calendar_rules import CalendarNoteParser  # noqa: E402
 
 REQUIRED_TRAIN_FIELDS = {
     "from",
@@ -34,7 +39,8 @@ REQUIRED_TRAIN_FIELDS = {
     "source",
 }
 
-VALID_STATIONS = {"Reggio Emilia", "Modena"}
+VALID_STATIONS = {"Reggio Emilia", "Rubiera", "Modena"}
+MIN_RUN_MINUTES, MAX_RUN_MINUTES = 3, 45
 VALID_CATEGORIES = {
     "Regionale",
     "Regionale Veloce",
@@ -64,14 +70,17 @@ def validate_trains(data: list[dict]) -> dict[str, int]:
     if not isinstance(data, list) or not data:
         raise ValueError("trains.json must contain a non-empty JSON array")
 
-    seen_train_keys: set[tuple[str, str, str]] = set()
-    seen_run_keys: set[tuple[str, str, str, str]] = set()
-
+    # Schema first: every later check (and the edition start) relies on it.
     for idx, t in enumerate(data):
         missing = REQUIRED_TRAIN_FIELDS - set(t.keys())
         if missing:
-            raise ValueError(f"Train row {idx} missing fields: {missing}")
+            raise ValueError(f"Train row {idx} missing fields: {sorted(missing)}")
 
+    seen_run_keys: set[tuple[str, ...]] = set()
+    edition_start = min(parse_iso_date(t["valid_from"]) for t in data)
+    parser = CalendarNoteParser(edition_start=edition_start)
+
+    for idx, t in enumerate(data):
         from_st = t["from"]
         to_st = t["to"]
         if from_st not in VALID_STATIONS or to_st not in VALID_STATIONS:
@@ -85,16 +94,12 @@ def validate_trains(data: list[dict]) -> dict[str, int]:
         dep_min = dep_t.hour * 60 + dep_t.minute
         arr_min = arr_t.hour * 60 + arr_t.minute
 
-        # Coherence: arrive > depart (same calendar day)
-        if arr_min <= dep_min:
+        # Coherence: positive duration; a run may cross midnight (23:49 -> 00:03).
+        duration = (arr_min - dep_min) % (24 * 60)
+        if not (MIN_RUN_MINUTES <= duration <= MAX_RUN_MINUTES):
             raise ValueError(
-                f"Train row {idx} ({t['train']}): arrive ({t['arrive']}) <= depart ({t['depart']})"
-            )
-
-        duration = arr_min - dep_min
-        if not (10 <= duration <= 30):
-            raise ValueError(
-                f"Train row {idx} ({t['train']}): duration {duration}m outside required 10-30 min window"
+                f"Train row {idx} ({t['train']}): duration {duration}m outside "
+                f"{MIN_RUN_MINUTES}-{MAX_RUN_MINUTES} min window"
             )
 
         if t["category"] not in VALID_CATEGORIES:
@@ -112,24 +117,32 @@ def validate_trains(data: list[dict]) -> dict[str, int]:
         if d_from > d_to:
             raise ValueError(f"Train row {idx}: valid_from ({d_from}) > valid_to ({d_to})")
 
-        # No duplicate runs
-        train_key = (from_st, to_st, str(t["train"]))
-        if train_key in seen_train_keys:
-            raise ValueError(f"Duplicate train number for direction: {train_key}")
-        seen_train_keys.add(train_key)
-
-        run_key = (from_st, to_st, str(t["train"]), t["depart"])
+        # The PDF prints period variants of the same train in separate columns
+        # (e.g. "fino al 16/11" and "dal 17/11"): allowed, but only with
+        # different calendar notes. Exact duplicates are rejected.
+        run_key = (from_st, to_st, str(t["train"]), t["depart"], t["arrive"], t["calendar_note"])
         if run_key in seen_run_keys:
-            raise ValueError(f"Duplicate train run: {run_key}")
+            raise ValueError(f"Duplicate train run: {run_key[:4]}")
         seen_run_keys.add(run_key)
 
-    re_to_mo = sum(1 for t in data if t["from"] == "Reggio Emilia")
-    mo_to_re = sum(1 for t in data if t["from"] == "Modena")
+        if not t["source"].startswith("https://") or "#page=" not in t["source"]:
+            raise ValueError(f"Train row {idx}: source must cite the PDF page (#page=N)")
+
+        interpretation = parser.parse(t["calendar_note"])
+        if not interpretation.interpretable:
+            raise ValueError(
+                f"Train row {idx} ({t['train']}): calendar note not interpretable: "
+                f"{' / '.join(interpretation.unparsed)}"
+            )
+
+    def count(origin: str, destination: str) -> int:
+        return sum(1 for t in data if t["from"] == origin and t["to"] == destination)
 
     return {
         "total": len(data),
-        "reggio_to_modena": re_to_mo,
-        "modena_to_reggio": mo_to_re,
+        "reggio_to_modena": count("Reggio Emilia", "Modena"),
+        "modena_to_reggio": count("Modena", "Reggio Emilia"),
+        "rubiera": sum(1 for t in data if "Rubiera" in (t["from"], t["to"])),
     }
 
 
@@ -223,7 +236,8 @@ def main() -> None:
     stats = validate_trains(trains_data)
     print(
         f"  OK: {stats['total']} train runs validated "
-        f"({stats['reggio_to_modena']} RE->MO, {stats['modena_to_reggio']} MO->RE)."
+        f"({stats['reggio_to_modena']} RE->MO, {stats['modena_to_reggio']} MO->RE, "
+        f"{stats['rubiera']} to/from Rubiera)."
     )
 
     print("\nALL DATASET VALIDATIONS PASSED SUCCESSFULLY.")

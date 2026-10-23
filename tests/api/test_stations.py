@@ -16,12 +16,11 @@ def test_list_stations_success() -> None:
     assert len(stations) >= 2
 
     ids = {s["id"] for s in stations}
-    assert "modena_fs" in ids
-    assert "reggio_fs" in ids
+    assert ids == {"modena_fs", "rubiera", "reggio_fs"}
 
     for s in stations:
         assert isinstance(s["id"], str)
         assert isinstance(s["name"], str)
-        assert s["city"] in {"Modena", "Reggio Emilia"}
+        assert s["city"] in {"Modena", "Rubiera", "Reggio Emilia"}
         assert isinstance(s["lat"], float)
         assert isinstance(s["lon"], float)

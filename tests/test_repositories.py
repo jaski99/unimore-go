@@ -55,7 +55,9 @@ def test_json_location_repository():
 
     # Stations
     stations = repo.all_stations()
-    assert len(stations) == 2
+    assert [s.id for s in stations] == ["modena_fs", "rubiera", "reggio_fs"]
+    rubiera = repo.get_station("rubiera")
+    assert rubiera is not None and rubiera.city == "Rubiera"
 
     mo_fs = repo.get_station("modena_fs")
     assert mo_fs is not None
