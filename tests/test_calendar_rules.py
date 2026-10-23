@@ -14,12 +14,15 @@ from engine.calendar_rules import (
     INTERPRETED,
     UNINTERPRETABLE,
     UNRESTRICTED,
+    AllOf,
+    AnyOf,
     CalendarNoteParser,
     DateWindow,
     ExceptDates,
     ExceptWeekdays,
     ExceptWindow,
     FestiveDays,
+    Not,
     OnlyDates,
     OnlyWeekdays,
     WorkingDays,
@@ -209,3 +212,139 @@ def test_rule_descriptions_are_italian() -> None:
         "sospeso nei festivi",
         "feriali",
     ]
+
+
+# --- term lists (TermListClauseParser) ----------------------------------------
+# Real notes from data/trains.json; each case lists (day, runs?) pairs checked
+# against the calendar by hand.
+
+D = date
+
+
+@pytest.mark.parametrize(
+    ("note", "expected"),
+    [
+        (
+            # FR 9303 07:23 Reggio Emilia -> Modena, page 74
+            "Nota 33: Si effettua dal 15/11. Sospeso il 21/11, il 22/11, il 28/11 e il 29/11.",
+            {
+                D(2026, 11, 14): False,
+                D(2026, 11, 15): True,
+                D(2026, 11, 21): False,
+                D(2026, 11, 23): True,
+                D(2026, 11, 29): False,
+            },
+        ),
+        (
+            # ICN 755, page 77: weekday restricted by a period, then "nonché" dates
+            "Nota 201: Si effettua il mercoledì dal 25/11 nonché il 24/11 e il 1/12.",
+            {
+                D(2026, 11, 18): False,
+                D(2026, 11, 24): True,
+                D(2026, 11, 25): True,
+                D(2026, 11, 26): False,
+                D(2026, 12, 1): True,
+                D(2026, 12, 2): True,
+            },
+        ),
+        (
+            # ICN 755, page 77: suspended weekday range in two periods plus dates
+            "Nota 202: Si effettua dal 15/11. Sospeso dal martedì alla domenica dal 15/11 al "
+            "25/11 e dal 27/11 al 2/12 nonché il 16/11, il 8/12 e il 9/12.",
+            {
+                D(2026, 11, 14): False,
+                D(2026, 11, 16): False,
+                D(2026, 11, 17): False,
+                D(2026, 11, 23): True,
+                D(2026, 11, 26): True,
+                D(2026, 11, 30): True,
+                D(2026, 12, 1): False,
+                D(2026, 12, 3): True,
+                D(2026, 12, 8): False,
+                D(2026, 12, 9): False,
+                D(2026, 12, 10): True,
+            },
+        ),
+        (
+            # R 3945 22:43, page 77
+            "Nota 192: Sospeso il lunedì, il venerdì, il sabato e nei festivi.",
+            {
+                D(2026, 10, 25): False,
+                D(2026, 10, 26): False,
+                D(2026, 10, 27): True,
+                D(2026, 10, 30): False,
+                D(2026, 12, 8): False,
+                D(2026, 12, 9): True,
+            },
+        ),
+        (
+            # R 3951 22:43, page 77
+            "Nota 191: Si effettua il lunedì, il venerdì e il sabato.",
+            {D(2026, 10, 26): True, D(2026, 10, 27): False, D(2026, 10, 31): True},
+        ),
+        (
+            # ICN 765, page 77
+            "Nota 194: Si effettua il venerdì e il sabato dal 23/10 al 14/11.",
+            {
+                D(2026, 10, 23): True,
+                D(2026, 10, 24): True,
+                D(2026, 10, 25): False,
+                D(2026, 11, 20): False,
+            },
+        ),
+        (
+            # ICN 755, page 77: one period minus four periods
+            "Nota 200: Si effettua fino al 14/11. Sospeso fino al 22/10, dal 25/10 al 29/10, "
+            "dal 1/11 al 5/11 e dal 8/11 al 12/11.",
+            {
+                D(2026, 10, 22): False,
+                D(2026, 10, 23): True,
+                D(2026, 10, 26): False,
+                D(2026, 10, 30): True,
+                D(2026, 11, 13): True,
+                D(2026, 11, 15): False,
+            },
+        ),
+        (
+            # R 17400, page 13: dates minus a date
+            "Nota 1: Servizio di Trenitalia Tper. Nota 5: Si effettua il 17/10, il 18/10 e il "
+            "19/10. Sospeso il 17/10.",
+            {
+                D(2026, 10, 17): False,
+                D(2026, 10, 18): True,
+                D(2026, 10, 19): True,
+                D(2026, 10, 20): False,
+            },
+        ),
+    ],
+)
+def test_real_term_list_notes(note: str, expected: dict[date, bool]) -> None:
+    interpretation = parser.parse(note)
+    assert interpretation.status == INTERPRETED
+    assert {day: interpretation.runs_on(day) for day in expected} == expected
+
+
+@pytest.mark.parametrize(
+    "note",
+    [
+        "Si effettua il lunedì e secondo calendario.",  # unknown token
+        "Sospeso il lunedì, il venerdì, il sabato.",  # comma list without closing "e"
+        "Si effettua il lunedìx.",  # weekday glued to other letters
+        "Sospeso.",  # empty term list
+    ],
+)
+def test_term_lists_outside_the_grammar_are_rejected(note: str) -> None:
+    assert parser.parse(note).status == UNINTERPRETABLE
+
+
+def test_combinators() -> None:
+    monday = OnlyWeekdays(frozenset({0}))
+    november = DateWindow(date(2026, 11, 1), date(2026, 11, 30))
+    either, both, never_monday = AnyOf((monday, november)), AllOf((monday, november)), Not(monday)
+    assert either.applies(date(2026, 10, 26)) and either.applies(date(2026, 11, 3))
+    assert not either.applies(date(2026, 10, 27))
+    assert both.applies(date(2026, 11, 2)) and not both.applies(date(2026, 10, 26))
+    assert never_monday.applies(date(2026, 10, 27)) and not never_monday.applies(date(2026, 10, 26))
+    assert " oppure " in either.describe()
+    assert both.describe().startswith("(") and " e (" in both.describe()
+    assert never_monday.describe().startswith("sospeso: ")

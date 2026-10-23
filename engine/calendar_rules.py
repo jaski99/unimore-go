@@ -180,6 +180,45 @@ class FestiveDays(CalendarRule):
         return "solo festivi" if self.only else "sospeso nei festivi"
 
 
+@dataclass(frozen=True)
+class AnyOf(CalendarRule):
+    """True when at least one of ``rules`` applies (union of day sets)."""
+
+    rules: tuple[CalendarRule, ...]
+
+    def applies(self, day: date) -> bool:
+        return any(rule.applies(day) for rule in self.rules)
+
+    def describe(self) -> str:
+        return " oppure ".join(rule.describe() for rule in self.rules)
+
+
+@dataclass(frozen=True)
+class AllOf(CalendarRule):
+    """True when every rule applies (intersection of day sets)."""
+
+    rules: tuple[CalendarRule, ...]
+
+    def applies(self, day: date) -> bool:
+        return all(rule.applies(day) for rule in self.rules)
+
+    def describe(self) -> str:
+        return " e ".join(f"({rule.describe()})" for rule in self.rules)
+
+
+@dataclass(frozen=True)
+class Not(CalendarRule):
+    """Complement of ``rule`` (used for "Sospeso ...")."""
+
+    rule: CalendarRule
+
+    def applies(self, day: date) -> bool:
+        return not self.rule.applies(day)
+
+    def describe(self) -> str:
+        return f"sospeso: {self.rule.describe()}"
+
+
 # ---------------------------------------------------------------------------
 # Interpretation result
 # ---------------------------------------------------------------------------
@@ -332,12 +371,149 @@ DEFAULT_CLAUSE_PARSERS: tuple[ClauseParser, ...] = (
     ),
 )
 
+_TERM_PREFIX = re.compile(
+    r"(?P<polarity>si effettua|sospeso|non si effettua) (?P<body>.+)", re.IGNORECASE
+)
+_TERM_SEPARATOR = re.compile(r"\s*(?:,\s*|\s+e\s+|\s+nonché\s+|\s+)", re.IGNORECASE)
+_TERM_ATOMS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("weekday_range", _compile(rf"dal (?P<a>{_WEEKDAY}) al(?:la)? (?P<b>{_WEEKDAY})")),
+    ("period", _compile(rf"dal (?P<a>{_DATE}) al (?P<b>{_DATE})")),
+    ("period_to", _compile(rf"fino al (?P<b>{_DATE})")),
+    ("period_from", _compile(rf"dal (?P<a>{_DATE})")),
+    ("weekday", _compile(rf"(?:il|la) (?P<a>{_WEEKDAY})")),
+    ("date", _compile(rf"il (?P<a>{_DATE})")),
+    ("festive", _compile(r"nei (?:giorni )?festivi")),
+)
+
+
+@dataclass
+class _WeekdayGroup:
+    days: set[int] = field(default_factory=set)
+    festive: bool = False
+    windows: list[DateWindow] = field(default_factory=list)
+
+    def rule(self) -> CalendarRule:
+        parts: list[CalendarRule] = []
+        if self.days:
+            parts.append(OnlyWeekdays(frozenset(self.days)))
+        if self.festive:
+            parts.append(FestiveDays(only=True))
+        base = parts[0] if len(parts) == 1 else AnyOf(tuple(parts))
+        if not self.windows:
+            return base
+        window = self.windows[0] if len(self.windows) == 1 else AnyOf(tuple(self.windows))
+        return AllOf((base, window))
+
+
+class TermListClauseParser:
+    """General clause: ``Si effettua|Sospeso`` + a list of day terms.
+
+    Terms are dates (``il 31/10``), periods (``dal 3/11 al 7/11``, ``fino al
+    22/10``, ``dal 15/11``), weekdays (``il lunedì``, ``la domenica``, ``dal
+    martedì alla domenica``) and ``nei festivi``, separated by ``,``, ``e``
+    or ``nonché``. Periods written right after a weekday group restrict that
+    group ("il sabato e la domenica dal 15/11 al 29/11"); ``nonché`` closes the
+    group, so what follows stands alone ("il mercoledì dal 25/11 nonché il
+    24/11"). The run operates on the union of the terms (``Si effettua``) or
+    outside it (``Sospeso``). Any token outside this grammar rejects the clause.
+
+    Seen in Regionale_Emilia.pdf (17/10–12/12/2026), e.g. note 116 on page 22
+    and note 53 on page 78.
+    """
+
+    name = "term_list"
+
+    def parse(self, clause: str, resolve: DateResolver) -> tuple[CalendarRule, ...] | None:
+        match = _TERM_PREFIX.fullmatch(clause.strip())
+        if not match:
+            return None
+        atoms = self._tokenize(match.group("body"))
+        if atoms is None:
+            return None
+        terms = self._group(atoms, resolve)
+        if not terms:
+            return None
+        union = terms[0] if len(terms) == 1 else AnyOf(tuple(terms))
+        include = match.group("polarity").lower() == "si effettua"
+        return (union,) if include else (Not(union),)
+
+    @staticmethod
+    def _tokenize(body: str) -> list[tuple[str, bool, re.Match[str]]] | None:
+        """Atoms with an "after nonché" flag; None when the clause is not a full list.
+
+        A comma-separated list must close with ``e``/``nonché`` before its last
+        item ("il lunedì, il venerdì e il sabato"): a list ending on a comma item
+        is a truncated transcription and is rejected.
+        """
+        atoms: list[tuple[str, bool, re.Match[str]]] = []
+        separators: list[str] = []
+        pos = 0
+        while pos < len(body):
+            separator = _TERM_SEPARATOR.match(body, pos) if atoms else None
+            after_nonche = False
+            if separator and separator.end() > pos:
+                word = separator.group(0).strip().lower()
+                after_nonche = word == "nonché"
+                if word:
+                    separators.append(word)
+                pos = separator.end()
+            for kind, pattern in _TERM_ATOMS:
+                atom = pattern.match(body, pos)
+                if atom and (atom.end() == len(body) or not body[atom.end()].isalnum()):
+                    atoms.append((kind, after_nonche, atom))
+                    pos = atom.end()
+                    break
+            else:
+                return None
+        if "," in separators and separators[-1] == ",":
+            return None
+        return atoms
+
+    @staticmethod
+    def _group(
+        atoms: list[tuple[str, bool, re.Match[str]]], resolve: DateResolver
+    ) -> list[CalendarRule]:
+        terms: list[CalendarRule] = []
+        group: _WeekdayGroup | None = None
+
+        def close() -> None:
+            nonlocal group
+            if group is not None:
+                terms.append(group.rule())
+                group = None
+
+        for kind, after_nonche, atom in atoms:
+            if after_nonche:
+                close()
+            if kind in ("weekday", "weekday_range", "festive"):
+                if group is None or group.windows:
+                    close()
+                    group = _WeekdayGroup()
+                if kind == "festive":
+                    group.festive = True
+                else:
+                    group.days |= _weekdays_in(atom.group(0))
+            elif kind.startswith("period"):
+                start = resolve(atom.group("a")) if "a" in atom.groupdict() else None
+                end = resolve(atom.group("b")) if "b" in atom.groupdict() else None
+                if group is not None:
+                    group.windows.append(DateWindow(start, end))
+                else:
+                    terms.append(DateWindow(start, end))
+            else:  # date
+                close()
+                terms.append(OnlyDates(frozenset({resolve(atom.group("a"))})))
+        close()
+        return terms
+
+
 # Informative segments that carry no calendar meaning.
 IGNORED_SEGMENTS: tuple[re.Pattern[str], ...] = (
     _compile(r"servizio di trenitalia.*"),
     _compile(r"verificato attivo.*"),
     _compile(r"corsa sul limite.*"),
     _compile(r"non sono ammessi i gruppi.*"),
+    _compile(r"sono ammessi esclusivamente i viaggiatori muniti di biglietto.*"),
 )
 UNRESTRICTED_SEGMENT = _compile(r"nessuna limitazione di calendario.*")
 
@@ -357,7 +533,9 @@ class CalendarNoteParser:
     """
 
     edition_start: date
-    clause_parsers: Sequence[ClauseParser] = field(default=DEFAULT_CLAUSE_PARSERS)
+    clause_parsers: Sequence[ClauseParser | TermListClauseParser] = field(
+        default=(*DEFAULT_CLAUSE_PARSERS, TermListClauseParser())
+    )
 
     def resolve_date(self, token: str) -> date:
         day_str, month_str = token.split("/")
