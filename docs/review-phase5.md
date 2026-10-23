@@ -67,10 +67,107 @@ Comandi usati:
 | 20 | Soluzione precedente di un altro giorno: «33 h 13 min prima dell'inizio». | Per soluzioni di un altro giorno si mostra solo l'orario di arrivo. | vitest `result-panel.test.tsx`. |
 | 21 | Mappa: chiave duplicata `station-Modena FS` (vista in `next dev`) quando un risultato vecchio veniva abbinato ai nuovi valori durante il caricamento. | Il percorso usa il risultato solo a calcolo concluso; `buildRoute` non disegna mai un treno tra la stessa stazione. | vitest `route-geometry.test.ts`; E2E su dev server da clone pulito: 8/8, nessun errore in console. |
 
-## Limiti noti (non risolti in questa fase)
+## Limiti noti del round 1
+
+Stato aggiornato di ogni limite: vedi la tabella A del [round 2](#round-2--v05-v05-review).
 
 - **Domenica/festivo senza treni utili:** in `arrive_by` la soluzione «successiva» può essere un treno dello stesso giorno alle 22:xx, poco utile; il messaggio principale resta corretto.
 - **55 note di calendario non interpretabili:** la corsa resta valida secondo i giorni strutturati e la UI mostra «Calendario da verificare» con la pagina del PDF. Non sono stati inventati significati.
 - **Formato dei campi data/ora:** dipende dalla lingua del browser (`<input type="date">`); in Chromium headless appare in formato US anche con `locale=it-IT`.
 - **Mappa:** il percorso è indicativo (linee rette), non un instradamento stradale; le durate vengono dall'API (OSRM).
 - **Geocoding:** usa il servizio pubblico Nominatim (1 richiesta/s, solo su invio, mai autocompletamento). I risultati vanno scelti dall'utente: per esempio «Via Emilia San Pietro 10» ha restituito per primo un indirizzo in via Dante Alighieri.
+
+---
+
+# Round 2 — v0.5 (`v0.5-review`)
+
+Correzioni richieste in `P6_followup.txt` dopo la prova di v0.4-review da studente reale. Base:
+`v0.4-review` (`7e6bbe7`), lavoro solo locale su `main`, **nessun push**. Tutti i numeri sotto
+sono stati misurati il 23/10/2026 nel sandbox, sulla build di produzione (`next build && next
+start`) collegata all'API v0.5.0.
+
+## Numeri finali (D)
+
+| Controllo | Risultato |
+|---|---|
+| pytest + coverage | **249 passed**, coverage **99 %** (soglia 90) — v0.4: 182 |
+| ruff check / ruff format | puliti (71 file) |
+| `tools/validate_data.py` | ALL DATASET VALIDATIONS PASSED (402 corse, 0 note non interpretabili) |
+| `scripts/smoke.sh` | 8 controlli `ok`, exit 0 (contro l'API locale; anche contro il container, vedi A7) |
+| vitest | **32 file, 159 test** passati — v0.4: 96 |
+| tsc / eslint / prettier | puliti |
+| `next build` | ok |
+| E2E `scripts/e2e_ui.py` | casi UI == API **8/8**; flussi **4/4** (9 + 8 + 10 + 12 = 39 controlli); mobile **2/2** (375×667 e 414×896, 11 + 11 controlli); axe **7/7** stati |
+| axe-core 4.14.0 (wcag2a, wcag2aa, wcag21a, wcag21aa, best-practice) | **0 violazioni** in 7 stati |
+| Lighthouse 12.8.2 mobile (3 esecuzioni) | Performance **93 / 95 / 94**, Accessibility **100**, Best Practices **100** |
+| Lighthouse FCP / LCP / TBT / CLS | 0,8 s / 1,1–2,3 s / 210–310 ms / **0** |
+
+Lighthouse è stato eseguito con `npx -y lighthouse@12` e `CHROME_PATH` impostato sul Chromium
+di Playwright (build 1248), con i flag `--headless=new --no-sandbox --disable-dev-shm-usage`.
+È riuscito al primo tentativo dei due consentiti.
+
+**Regressione trovata e corretta.** Le prime 3 esecuzioni davano Performance **79 / 78 / 75** con
+**CLS 0,289**. L'elemento spostato era `#result`: nel layout v0.5 il modulo sta sopra il
+risultato, e il suo scheletro di caricamento (4 righe) diventava il modulo vero (~900–980 px)
+spingendo giù il risultato.
+- **Correzione:** lo scheletro ha l'altezza misurata del modulo per fascia di larghezza (commit `1fea8d3`).
+- **Dopo:** CLS 0, Performance 93–95.
+
+## A. Punti aperti del round 1
+
+| # | Problema | Stato | Correzione | Verifica |
+|---|---|---|---|---|
+| A1 | Arrive-by di domenica/festivi: proponeva un treno serale dello stesso giorno. | **fatto** | Causa radice: le tabelle dei quadri 1/2 del PDF non usano simboli di giorno, quindi il default «lun–ven» della Fase 1 toglieva tutti i treni festivi. Ora 402 corse estratte su tutti i giorni, con le note di calendario. Le alternative sono la stessa ora nel giorno feriale precedente/successivo, oppure un treno dello stesso giorno al massimo 60 min in ritardo; le soluzioni arrivano al massimo 120 min prima della lezione. | pytest `test_journeys.py::test_sunday_lesson_is_planned_without_a_sunday_warning`, `::test_far_lesson_late_train_is_replaced_by_next_working_day`, `::test_weekday_holiday_is_informational_and_has_trains`; API dom 25/10 Modena FS → Palazzo Dossetti 09:00 → RV 3902, esci alle 07:55. |
+| A2 | 55 note di calendario non interpretabili. | **fatto** | Grammatica estesa (`AnyOf`/`AllOf`/`Not`, elenchi di termini, `edition_start`); estrattore `tools/trenitalia_pdf.py`. | Dati: 400 corse con nota (148 note distinte), **0 non interpretabili**. `validate_data` fallisce se una nota non è interpretabile. pytest `test_calendar_rules.py`. |
+| A3 | Formato data/ora dipendente dalla lingua del browser. | **fatto (ora) / parziale (data)** | Ora: `TimeSelect` a 24 h, sempre HH:MM. Data: resta `<input type="date">` nativo (il selettore del sistema è il più usabile su mobile), ma sotto c'è la lettura in italiano («Lunedì 26 ottobre», badge «Oggi», «Torna a oggi»). | vitest `time-select.test.tsx`, `plan-form.test.tsx`; E2E flussi B2. |
+| A4 | Nominatim: «Via Emilia San Pietro 10» restituiva prima via Dante Alighieri. | **fatto** | I risultati sono riordinati per parole della via digitata; tipo di strada, regione, paese e CAP sono ignorati. | pytest `api/test_geocode.py` con le 10 risposte reali di Nominatim del 23/10. |
+| A5 | Mappa: percorso in linea d'aria, non stradale. | **non fatto** | Motivo: un instradamento stradale richiederebbe un servizio di routing esterno chiamato dal browser (i server pubblici OSRM/FOSSGIS sono demo con limiti d'uso; gli altri richiedono una chiave, escluso dal brief). Le durate restano quelle OSRM dell'API. La mappa ora lo dichiara: «Linea indicativa in linea d'aria: non è il percorso stradale». | Nessun test specifico per la didascalia (testo statico in `map-panel.tsx`). |
+| A6 | `scripts/smoke.sh` obsoleto (corpo di richiesta vecchio, nessun controllo delle risposte). | **fatto** | Invia il corpo v0.5 e verifica le risposte (andata 07:39, ritorno 13:33, dom 25/10, 20/12 fuori validità); exit ≠ 0 al primo errore. | 8 controlli `ok`, exit 0. |
+| A7 | Docker mai provato. | **fatto** | — | `docker-compose build` ok (immagini api 163 MB, web 834 MB); `up -d`: API *healthy*, web pronto. `smoke.sh` superato contro il container; `/` → 200; preflight CORS da `http://localhost:3000` → 200. |
+| A8 | Verifica da clone pulito. | **parziale** | Il clone pulito di `main` conserva i permessi di `scripts/*.sh`. | **Verificato:** dopo il reset del sandbox, `npm ci` dal lockfile committato su `node_modules` vuota è riuscito, e tutti i test sono girati su quell'installazione. **Non verificato:** `npm ci` *dentro* un secondo clone in `/tmp`, terminato due volte con exit 137 (memoria: il sandbox ha 2 GB e API e sito erano attivi). |
+
+## B. Bug della revisione utente
+
+| # | Problema | Stato | Correzione | Verifica |
+|---|---|---|---|---|
+| B1 | Dom 25/10, Modena FS → Palazzo Dossetti, 09:00: «Nessun treno utile per arrivare entro le 08:31» incomprensibile. | **fatto** | Due cause. (1) Mancavano i treni festivi (vedi A1): ora c'è RV 3902. (2) Il conto non era spiegato: `calculation.summary` lo mostra nel risultato e nell'avviso. | API: «Calcolo: lezione alle 09:00 − 10 min di anticipo − 19 min a piedi dalla stazione alla sede = arrivo a Reggio Emilia FS entro le 08:31.» Conto verificato: 09:00 − 10 − 19 = 08:31; Palazzo Dossetti è a Reggio Emilia. pytest `test_notices.py`, `test_journeys.py`; E2E flusso «B1 + B3» 8/8. |
+| B2 | All'apertura c'era già un risultato non richiesto. | **fatto** | Nessun calcolo finché non si preme Calcola o si apre un link completo. Dopo il reload restano sede, stazione, modo e anticipo; la data è oggi con il badge «Oggi». | vitest `planner-shell.test.tsx`, `use-planner-values.test.tsx`, `preferences-store.test.ts`; E2E flusso «B2 + B3» 9/9 (0 risultati all'apertura, preferenze dopo il reload). |
+| B3 | Stato non nell'URL; nessuna condivisione. | **fatto** | `url-state` (`sede`, `stazione`/`partenza=casa`, `data`, `ora`, `mezzo`, `verso`, `ritorno`), con validazione campo per campo. Ogni ricerca va nella cronologia; Indietro/Avanti/Ricarica rifanno il calcolo. «Copia link» e «Condividi» (Web Share, con la copia come alternativa). Un link condiviso non sovrascrive le preferenze. | vitest `url-state.test.ts`, `share.test.ts`, `use-history-search.test.tsx`, `result-actions.test.tsx`; E2E Back/Forward/Reload e link copiato. |
+| B4 | Avvisi duplicati (20/12: fuori validità + domenica + «orario vale fino al»). | **fatto** | `engine/notices.py`: priorità (fuori validità 100 > nessun treno 90 > nota di calendario 70 > casa lontana 60 > … > non in tempo reale 10) e regole di fusione. La UI mostra un solo avviso principale. | pytest `test_notices.py`, `test_journeys.py::test_out_of_validity_sunday_has_one_primary_notice`. API 20/12: `out_of_validity` + `not_realtime` e «Stessa ora di lezione, sabato 12/12/2026 (giorno feriale precedente)». E2E: 1 avviso. |
+| B5 | Selettore sede: bisognava cancellare il testo per vedere le altre sedi. | **fatto** | Combobox ARIA 1.2: al focus/click mostra tutte e 5 le sedi anche con un valore già scelto; frecce, Invio, Esc; il filtro parte solo quando si digita. | vitest `campus-search.test.tsx`; E2E: 5 opzioni nel listbox «Sedi UNIMORE» al focus. |
+| B6 | Mappa sotto il form, senza zoom né etichette. | **fatto** | Mappa sotto il risultato (ordine DOM: modulo → risultato → mappa → orario). `fitBounds` con margini calcolati sulle etichette; marker etichettati «Casa», «Stazione partenza · …», «Stazione arrivo · …», «Sede · DIEF»; treno continuo, tratti a piedi/in bici tratteggiati, legenda. | vitest `route-geometry.test.ts`; E2E: etichette attese ed etichette tutte dentro la cornice della mappa. |
+
+## C. Miglioramenti UX
+
+| # | Richiesta | Stato | Correzione | Verifica |
+|---|---|---|---|---|
+| C1 | Più stazioni solo con orari verificabili; altrimenti dichiarare la copertura. | **fatto** | Aggiunta **Rubiera**: orari dal PDF Trenitalia (quadro 1, con pagina), coordinate da OSM (nodo 13769327683, UIC 8305031), validità 17/10–12/12/2026, tutto citato in `data/SOURCES.md`. Altre fonti valutate (GTFS TPER, NAP ER L1–L3, Mobility Database) non coprono la relazione o non hanno orari: non usate (`docs/research/STATUS_treni.md`). La home mostra «Stazioni coperte: Reggio Emilia FS · Rubiera · Modena FS». | `validate_data`; vitest `plan-form.test.tsx`. |
+| C2 | Link a ViaggiaTreno/infomobilità con il numero del treno e la nota «non in tempo reale». | **fatto (senza link per singolo treno)** | Riquadro con il numero del treno, «Copia numero» e i link a ViaggiaTreno (infomobilità) e alle notizie di infomobilità Trenitalia. Nota «Orari programmati, non in tempo reale». Nessuna API a pagamento o con chiave. | vitest `realtime-links.test.ts`, `result-notices.test.tsx`. URL verificati con risposta 200. |
+| C3 | «Calcola il ritorno» con le stesse impostazioni; vista andata + ritorno. | **fatto** | Pulsante nel risultato con orario di fine lezione; il ritorno è mostrato sotto l'andata ed è salvato nell'URL (`ritorno=`). | vitest `return-trip.test.tsx`; E2E flusso «C3 + C6» 10/10: fine 13:00 → parti alle 13:33. |
+| C4 | Domenica/festivi senza treni: proporre il giorno feriale precedente/successivo. | **fatto** | Alternative `nearby` con etichetta spiegata («Stessa ora di lezione, sabato 12/12/2026 (giorno feriale precedente)»). | pytest `test_journeys.py::test_far_lesson_late_train_is_replaced_by_next_working_day`, `::test_far_future_date_offers_the_last_covered_working_day`; vitest `result-panel.test.tsx`; API 20/12 (vedi B4). |
+| C5 | Durata porta a porta, numero di cambi, spiegazione di «anticipo» e «tempo in stazione». | **fatto** | `duration_min` e `changes` dall'API; nel risultato le voci «Porta a porta» (es. 39 min per RE FS → DIEF, 26/10, 08:30) e «Cambi» («Nessuno · treno diretto»); toggletip accessibili «?» (bottone, Esc chiude, allineati per non uscire dallo schermo a 375 px). | pytest `test_itinerary_builder.py`; vitest `help-tip.test.tsx`, `result-panel.test.tsx`, `itinerary-summary.test.ts`. |
+| C6 | «Aggiungi al calendario» (.ics) per «Esci alle». | **fatto** | `.ics` generato nel browser: UTC, CRLF, righe piegate a 75 ottetti, promemoria 10 min prima, titolo con il nome breve della sede. | vitest `ics.test.ts`; E2E: download `unimorego-2026-10-26-0739.ics` controllato byte per byte. |
+| C7 | Mobile 375×667 e 414×896, niente scroll orizzontale, test e2e. | **fatto** | Risultato e mappa subito sotto il pulsante; scroll al risultato dopo Calcola; toggletip senza overflow. | E2E mobile 2/2 (11 + 11 controlli: `scrollWidth ≤ larghezza`, risultato visibile dopo il tocco, mappa sotto il risultato, help aperto senza overflow). |
+
+## D. Chiusura
+
+| Requisito | Stato |
+|---|---|
+| pytest con coverage ≥ 90 | **fatto**: 249 passed, 99 % |
+| vitest | **fatto**: 159/159 |
+| e2e incluso mobile | **fatto**: 8/8 + 4/4 + 2/2 + axe 7/7 |
+| ruff, eslint, tsc, prettier | **fatto**: puliti |
+| axe 0 violazioni | **fatto**: 0 in 7 stati |
+| Lighthouse mobile ≥ 90 | **fatto**: 93 / 95 / 94 (dopo la correzione del CLS) |
+| CHANGELOG, README IT+EN, questa sezione | **fatto** |
+| Tag `v0.5-review`, bundle `unimore-go-v0.5-review.bundle`, preview riavviata | **fatto** |
+| Nessun push | **rispettato**: nessun remote usato |
+
+## Limiti noti dopo il round 2
+
+- **Mappa in linea d'aria** (A5): il motivo è nella tabella A.
+- **ViaggiaTreno senza link per singolo treno** (C2): il formato URL non è documentato ufficialmente, quindi si copia il numero.
+- **Copertura:** solo Reggio Emilia FS, Rubiera e Modena FS, con orari validi fino al 12/12/2026. Dopo quella data l'app avvisa e propone l'ultimo giorno coperto; per l'orario invernale serve una nuova estrazione dal PDF.
+- **`npm ci` in un secondo clone** non eseguito per limiti di memoria del sandbox (A8).
+- **Lighthouse TBT** 210–310 ms: dentro la soglia del punteggio, ma è la voce che pesa di più. Il JavaScript non usato è soprattutto Leaflet, già caricato solo quando la mappa entra in vista.
+- **Nominatim** resta un servizio pubblico con limiti d'uso (1 richiesta/s, solo all'invio).
