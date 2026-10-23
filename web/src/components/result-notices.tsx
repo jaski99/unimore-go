@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { Calculation, Leg, Notice } from '@/lib/api/types';
 import { trainLabel } from '@/lib/itinerary-summary';
 import { realtimeLinks } from '@/lib/realtime-links';
@@ -58,13 +58,11 @@ export function InfoList({ notices }: { notices: Notice[] }) {
  */
 export function RealtimeBox({ train, notice }: { train?: Leg; notice?: Notice }) {
   const [copied, setCopied] = useState('');
-  const titleId = useId();
   const number = train?.train?.number;
   return (
-    <section className="realtime-box" aria-labelledby={titleId}>
-      <h3 id={titleId} className="text-sm font-bold text-ink dark:text-white">
-        Controlla ritardi e scioperi
-      </h3>
+    // Not a landmark: outbound and return each have one, with the same heading.
+    <div className="realtime-box">
+      <h3 className="text-sm font-bold text-ink dark:text-white">Controlla ritardi e scioperi</h3>
       <p className="mt-1 text-xs text-slate-700 dark:text-slate-300">
         {notice?.message ??
           'Orari programmati Trenitalia, non in tempo reale: controlla prima di partire.'}
@@ -105,6 +103,6 @@ export function RealtimeBox({ train, notice }: { train?: Leg; notice?: Notice })
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

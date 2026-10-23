@@ -51,7 +51,9 @@ describe('ResultPanel', () => {
       'In stazione a Modena FS entro le 07:58lezione alle 08:30 − 10 min di anticipo − 22 min in bici',
     );
     // C2: real-time check links + "non in tempo reale".
-    const realtime = screen.getByRole('region', { name: 'Controlla ritardi e scioperi' });
+    const realtime = screen.getByRole('heading', {
+      name: 'Controlla ritardi e scioperi',
+    }).parentElement!;
     expect(realtime).toHaveTextContent('non in tempo reale');
     expect(within(realtime).getByRole('link', { name: /ViaggiaTreno/ })).toHaveAttribute(
       'href',
@@ -131,9 +133,9 @@ describe('ResultPanel', () => {
     };
     render(<ResultPanel status="success" result={legacy} error={null} onRetry={vi.fn()} />);
     expect(screen.getByRole('alert')).toHaveTextContent('oltre la validità');
-    expect(screen.getByRole('region', { name: 'Controlla ritardi e scioperi' })).toHaveTextContent(
-      demo.warnings[0],
-    );
+    expect(
+      screen.getByRole('heading', { name: 'Controlla ritardi e scioperi' }).parentElement!,
+    ).toHaveTextContent(demo.warnings[0]);
   });
 
   it('un percorso senza treno lo dice esplicitamente', () => {

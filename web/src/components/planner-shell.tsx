@@ -11,7 +11,7 @@ import {
   validatePlannerValues,
   type PlannerValues,
 } from '@/lib/plan-request';
-import { buildRoute } from '@/lib/route-geometry';
+import { buildRoute, shortCampusName } from '@/lib/route-geometry';
 import { LocalStorageScheduleStore } from '@/lib/schedule-store';
 import { addMinutesClamped, formatDate, formatShortDate, todayInRome } from '@/lib/time-format';
 import { isCompleteSearch, parseSearch, serializeSearch, type UrlSearch } from '@/lib/url-state';
@@ -215,7 +215,7 @@ export function PlannerShell() {
   const link = planned ? shareUrl(serializeSearch(planned.values, planned.returnTime)) : '';
   const destination = (values_: PlannerValues | undefined) => {
     const campus = campuses.find((item) => item.id === values_?.campusId);
-    return campus?.name.match(/\(([^)]+)\)\s*$/)?.[1] ?? campus?.name;
+    return campus && shortCampusName(campus.name);
   };
   const mainItinerary = outbound.result?.itineraries[0];
   const returnItinerary = back.result?.itineraries[0];
@@ -227,7 +227,7 @@ export function PlannerShell() {
     <main className="min-h-screen bg-canvas text-ink dark:bg-slate-950 dark:text-slate-100">
       <header className="app-header">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8 sm:py-4">
-          <a className="flex items-center gap-3" href="#top" aria-label="UnimoreGo, vai all’inizio">
+          <a className="flex items-center gap-3" href="#top">
             <span className="brand-mark">
               <Icon name="arrow" className="h-5 w-5" />
             </span>
@@ -238,6 +238,7 @@ export function PlannerShell() {
               <span className="hidden text-[11px] font-medium text-slate-600 sm:block">
                 Il tempo giusto per partire
               </span>
+              <span className="sr-only">, vai all’inizio</span>
             </span>
           </a>
           <div className="flex items-center gap-2">
