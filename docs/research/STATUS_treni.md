@@ -174,3 +174,53 @@ In conformità alle direttive di progetto ("niente valori inventati: se illeggib
    - RV 2485 (23:49 RE → 00:03 MO): corsa valida ma esclusa per rispetto del vincolo solare `arrive > depart` nello stesso giorno.
    - EuroNight B0144 / B0145 (durata ~40 min con fermata tecnica prolungata) e ICN 1963 / IC 604 (durata 31 min, oltre la soglia massima di 30 min per pendolarismo).
 5. **Deduplicazione su treno canonico**: le corse con varianti orarie temporanee dovute a cantieri (es. ICN 752 o IC 590 nel weekend 14-15/11) sono state normalizzate alla corsa feriale regolare, garantendo unicità assoluta per `(from, to, train)`.
+
+---
+
+## 8. Fase 5: uso delle note di calendario e delle categorie (v0.4)
+
+Il dataset `data/trains.json` **non è stato modificato** in questa fase: restano 121 corse, valide dal 17/10 al 12/12/2026 (validità ora calcolata dai dati in `engine/validity.py`). È cambiato solo il modo in cui il motore usa i campi già presenti.
+
+### 8.1 Note di calendario (`engine/calendar_rules.py`)
+
+Ogni corsa conserva la nota trascritta (`calendar_note`) e la pagina del PDF (`source`). Il parser accetta una nota solo se **ogni** clausola corrisponde completamente alla grammatica. Le clausole riconosciute sono:
+- «si effettua il lun/…»;
+- «non si effettua il …» / «sospeso il …»;
+- «dal … al …»;
+- date singole;
+- «feriale» / «festivi».
+
+Esito sulle 121 corse (verifica eseguita il 2026-10-23):
+
+| Esito | Corse | Effetto nel planner |
+|---|---:|---|
+| Nota interpretata | 11 | La regola filtra la corsa per data (insieme ai giorni strutturati e alle festività nazionali). |
+| Solo informativa (operatore, controlli di trascrizione, regole biglietti) | 55 | Nessun effetto. |
+| Non interpretabile (clausola troncata, a capo non ricostruibile, più note alternative unite da `\|`) | 55 | La corsa resta valida secondo `days`/`valid_from`/`valid_to`. La risposta aggiunge un avviso che cita la nota e la pagina («Calendario da verificare»). |
+
+Esempi di note interpretate, con la pagina del PDF (pagina file / pagina stampata):
+
+| Regola | Corsa | Pagina |
+|---|---|---|
+| fino al 16/11 | RV 3918 | 49 / 37 (note 1 e 119) |
+| sospeso il venerdì | R | 60 / 48 (note 1 e 188) |
+| solo venerdì | RV 2484 | 60 / 48 (note 1 e 189) |
+| dal 19/10 al 26/10 | RV | 73 / 61 (note 8 e 27) |
+| solo lunedì | RV | 76 / 64 (note 8 e 40) |
+| dal 22/10 al 16/11, sospeso il 23–25/10 | RV | 78 / 66 (note 8 e 53) |
+| solo lun, ven, sab | R | 124 / 112 (note 8 e 191) |
+
+Festività considerate nell'edizione: **1/11** (Ognissanti) e **8/12** (Immacolata), da `engine/holidays.py` (festività nazionali italiane, Pasqua calcolata).
+
+### 8.2 Categorie e biglietti (`engine/train_categories.py`)
+
+- **regional:** R, RV. Biglietto regionale.
+- **intercity:** IC, ICN.
+- **high_speed:** FR.
+
+Le categorie IC, ICN e FR sono marcate `different_ticket: true` (biglietto diverso o supplemento) e la UI mostra il badge «Biglietto diverso / supplemento». Per default la UI chiede solo `regional`; l'API senza `train_categories` considera tutte le categorie (comportamento v0.3).
+
+### 8.3 Limiti che restano
+
+- Le 55 note non interpretabili andrebbero ricontrollate a vista sul PDF e ritrascritte. Fino ad allora l'app avvisa e non inventa.
+- Fuori dal 17/10–12/12/2026 non ci sono dati: l'API lo dichiara esplicitamente e propone solo soluzioni dentro la validità.
