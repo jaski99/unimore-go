@@ -55,3 +55,25 @@ describe('date di calendario Europe/Rome', () => {
     expect(formatDuration(125)).toBe('2 h 05 min');
   });
 });
+
+describe('data lunga, oggi e orari limitati', () => {
+  it('scrive la data per esteso in italiano', async () => {
+    const { formatLongDate } = await import('./time-format');
+    expect(formatLongDate('2026-10-23')).toBe('venerdì 23 ottobre 2026');
+    expect(formatLongDate('2026-12-08')).toBe('martedì 8 dicembre 2026');
+  });
+
+  it('riconosce oggi nel fuso di Roma (anche a cavallo della mezzanotte UTC)', async () => {
+    const { isToday } = await import('./time-format');
+    const lateNight = new Date('2026-10-23T22:30:00Z'); // 00:30 del 24/10 a Roma
+    expect(isToday('2026-10-24', lateNight)).toBe(true);
+    expect(isToday('2026-10-23', lateNight)).toBe(false);
+  });
+
+  it('somma minuti restando nello stesso giorno', async () => {
+    const { addMinutesClamped } = await import('./time-format');
+    expect(addMinutesClamped('09:00', 120)).toBe('11:00');
+    expect(addMinutesClamped('22:45', 120)).toBe('23:55');
+    expect(addMinutesClamped('00:10', -30)).toBe('00:00');
+  });
+});

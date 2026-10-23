@@ -116,3 +116,27 @@ export function formatDuration(minutes: number): string {
   if (!hours) return `${rest} min`;
   return rest ? `${hours} h ${String(rest).padStart(2, '0')} min` : `${hours} h`;
 }
+
+/** "venerdì 23 ottobre 2026" for a YYYY-MM-DD string. */
+export function formatLongDate(date: string): string {
+  return new Intl.DateTimeFormat('it-IT', {
+    timeZone: 'UTC',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${date}T12:00:00Z`));
+}
+
+/** True when the YYYY-MM-DD date is today in Europe/Rome. */
+export function isToday(date: string, now = new Date()): boolean {
+  return date === todayInRome(now);
+}
+
+/** Add minutes to "HH:MM", clamped to the same day (00:00-23:55 by default). */
+export function addMinutesClamped(time: string, minutes: number, max = '23:55'): string {
+  const [hour, minute] = time.split(':').map(Number);
+  const [maxHour, maxMinute] = max.split(':').map(Number);
+  const total = Math.max(0, Math.min(hour * 60 + minute + minutes, maxHour * 60 + maxMinute));
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
