@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fixtures from './api/mock-fixtures.json';
 import type { Itinerary, Leg } from './api/types';
 import { defaultPlannerValues } from './plan-request';
-import { buildRoute, nearestStation, stationForStop } from './route-geometry';
+import { buildRoute, nearestStation, shortCampusName, stationForStop } from './route-geometry';
 
 const { stations, campuses } = fixtures;
 const dief = campuses.find((campus) => campus.id === 'dief')!;
@@ -29,7 +29,7 @@ describe('route geometry', () => {
     expect(route.points.map((point) => point.label)).toEqual([
       'Stazione partenza · Reggio Emilia FS',
       'Stazione arrivo · Modena FS',
-      `Sede · ${dief.name}`,
+      'Sede · DIEF',
     ]);
     expect(route.segments.map((segment) => segment.kind)).toEqual(['train', 'active']);
   });
@@ -98,7 +98,7 @@ describe('route geometry', () => {
     const route = buildRoute({ ...base, stationId: 'modena_fs' }, stations, dief, loop);
     expect(route.points.map((point) => point.label)).toEqual([
       'Stazione partenza · Modena FS',
-      `Sede · ${dief.name}`,
+      'Sede · DIEF',
     ]);
     expect(route.segments.map((segment) => segment.kind)).toEqual(['active']);
   });
@@ -107,5 +107,12 @@ describe('route geometry', () => {
     const values = { ...base, direction: 'return' as const };
     const route = buildRoute(values, stations, dief, undefined);
     expect(route.points.map((point) => point.role)).toEqual(['campus', 'to_station']);
+  });
+});
+
+describe('shortCampusName', () => {
+  it('usa la sigla tra parentesi quando c’è', () => {
+    expect(shortCampusName("Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)")).toBe('DIEF');
+    expect(shortCampusName('Palazzo Dossetti')).toBe('Palazzo Dossetti');
   });
 });

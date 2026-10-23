@@ -34,6 +34,11 @@ export const ROLE_LABELS: Record<PointRole, string> = {
   campus: 'Sede',
 };
 
+/** "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)" -> "DIEF"; names without an acronym stay. */
+export function shortCampusName(name: string): string {
+  return name.match(/\(([^)]+)\)\s*$/)?.[1] ?? name;
+}
+
 const squared = (a: LatLon, b: LatLon) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
 const fold = (value: string) =>
   value
@@ -82,7 +87,7 @@ export function buildRoute(
       ? stations.find((station) => station.id === values.stationId)
       : undefined;
   const campusAt = campus ? at(campus) : undefined;
-  const campusPoint = campusAt && point('campus', campusAt, campus!.name);
+  const campusPoint = campusAt && point('campus', campusAt, shortCampusName(campus!.name));
 
   const trains = itinerary?.legs.filter((leg): leg is Leg => leg.type === 'train') ?? [];
   const boarding = trains[0] && stationForStop(stations, trains[0].from);

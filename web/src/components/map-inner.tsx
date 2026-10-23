@@ -82,8 +82,15 @@ function FitAndResize({ positions }: { positions: LatLon[] }) {
   useEffect(() => {
     // The container may get its final size after mount (lazy load, layout shifts).
     map.invalidateSize();
-    if (positions.length > 1) map.fitBounds(positions, { padding: [44, 44], maxZoom: 15 });
-    else if (positions.length === 1) map.setView(positions[0], 14);
+    if (positions.length > 1) {
+      // Labels are centred on the markers: keep room for half a label on each side.
+      const side = Math.min(110, Math.round(map.getSize().x * 0.28));
+      map.fitBounds(positions, {
+        paddingTopLeft: [side, 40],
+        paddingBottomRight: [side, 24],
+        maxZoom: 15,
+      });
+    } else if (positions.length === 1) map.setView(positions[0], 14);
   }, [map, positions]);
   useEffect(() => {
     const resize = () => map.invalidateSize();
