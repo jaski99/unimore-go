@@ -1,0 +1,2415 @@
+[
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "00:53",
+    "arrive": "01:10",
+    "train": "17402",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-11-16",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 16/11 al 1/12. Sospeso | Si effettua il 21/11, il 22/11, il 28/11 e il 29/11.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=13 (pagina stampata 1; note 13)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "00:53",
+    "arrive": "01:09",
+    "train": "17400",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-12-02",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 2/12. Sospeso dal marte- d\u00ec alla domenica dal 6/12 al 11/12 nonch\u00e9; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=13 (pagina stampata 1; note 15)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "05:22",
+    "arrive": "05:37",
+    "train": "2066",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 21/10. | Si effettua il 23/10, il 24/10 e il 25/10. | Si effettua dal 22/10. Sospeso il 23/10,; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=16 (pagina stampata 4; note 1, 22)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "05:26",
+    "arrive": "05:41",
+    "train": "752",
+    "category": "Intercity Notte",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 15/11. Sospeso dal luned\u00ec al venerd\u00ec fino al 13/11. | Si effettua dal 2/12. Sospeso dal marte- d\u00ec alla domenica dal 6/12 al 11/12 nonch\u00e9",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=16 (pagina stampata 4; note 47)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "05:55",
+    "arrive": "06:10",
+    "train": "2454",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=18 (pagina stampata 6; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "06:07",
+    "arrive": "06:22",
+    "train": "2456",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=19 (pagina stampata 7; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "06:23",
+    "arrive": "06:41",
+    "train": "2458",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=20 (pagina stampata 8; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "07:00",
+    "arrive": "07:18",
+    "train": "2070",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 21/10. Sospeso il | Si effettua il 23/10, il 24/10 e il 25/10. | Si effettua dal 22/10. Sospeso dal; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=21 (pagina stampata 9; note 1, 74)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "07:00",
+    "arrive": "07:18",
+    "train": "2080",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il 17/10, il 18/10, il 31/10, il; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=21 (pagina stampata 9; note 1, 75)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "07:23",
+    "arrive": "07:41",
+    "train": "17406",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "07:31",
+    "arrive": "07:50",
+    "train": "2460",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "07:40",
+    "arrive": "07:57",
+    "train": "8802",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 15/11. Sospeso il 21/11, | Si effettua fino al 14/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=24 (pagina stampata 12; note 90)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "07:43",
+    "arrive": "08:06",
+    "train": "1962",
+    "category": "Intercity Notte",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il 17/10. | Sono ammessi esclusivamente i viag-",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 7779)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "08:00",
+    "arrive": "08:16",
+    "train": "3902",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=25 (pagina stampata 13; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "08:23",
+    "arrive": "08:41",
+    "train": "2462",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 26/10. Sospeso il | Si effettua dal 27/10. | Si effettua il 17/10 e il 18/10.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=26 (pagina stampata 14; note 1, 97)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "08:40",
+    "arrive": "08:57",
+    "train": "8804",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 20/11. Sospeso il 21/11, | Si effettua il 14/11 e il 15/11. | Si effettua dal 10/11 al 19/11. Sospeso | Si effettua fino al 9/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=27 (pagina stampata 15; note 103)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "09:00",
+    "arrive": "09:16",
+    "train": "3904",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Non sono ammessi i gruppi con bigliet-; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=27 (pagina stampata 15; note 108)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "09:23",
+    "arrive": "09:41",
+    "train": "17410",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "09:40",
+    "arrive": "09:57",
+    "train": "8806",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 20/11. Sospeso il 21/11, | Si effettua il 14/11 e il 15/11. | Si effettua dal 14/11 al 19/11. Sospeso | Si effettua fino al 13/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=29 (pagina stampata 17; note 103)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "10:00",
+    "arrive": "10:16",
+    "train": "3906",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=30 (pagina stampata 18; note 108119)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "10:10",
+    "arrive": "10:24",
+    "train": "580",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=31 (pagina stampata 19; note 91)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "10:23",
+    "arrive": "10:41",
+    "train": "2466",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=31 (pagina stampata 19; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "11:00",
+    "arrive": "11:16",
+    "train": "3908",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=34 (pagina stampata 22; note 108120)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "11:23",
+    "arrive": "11:41",
+    "train": "17412",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=35 (pagina stampata 23; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "12:00",
+    "arrive": "12:16",
+    "train": "3910",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-27",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il 17/10 e il 18/10. | Si effettua dal 27/10 al 16/11. | Si effettua dal 19/10 al 26/10. | Si effettua dal 17/11.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=37 (pagina stampata 25; note 1, 99)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "12:23",
+    "arrive": "12:41",
+    "train": "2470",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=38 (pagina stampata 26; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "13:00",
+    "arrive": "13:16",
+    "train": "3912",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 17/11. | Si effettua fino al 16/11.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=40 (pagina stampata 28; note 1, 120)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "13:22",
+    "arrive": "13:45",
+    "train": "17414",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=41 (pagina stampata 29; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "13:25",
+    "arrive": "13:40",
+    "train": "606",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 15/11. | Si effettua il 16/11. | Si effettua dal 17/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=42 (pagina stampata 30; note 40)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "14:00",
+    "arrive": "14:17",
+    "train": "3914",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 16/11. | Si effettua dal 17/11.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=43 (pagina stampata 31; note 1, 119)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "14:23",
+    "arrive": "14:41",
+    "train": "2474",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "14:23",
+    "arrive": "14:41",
+    "train": "2490",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "15:00",
+    "arrive": "15:16",
+    "train": "3916",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=46 (pagina stampata 34; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "15:23",
+    "arrive": "15:41",
+    "train": "17416",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=47 (pagina stampata 35; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "15:28",
+    "arrive": "15:47",
+    "train": "608",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=48 (pagina stampata 36; note 91)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "15:40",
+    "arrive": "15:57",
+    "train": "8818",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 20/11. Sospeso il 21/11, | Si effettua dal 14/11 al 19/11. Sospeso | Si effettua fino al 13/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=48 (pagina stampata 36; note 103)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "16:00",
+    "arrive": "16:16",
+    "train": "3918",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-11-16",
+    "calendar_note": "Nota 119: si effettua fino al 16/11; verificato attivo luned\u00ec 2026-10-26. Nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=49 (pagina stampata 37; note 1 e 119)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "16:23",
+    "arrive": "16:41",
+    "train": "2478",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=50 (pagina stampata 38; nota 1)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "16:40",
+    "arrive": "16:57",
+    "train": "8820",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 20/11. Sospeso il 21/11, | Si effettua il 17/11, il 18/11 e il 19/11. | Si effettua il 14/11, il 15/11 e il 16/11. | Si effettua fino al 13/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=51 (pagina stampata 39; note 103)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "17:00",
+    "arrive": "17:16",
+    "train": "3920",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=52 (pagina stampata 40; nota 1)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "17:17",
+    "arrive": "17:31",
+    "train": "590",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 6/11. | Si effettua il 8/11. | Si effettua dal 15/11. Sospeso il saba- | Si effettua dal luned\u00ec al sabato dal",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=53 (pagina stampata 41; note 176)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "17:22",
+    "arrive": "17:40",
+    "train": "17418",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=53 (pagina stampata 41; nota 1)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "17:40",
+    "arrive": "17:57",
+    "train": "8824",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 13/11. | Si effettua il 14/11, il 15/11 e il 16/11. | Si effettua il 17/11, il 18/11 e il 19/11. | Si effettua dal 20/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=55 (pagina stampata 43; note 118)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "18:00",
+    "arrive": "18:16",
+    "train": "3922",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-11-16",
+    "calendar_note": "Nota 119: si effettua fino al 16/11; verificato attivo luned\u00ec 2026-10-26. Nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=56 (pagina stampata 44; note 1 e 119)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "18:23",
+    "arrive": "18:41",
+    "train": "2482",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=57 (pagina stampata 45; nota 1)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "18:43",
+    "arrive": "19:00",
+    "train": "17426",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=58 (pagina stampata 46; nota 1)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "19:00",
+    "arrive": "19:16",
+    "train": "3924",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-11-16",
+    "calendar_note": "Nota 119: si effettua fino al 16/11; verificato attivo luned\u00ec 2026-10-26. Nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=59 (pagina stampata 47; note 1 e 119)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "19:23",
+    "arrive": "19:41",
+    "train": "17420",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nota 188: sospeso il venerd\u00ec; verificato attivo luned\u00ec 2026-10-26. Nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=60 (pagina stampata 48; note 1 e 188)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "sat",
+      "sun"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "19:23",
+    "arrive": "19:41",
+    "train": "2484",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il venerd\u00ec.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=60 (pagina stampata 48; note 1, 189)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "19:36",
+    "arrive": "19:56",
+    "train": "612",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 15/11. | Si effettua dal 16/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=60 (pagina stampata 48; note 40)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "20:00",
+    "arrive": "20:16",
+    "train": "3926",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-11-16",
+    "calendar_note": "Nota 119: si effettua fino al 16/11; verificato attivo luned\u00ec 2026-10-26. Corsa sul limite superiore incluso della finestra 16:00\u201320:00. Nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=62 (pagina stampata 50; note 1 e 119)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "20:23",
+    "arrive": "20:41",
+    "train": "2486",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=62 (pagina stampata 50; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "21:00",
+    "arrive": "21:16",
+    "train": "3928",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 16/11. | Si effettua dal 17/11.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=64 (pagina stampata 52; note 1, 119)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "21:10",
+    "arrive": "21:24",
+    "train": "596",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 6/11. | Si effettua il 8/11. | Si effettua dal luned\u00ec al sabato dal | Si effettua dal 14/11. Sospeso il 14/11, | Si effettua il 14/11 e il 15/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=64 (pagina stampata 52; note 176)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "21:23",
+    "arrive": "21:41",
+    "train": "17422",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=65 (pagina stampata 53; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "21:35",
+    "arrive": "21:51",
+    "train": "614",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=66 (pagina stampata 54; note 91)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "22:00",
+    "arrive": "22:16",
+    "train": "3930",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=67 (pagina stampata 55; note 1)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "22:07",
+    "arrive": "22:25",
+    "train": "1588",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-11-15",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua la domenica dal 15/11. So- | Si effettua il 15/11. | Si effettua il 25/10. | Si effettua il 1/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=67 (pagina stampata 55; note 207)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "22:46",
+    "arrive": "23:03",
+    "train": "9330",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 15/11. Sospeso dal | Si effettua dal 24/10 al 31/10. | S ie f f e t t u ai l2 1 / 1 0 ,i l2 2 / 1 0ei l2 3 / 1 0 . | Si effettua fino al 14/11. Sospeso fino | Si effettua il 17/10, il 18/10, il 19/10 e",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=69 (pagina stampata 57; note 215)"
+  },
+  {
+    "from": "Modena",
+    "to": "Reggio Emilia",
+    "depart": "23:00",
+    "arrive": "23:15",
+    "train": "3934",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 1: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=69 (pagina stampata 57; note 1)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "04:43",
+    "arrive": "04:57",
+    "train": "17401",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-11-02",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il 17/10, il 18/10 e il 19/10. | Si effettua dal 2/11. Sospeso dal 3/11 | Si effettua dal 20/10 al 1/11. Sospeso | Si effettua il 17/10. | Si effettua dal 20/10 al 24/10 e dal; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=71 (pagina stampata 59; note 8, 11)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "06:19",
+    "arrive": "06:35",
+    "train": "17403",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=72 (pagina stampata 60; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "06:42",
+    "arrive": "06:58",
+    "train": "3905",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-19",
+    "valid_to": "2026-10-26",
+    "calendar_note": "Nota 27: si effettua dal 19/10 al 26/10; verificato attivo luned\u00ec 2026-10-26.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=73 (pagina stampata 61; note 8 e 27)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "07:04",
+    "arrive": "07:20",
+    "train": "2451",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=73 (pagina stampata 61; nota 8)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "07:10",
+    "arrive": "07:26",
+    "train": "603",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 15/11. | Si effettua dal 16/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=74 (pagina stampata 62; note 30)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "07:23",
+    "arrive": "07:40",
+    "train": "9303",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 31/10. | Si effettua dal 1/11 al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=74 (pagina stampata 62; note 16)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "07:33",
+    "arrive": "07:47",
+    "train": "17405",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=75 (pagina stampata 63; nota 8)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "07:44",
+    "arrive": "07:56",
+    "train": "3907",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-11-16",
+    "calendar_note": "Nota 35: si effettua fino al 16/11; verificato attivo luned\u00ec 2026-10-26. Nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=75 (pagina stampata 63; note 8 e 35)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "07:59",
+    "arrive": "08:15",
+    "train": "17425",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=75 (pagina stampata 63; nota 8)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "08:05",
+    "arrive": "08:22",
+    "train": "583",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 6/11. | Si effettua il 8/11. | Si effettua dal luned\u00ec al sabato dal 7/11 | Si effettua dal 14/11. Sospeso il 14/11, | Si effettua il 14/11 e il 15/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=75 (pagina stampata 63; note 36)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "08:14",
+    "arrive": "08:32",
+    "train": "2453",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il luned\u00ec.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=76 (pagina stampata 64; note 8, 40)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "08:35",
+    "arrive": "08:53",
+    "train": "1589",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il sabato fino al 31/10. | Si effettua il sabato dal 21/11. Sospeso | Si effettua il 14/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=78 (pagina stampata 66; note 59)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "08:44",
+    "arrive": "08:56",
+    "train": "2067",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "valid_from": "2026-10-22",
+    "valid_to": "2026-11-16",
+    "calendar_note": "Nota 53: si effettua dal 22/10 al 16/11, sospeso il 23/10, il 24/10 e il 25/10; verificato attivo luned\u00ec 2026-10-26. Nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=78 (pagina stampata 66; note 8 e 53)",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ]
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "09:00",
+    "arrive": "09:14",
+    "train": "8803",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 20/11. Sospeso il 21/11, | Si effettua il 14/11, il 15/11 e il 16/11. | Si effettua il 17/11, il 18/11 e il 19/11. | Si effettua fino al 13/11. | Si effettua il 14/11 e il 15/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=79 (pagina stampata 67; note 63)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "09:11",
+    "arrive": "09:24",
+    "train": "605",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 15/11. | Si effettua il 16/11. | Si effettua dal 17/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=79 (pagina stampata 67; note 30)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "09:23",
+    "arrive": "09:38",
+    "train": "2455",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=82 (pagina stampata 70; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "09:44",
+    "arrive": "09:56",
+    "train": "3913",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=83 (pagina stampata 71; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "09:44",
+    "arrive": "09:56",
+    "train": "3911",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 16/11. Sospeso il sa- | Si effettua dal 17/11. Sospeso il sabato; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=83 (pagina stampata 71; note 8, 80)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "10:19",
+    "arrive": "10:36",
+    "train": "17409",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "11:09",
+    "arrive": "11:24",
+    "train": "607",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 100)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "11:20",
+    "arrive": "11:36",
+    "train": "2459",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "11:44",
+    "arrive": "11:56",
+    "train": "3917",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 16/11. | Si effettua dal 17/11.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=90 (pagina stampata 78; note 8, 35)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "12:19",
+    "arrive": "12:36",
+    "train": "17413",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "12:44",
+    "arrive": "12:56",
+    "train": "3953",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "12:44",
+    "arrive": "12:56",
+    "train": "3921",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "13:10",
+    "arrive": "13:24",
+    "train": "609",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 17/11. Sospeso il 21/11, | Si effettua il 16/11. | Si effettua fino al 15/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=93 (pagina stampata 81; note 68)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "13:21",
+    "arrive": "13:37",
+    "train": "2463",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=94 (pagina stampata 82; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "13:44",
+    "arrive": "13:56",
+    "train": "3925",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 17/11. | Si effettua fino al 16/11.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=95 (pagina stampata 83; note 8, 26)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "14:19",
+    "arrive": "14:36",
+    "train": "17415",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=97 (pagina stampata 85; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "14:44",
+    "arrive": "14:56",
+    "train": "3927",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=98 (pagina stampata 86; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "15:20",
+    "arrive": "15:36",
+    "train": "2467",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=99 (pagina stampata 87; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "15:26",
+    "arrive": "15:46",
+    "train": "597",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il luned\u00ec e il marted\u00ec fino al | Si effettua dal luned\u00ec al venerd\u00ec dal | Si effettua il 18/10 e il 25/10. | Si effettua il 6/12, il 7/12 e il 8/12. | Si effettua il 14/11 e il 15/11. | Si effettua il sabato dal 28/11. | Si effettua il 8/11. | Si effettua il 7/11 e il 8/11. Sospeso il 8/11. | Si effettua il sabato e la domenica fino | Si effettua il 17/10. | Si effettua il 1/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=100 (pagina stampata 88; note 122)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "15:44",
+    "arrive": "15:56",
+    "train": "3929",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Non sono ammessi i gruppi con bigliet- | Si effettua fino al 16/11. | Si effettua dal 17/11.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=102 (pagina stampata 90; note 5, 35)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "16:19",
+    "arrive": "16:36",
+    "train": "17417",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=103 (pagina stampata 91; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "16:44",
+    "arrive": "16:56",
+    "train": "3931",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Non sono ammessi i gruppi con bigliet- | Si effettua dal 17/11. | Si effettua fino al 16/11.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=104 (pagina stampata 92; note 5, 26)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "17:07",
+    "arrive": "17:22",
+    "train": "613",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=104 (pagina stampata 92; note 100)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "17:19",
+    "arrive": "17:36",
+    "train": "2471",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=106 (pagina stampata 94; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "17:37",
+    "arrive": "17:50",
+    "train": "3955",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "17:37",
+    "arrive": "17:50",
+    "train": "3933",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "17:44",
+    "arrive": "17:59",
+    "train": "3935",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 17/11. | Si effettua fino al 16/11.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8, 26)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "18:19",
+    "arrive": "18:36",
+    "train": "17419",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=110 (pagina stampata 98; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "18:44",
+    "arrive": "18:56",
+    "train": "3937",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=111 (pagina stampata 99; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "19:00",
+    "arrive": "19:14",
+    "train": "8823",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=115 (pagina stampata 103; note 100)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "19:22",
+    "arrive": "19:36",
+    "train": "599",
+    "category": "Intercity",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. | Si effettua dal 15/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=116 (pagina stampata 104; note 100)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "19:27",
+    "arrive": "19:44",
+    "train": "2475",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=115 (pagina stampata 103; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "19:44",
+    "arrive": "19:56",
+    "train": "3939",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=115 (pagina stampata 103; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "20:00",
+    "arrive": "20:14",
+    "train": "8825",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 15/11. Sospeso il 21/11, | Si effettua fino al 14/11.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=117 (pagina stampata 105; note 33)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "20:10",
+    "arrive": "20:25",
+    "train": "2477",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-11-02",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il 17/10 e il 18/10. | Si effettua dal 2/11. Sospeso il 9/11. | Si effettua il 9/11. | Si effettua dal 27/10 al 1/11. | Si effettua dal 19/10 al 26/10.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=117 (pagina stampata 105; note 8, 25)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "20:44",
+    "arrive": "20:56",
+    "train": "2087",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il 17/10, il 18/10, il 31/10, il; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=118 (pagina stampata 106; note 8, 168)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "20:44",
+    "arrive": "20:56",
+    "train": "2091",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 21/10. Sospeso il | Si effettua dal 22/10. Sospeso dal | Si effettua il 23/10, il 24/10 e il 25/10.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=118 (pagina stampata 106; note 8, 169)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "21:00",
+    "arrive": "21:14",
+    "train": "8829",
+    "category": "Frecciarossa",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 13/11. | Si effettua dal 14/11 al 19/11. Sospeso | Si effettua il 14/11 e il 15/11. | Si effettua dal 20/11. Sospeso il 21/11,",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=120 (pagina stampata 108; note 66)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "21:07",
+    "arrive": "21:29",
+    "train": "1963",
+    "category": "Intercity Notte",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=118 (pagina stampata 106; note 61171)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "21:18",
+    "arrive": "21:36",
+    "train": "2479",
+    "category": "Regionale Veloce",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=120 (pagina stampata 108; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "21:29",
+    "arrive": "21:44",
+    "train": "35051",
+    "category": "Intercity Notte",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-18",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 18/10 al 22/10, dal",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=121 (pagina stampata 109; note 174)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "21:43",
+    "arrive": "21:56",
+    "train": "3943",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=121 (pagina stampata 109; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "22:05",
+    "arrive": "22:22",
+    "train": "17421",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=121 (pagina stampata 109; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "22:43",
+    "arrive": "22:55",
+    "train": "3951",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "fri",
+      "sat"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua il luned\u00ec, il venerd\u00ec e il sa- bato.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=124 (pagina stampata 112; note 8, 191)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "22:43",
+    "arrive": "22:55",
+    "train": "3947",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Nessuna limitazione di calendario stampata per la corsa.; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=124 (pagina stampata 112; note 8)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "22:43",
+    "arrive": "22:55",
+    "train": "3945",
+    "category": "Regionale",
+    "operator": "Trenitalia Tper",
+    "days": [
+      "tue",
+      "wed",
+      "thu",
+      "sun"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Sospeso il luned\u00ec, il venerd\u00ec, il sabato; nota 8: servizio di Trenitalia Tper.",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=124 (pagina stampata 112; note 8, 192)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "22:51",
+    "arrive": "23:06",
+    "train": "765",
+    "category": "Intercity Notte",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-11-15",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua dal 15/11. Sospeso dal | Si effettua il venerd\u00ec e il sabato dal",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=124 (pagina stampata 112; note 193)"
+  },
+  {
+    "from": "Reggio Emilia",
+    "to": "Modena",
+    "depart": "23:25",
+    "arrive": "23:39",
+    "train": "755",
+    "category": "Intercity Notte",
+    "operator": "Trenitalia",
+    "days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "valid_from": "2026-10-17",
+    "valid_to": "2026-12-12",
+    "calendar_note": "Si effettua fino al 14/11. Sospeso fino | Si effettua il 8/12. | Si effettua il mercoled\u00ec dal 25/11 non- | Si effettua dal 15/11. Sospeso dal marted\u00ec alla domenica dal 15/11 al 25/11",
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=125 (pagina stampata 113; note 200)"
+  }
+]
