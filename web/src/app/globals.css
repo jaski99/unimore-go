@@ -58,7 +58,7 @@ select:focus-visible {
   @apply inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-pine shadow-sm dark:bg-slate-800 dark:text-emerald-300;
 }
 .hero-title {
-  @apply mt-5 text-4xl font-black leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[3.6rem];
+  @apply text-2xl font-black leading-[1.08] tracking-tight text-ink sm:mt-5 sm:text-5xl lg:text-[3.2rem];
 }
 @media (prefers-color-scheme: dark) {
   .hero-title {
@@ -72,7 +72,7 @@ select:focus-visible {
   @apply rounded-full border border-emerald-900/10 bg-white/70 px-3 py-1.5 dark:border-white/10 dark:bg-slate-800/80;
 }
 .hero-illustration {
-  @apply relative hidden h-64 overflow-hidden rounded-[2rem] border border-white/80 bg-gradient-to-br from-[#d8f1e5] to-[#b9e2d1] shadow-card sm:block lg:h-72;
+  @apply relative hidden h-64 overflow-hidden rounded-[2rem] border border-white/80 bg-gradient-to-br from-[#d8f1e5] to-[#b9e2d1] shadow-card sm:block lg:h-56;
 }
 .dark .hero-illustration {
   background: linear-gradient(135deg, #123a34, #173e3a);
@@ -159,7 +159,7 @@ select:focus-visible {
   @apply mb-2 block text-sm font-semibold text-ink dark:text-slate-100;
 }
 .field-hint {
-  @apply text-xs text-slate-500;
+  @apply text-xs text-slate-600 dark:text-slate-400;
 }
 .field-input {
   @apply block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-ink shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-pine focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:border-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-950;
@@ -222,10 +222,10 @@ select:focus-visible {
   @apply rounded-t-[1.5rem] bg-gradient-to-br from-pine to-[#228568] p-5 text-white sm:p-6;
 }
 .result-eyebrow {
-  @apply text-xs font-bold uppercase tracking-[.15em] text-emerald-50/80;
+  @apply text-xs font-bold uppercase tracking-[.12em] text-white;
 }
 .result-title {
-  @apply mt-2 text-3xl font-black tracking-tight sm:text-4xl;
+  @apply mt-2 text-4xl font-black tracking-tight sm:text-5xl;
 }
 .result-title span {
   @apply whitespace-nowrap;
@@ -265,7 +265,7 @@ select:focus-visible {
   @apply h-64 bg-slate-100 sm:h-72;
 }
 .map-loading {
-  @apply flex h-full items-center justify-center gap-2 text-sm text-slate-500;
+  @apply flex h-full items-center justify-center gap-2 text-sm text-slate-600;
 }
 .leaflet-map {
   width: 100%;
@@ -273,10 +273,10 @@ select:focus-visible {
   z-index: 0;
 }
 .map-legend {
-  @apply inline-flex items-center gap-2 text-xs font-medium text-slate-500;
+  @apply inline-flex items-center gap-1.5 font-medium;
 }
 .map-legend i {
-  @apply h-2.5 w-2.5 rounded-full bg-[#e18752];
+  @apply h-2.5 w-2.5 rounded-full;
 }
 .next-class {
   @apply flex items-center justify-between gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 dark:border-emerald-900 dark:bg-emerald-950/50;
@@ -288,8 +288,115 @@ select:focus-visible {
   @apply flex h-10 min-w-[58px] items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-bold tabular-nums text-ink dark:bg-slate-800 dark:text-white;
 }
 .icon-button {
-  @apply flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950;
+  @apply flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950;
 }
 .app-footer {
   @apply border-t border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950;
+}
+
+/* ---- Phase 5: layout and new components ---- */
+.planner-grid {
+  @apply flex flex-col gap-6 pt-4 sm:pt-0;
+}
+@media (min-width: 1024px) {
+  .planner-grid {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.88fr) minmax(0, 1.12fr);
+    grid-template-areas:
+      'form result'
+      'form map'
+      'schedule map';
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    column-gap: 1.75rem;
+    row-gap: 1.5rem;
+  }
+  .planner-result {
+    grid-area: result;
+  }
+  .planner-form {
+    grid-area: form;
+  }
+  .planner-map {
+    grid-area: map;
+  }
+  .planner-schedule {
+    grid-area: schedule;
+  }
+}
+.segmented {
+  @apply grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800;
+}
+.segmented-option {
+  @apply flex min-h-14 flex-col items-center justify-center rounded-xl px-2 py-2 text-sm text-slate-700 transition hover:text-ink dark:text-slate-300;
+}
+.segmented-active {
+  @apply bg-white text-pine shadow-sm dark:bg-slate-700 dark:text-emerald-300;
+}
+.home-chip {
+  @apply flex items-center gap-3 rounded-xl border border-pine/40 bg-emerald-50/70 px-3.5 py-2.5 dark:border-emerald-700 dark:bg-emerald-950/50;
+}
+.chip-button {
+  @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-800 transition hover:border-pine hover:text-pine dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200;
+}
+.chip-button-active {
+  @apply border-sky-600 bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100;
+}
+.address-results {
+  @apply divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900;
+}
+.address-option {
+  @apply block min-h-11 w-full px-3.5 py-2.5 text-left text-sm text-ink hover:bg-emerald-50 dark:text-white dark:hover:bg-slate-800;
+}
+.alert-box {
+  @apply flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-sm leading-5 text-amber-950 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-100;
+}
+.ticket-badge {
+  @apply inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-950;
+}
+.train-chip {
+  @apply ml-2 rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-bold tabular-nums text-slate-800 dark:bg-slate-800 dark:text-slate-100;
+}
+.stat-label {
+  @apply text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400;
+}
+.calendar-note {
+  @apply mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:bg-amber-950/50 dark:text-amber-100;
+}
+.calendar-note summary {
+  @apply flex cursor-pointer items-center gap-1.5 font-semibold;
+}
+.calendar-note p {
+  @apply mt-1.5 leading-5;
+}
+.nearby-card {
+  @apply rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900;
+}
+.nearby-card summary {
+  @apply cursor-pointer list-none;
+}
+.nearby-card summary::-webkit-details-marker {
+  display: none;
+}
+.nearby-card[open] {
+  @apply border-pine/40;
+}
+.cursor-crosshair {
+  cursor: crosshair;
+}
+/* Reserve the answer's space so the form below never jumps when it arrives (CLS). */
+.planner-result {
+  min-height: 720px;
+}
+@media (min-width: 1024px) {
+  .planner-result {
+    min-height: 640px;
+  }
+}
+.planner-result > * {
+  min-height: inherit;
+}
+/* Fieldsets default to min-width: min-content, which lets long labels widen the page. */
+fieldset {
+  min-width: 0;
 }

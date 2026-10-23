@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { Campus, PlanRequest, Station } from '@/lib/api/types';
+import type { Campus } from '@/lib/api/types';
 import type { PlanService } from '@/lib/api/plan-service';
+import { pickLessonToPrefill } from '@/lib/lesson-prefill';
+import { buildPlanRequest, validatePlannerValues, type PlannerValues } from '@/lib/plan-request';
 import type { LocalStorageScheduleStore, ScheduledClass, Weekday } from '@/lib/schedule-store';
-import { formatClock, formatDate, getNextDateForWeekday, toRomeIso } from '@/lib/time-format';
-import type { FormPrefill } from './plan-form';
+import { formatClock, formatShortDate, getNextDateForWeekday } from '@/lib/time-format';
 import { Icon } from './icons';
 
 const weekdays = [
@@ -19,21 +20,31 @@ const weekdays = [
   { id: 0, label: 'Domenica' },
 ] as const;
 
+export interface LessonSelection {
+  campusId: string;
+  date: string;
+  time: string;
+}
+
 interface SchedulePanelProps {
   store: LocalStorageScheduleStore | null;
   campuses: Campus[];
-  stations: Station[];
-  /** Station the commuter departs from (same as the main form). */
-  originStationId: string;
+  /** Current planner settings (origin, mode, buffer, categories) reused for the preview. */
+  values: PlannerValues;
   service: PlanService;
-  onSelectClass: (prefill: FormPrefill) => void;
+  onSelectClass: (selection: LessonSelection) => void;
+}
+
+/** Plan request for the next lesson, built from the user's own settings. */
+export function nextLessonRequest(values: PlannerValues, lesson: LessonSelection) {
+  const lessonValues: PlannerValues = { ...values, ...lesson, direction: 'outbound' };
+  return validatePlannerValues(lessonValues) ? null : buildPlanRequest(lessonValues);
 }
 
 export function SchedulePanel({
   store,
   campuses,
-  stations,
-  originStationId,
+  values,
   service,
   onSelectClass,
 }: SchedulePanelProps) {
@@ -41,68 +52,51 @@ export function SchedulePanel({
   const [weekday, setWeekday] = useState<Weekday>(1);
   const [time, setTime] = useState('08:30');
   const [campusId, setCampusId] = useState(campuses[0]?.id ?? 'dief');
-  const [nextInfo, setNextInfo] = useState<{
-    lesson: ScheduledClass;
-    date: string;
-    leaveAt: string | null;
-  } | null>(null);
+  const [leave, setLeave] = useState<{ key: string; leaveAt: string | null } | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Restore persisted lessons from the injected storage adapter.
     setLessons(store?.getAll() ?? []);
   }, [store]);
 
+  const upcoming = useMemo(() => pickLessonToPrefill(lessons), [lessons]);
+  const requestKey = useMemo(() => {
+    if (!upcoming) return '';
+    const request = nextLessonRequest(values, {
+      campusId: upcoming.lesson.campusId,
+      date: upcoming.date,
+      time: upcoming.lesson.time,
+    });
+    return request ? JSON.stringify(request) : '';
+  }, [upcoming, values]);
+
   useEffect(() => {
+    if (!requestKey) return;
     let active = true;
-    if (!lessons.length || !stations.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear the previous computed lesson when the schedule becomes empty.
-      setNextInfo(null);
-      return () => {
-        active = false;
-      };
-    }
-    const now = new Date();
-    const upcoming = lessons
-      .map((lesson) => {
-        const date = nextClassDate(lesson, now);
-        const classDate = new Date(`${date}T${lesson.time}:00`);
-        return { lesson, date, at: classDate.getTime() };
-      })
-      .sort((first, second) => first.at - second.at)[0];
-    const request: PlanRequest = {
-      origin: {
-        station_id: stations.some((station) => station.id === originStationId)
-          ? originStationId
-          : stations[0].id,
-      },
-      campus_id: upcoming.lesson.campusId,
-      arrive_by: toRomeIso(upcoming.date, upcoming.lesson.time),
-      mode: 'bike',
-      margin_min: 10,
-    };
-    setNextInfo({ lesson: upcoming.lesson, date: upcoming.date, leaveAt: null });
-    void service
-      .createPlan(request)
+    service
+      .createPlan(JSON.parse(requestKey))
       .then((response) => {
         if (active)
-          setNextInfo({
-            lesson: upcoming.lesson,
-            date: upcoming.date,
-            leaveAt: response.itineraries[0]?.leave_at ?? null,
-          });
+          setLeave({ key: requestKey, leaveAt: response.itineraries[0]?.leave_at ?? null });
       })
       .catch(() => {
-        if (active) setNextInfo({ lesson: upcoming.lesson, date: upcoming.date, leaveAt: null });
+        if (active) setLeave({ key: requestKey, leaveAt: null });
       });
     return () => {
       active = false;
     };
-  }, [lessons, stations, originStationId, service]);
+  }, [requestKey, service]);
 
-  const nextCampus = useMemo(
-    () => campuses.find((campus) => campus.id === nextInfo?.lesson.campusId),
-    [campuses, nextInfo],
-  );
+  const nextInfo = upcoming
+    ? {
+        lesson: upcoming.lesson,
+        date: upcoming.date,
+        pending: leave?.key !== requestKey,
+        leaveAt: leave?.key === requestKey ? leave.leaveAt : null,
+      }
+    : null;
+
+  const nextCampus = campuses.find((campus) => campus.id === nextInfo?.lesson.campusId);
 
   function addClass(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,15 +107,11 @@ export function SchedulePanel({
   function selectClass(lesson: ScheduledClass) {
     onSelectClass({
       campusId: lesson.campusId,
-      date: getNextDateForWeekday(lesson.weekday),
+      date: pickLessonToPrefill([lesson])?.date ?? getNextDateForWeekday(lesson.weekday),
       time: lesson.time,
     });
     document.getElementById('plan-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-
-  const nextWeekdayLabel = nextInfo
-    ? weekdays.find((day) => day.id === nextInfo.lesson.weekday)?.label
-    : '';
 
   return (
     <section className="schedule-card" aria-labelledby="schedule-heading">
@@ -143,11 +133,13 @@ export function SchedulePanel({
               Prossima lezione
             </p>
             <p className="mt-1 truncate font-semibold text-ink dark:text-white">
-              {nextCampus?.name} · {nextWeekdayLabel} {formatDate(`${nextInfo.date}T12:00:00`)}
+              {nextCampus?.name} · {formatShortDate(nextInfo.date)}
             </p>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
               Inizio alle {nextInfo.lesson.time} ·{' '}
-              {nextInfo.leaveAt ? (
+              {nextInfo.pending ? (
+                'calcolo…'
+              ) : nextInfo.leaveAt ? (
                 <>
                   esci alle{' '}
                   <strong className="text-pine dark:text-emerald-300">
@@ -162,7 +154,7 @@ export function SchedulePanel({
           <Icon name="arrow" className="h-5 w-5 shrink-0 text-pine" />
         </div>
       )}
-      {!store && <p className="mt-4 text-sm text-slate-500">Caricamento orario salvato…</p>}
+      {!store && <p className="mt-4 text-sm text-slate-600">Caricamento orario salvato…</p>}
       {store && lessons.length > 0 && (
         <ul className="mt-4 divide-y divide-slate-200 dark:divide-slate-700">
           {lessons.map((lesson) => {
@@ -179,7 +171,7 @@ export function SchedulePanel({
                   <span className="block truncate text-sm font-semibold text-ink hover:text-pine dark:text-white">
                     {campus?.name ?? 'Sede non trovata'}
                   </span>
-                  <span className="text-xs text-slate-500">{dayLabel}</span>
+                  <span className="text-xs text-slate-600">{dayLabel}</span>
                 </button>
                 <button
                   type="button"
@@ -256,15 +248,4 @@ export function SchedulePanel({
       </form>
     </section>
   );
-}
-
-function nextClassDate(lesson: ScheduledClass, now: Date): string {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const isToday =
-    now.getDay() === lesson.weekday &&
-    lesson.time >
-      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  if (isToday)
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  return getNextDateForWeekday(lesson.weekday, now);
 }
