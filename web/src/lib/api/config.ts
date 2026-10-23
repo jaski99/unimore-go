@@ -3,7 +3,10 @@
 export const DEFAULT_API_URL = 'http://localhost:8000';
 
 export interface ApiConfig {
-  /** Base URL of the FastAPI backend, without trailing slash. */
+  /**
+   * Base URL of the FastAPI backend, without trailing slash. An empty string
+   * (from NEXT_PUBLIC_API_URL=/) means same-origin requests via the Next.js proxy.
+   */
   apiUrl: string;
   /** True only when NEXT_PUBLIC_USE_MOCK=1: use the offline mock instead of HTTP. */
   useMock: boolean;

@@ -14,6 +14,10 @@ describe('resolveApiConfig', () => {
     );
   });
 
+  it('accetta "/" per chiamare la stessa origine (proxy Next.js)', () => {
+    expect(resolveApiConfig({ NEXT_PUBLIC_API_URL: '/' }).apiUrl).toBe('');
+  });
+
   it('attiva il mock solo con NEXT_PUBLIC_USE_MOCK=1', () => {
     expect(resolveApiConfig({ NEXT_PUBLIC_USE_MOCK: '1' }).useMock).toBe(true);
     for (const value of ['0', 'true', 'mock', '']) {
