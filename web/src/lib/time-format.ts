@@ -19,16 +19,6 @@ export function formatTime(value: string | Date): string {
   }).format(date);
 }
 
-export function formatDate(value: string | Date): string {
-  const date = value instanceof Date ? value : new Date(value);
-  return new Intl.DateTimeFormat('it-IT', {
-    timeZone: ROME_TIME_ZONE,
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(date);
-}
-
 export function toRomeIso(date: string, time: string): string {
   const [year, month, day] = date.split('-').map(Number);
   const [hour, minute] = time.split(':').map(Number);

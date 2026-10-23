@@ -185,6 +185,15 @@ select:focus-visible {
 .campus-option[aria-selected='true'] {
   @apply font-semibold text-pine dark:text-emerald-300;
 }
+.map-view-switch {
+  @apply inline-flex shrink-0 rounded-xl bg-slate-100 p-1 text-xs font-semibold dark:bg-slate-800;
+}
+.map-view-switch button {
+  @apply rounded-lg px-3 py-1.5 text-slate-700 dark:text-slate-300;
+}
+.map-view-switch .map-view-active {
+  @apply bg-white text-ink shadow-sm dark:bg-slate-950 dark:text-white;
+}
 .campus-toggle {
   @apply absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-slate-600 hover:text-ink dark:text-slate-400 dark:hover:text-white;
 }

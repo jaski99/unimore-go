@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import fixtures from './api/mock-fixtures.json';
 import type { Itinerary, Leg } from './api/types';
 import { defaultPlannerValues } from './plan-request';
-import { buildRoute, nearestStation, shortCampusName, stationForStop } from './route-geometry';
+import {
+  assignLabelSides,
+  buildRoute,
+  nearestStation,
+  shortCampusName,
+  stationForStop,
+  type RoutePoint,
+} from './route-geometry';
 
 const { stations, campuses } = fixtures;
 const dief = campuses.find((campus) => campus.id === 'dief')!;
@@ -87,6 +94,7 @@ describe('route geometry', () => {
           role: 'from_station',
           position: [44.697309, 10.642577],
           label: 'Stazione partenza · Reggio Emilia FS',
+          labelSide: 'top',
         },
       ],
       segments: [],
@@ -114,5 +122,41 @@ describe('shortCampusName', () => {
   it('usa la sigla tra parentesi quando c’è', () => {
     expect(shortCampusName("Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)")).toBe('DIEF');
     expect(shortCampusName('Palazzo Dossetti')).toBe('Palazzo Dossetti');
+  });
+});
+
+describe('etichette dei marker senza sovrapposizioni (B5)', () => {
+  const sides = (points: RoutePoint[]) =>
+    Object.fromEntries(points.map((point) => [point.role, point.labelSide]));
+
+  it('due punti vicini hanno le etichette su lati opposti (Modena FS sopra, DIEF sotto)', () => {
+    const route = buildRoute(base, stations, dief, withTrain);
+    expect(sides(route.points)).toEqual({
+      from_station: 'top',
+      to_station: 'top',
+      campus: 'bottom',
+    });
+  });
+
+  it('da casa vicino a Reggio Emilia FS: casa (più a nord) sopra, stazione sotto', () => {
+    const route = buildRoute({ ...base, originKind: 'home', home }, stations, dief, withTrain);
+    expect(sides(route.points)).toEqual({
+      home: 'top',
+      from_station: 'bottom',
+      to_station: 'top',
+      campus: 'bottom',
+    });
+  });
+
+  it('ogni coppia di vicini più prossimi reciproci usa lati diversi, anche alla stessa latitudine', () => {
+    const at = (role: RoutePoint['role'], lat: number, lon: number): RoutePoint => ({
+      role,
+      label: role,
+      position: [lat, lon],
+      labelSide: 'top',
+    });
+    const placed = assignLabelSides([at('home', 44.65, 10.92), at('campus', 44.65, 10.93)]);
+    expect(placed.map((point) => point.labelSide)).toEqual(['top', 'bottom']);
+    expect(assignLabelSides([at('campus', 44.6, 10.9)])[0].labelSide).toBe('top');
   });
 });

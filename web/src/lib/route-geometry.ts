@@ -6,11 +6,15 @@ export type LatLon = [number, number];
 /** What a map marker stands for; drives its icon and its permanent label. */
 export type PointRole = 'home' | 'from_station' | 'to_station' | 'campus';
 
+/** Where the permanent label sits: above or below its marker (labels stay centred). */
+export type LabelSide = 'top' | 'bottom';
+
 export interface RoutePoint {
   position: LatLon;
   role: PointRole;
   /** Visible label, e.g. "Stazione partenza · Reggio Emilia FS". */
   label: string;
+  labelSide: LabelSide;
 }
 
 /** Train segments are drawn solid, walk/bike dashed. */
@@ -63,7 +67,39 @@ export function stationForStop(stations: Station[], stop: string): Station | und
 const at = (place: { lat: number; lon: number }): LatLon => [place.lat, place.lon];
 
 function point(role: PointRole, position: LatLon, name?: string): RoutePoint {
-  return { role, position, label: name ? `${ROLE_LABELS[role]} · ${name}` : ROLE_LABELS[role] };
+  return {
+    role,
+    position,
+    label: name ? `${ROLE_LABELS[role]} · ${name}` : ROLE_LABELS[role],
+    labelSide: 'top',
+  };
+}
+
+/** Strictly "north of" `other`; at the same latitude the western point counts as north. */
+const isAbove = (point: LatLon, other: LatLon) =>
+  point[0] > other[0] || (point[0] === other[0] && point[1] < other[1]);
+
+/**
+ * Keep labels of nearby markers apart at any zoom (review B5): each label
+ * goes on the side away from its nearest marker, i.e. above when the point
+ * is the northern one of the pair, below otherwise. Mutual nearest
+ * neighbours (Modena FS and DIEF, a home next to its station) thus always
+ * get opposite sides, while labels stay horizontally centred.
+ */
+export function assignLabelSides(points: RoutePoint[]): RoutePoint[] {
+  return points.map((current) => {
+    const others = points.filter((other) => other !== current);
+    if (!others.length) return { ...current, labelSide: 'top' };
+    const nearest = others.reduce((best, other) =>
+      squared(other.position, current.position) < squared(best.position, current.position)
+        ? other
+        : best,
+    );
+    return {
+      ...current,
+      labelSide: isAbove(current.position, nearest.position) ? 'top' : 'bottom',
+    };
+  });
 }
 
 /**
@@ -105,7 +141,7 @@ export function buildRoute(
       segment(fromStation, toStation, 'train'),
       ...(end ? [segment(toStation, end, 'active')] : []),
     ];
-    return { points, segments };
+    return { points: assignLabelSides(points), segments };
   }
 
   // No train (same city, pending result or stale itinerary): endpoints only,
@@ -117,7 +153,7 @@ export function buildRoute(
   const ordered = (isReturn ? [campusPoint, own] : [own, campusPoint]).filter(isPoint);
   const segments =
     itinerary && ordered.length === 2 ? [segment(ordered[0], ordered[1], 'active')] : [];
-  return { points: ordered, segments };
+  return { points: assignLabelSides(ordered), segments };
 }
 
 function segment(from: RoutePoint, to: RoutePoint, kind: SegmentKind): RouteSegment {

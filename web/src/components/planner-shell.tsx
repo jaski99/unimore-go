@@ -13,13 +13,13 @@ import {
 } from '@/lib/plan-request';
 import { buildRoute, shortCampusName } from '@/lib/route-geometry';
 import { LocalStorageScheduleStore } from '@/lib/schedule-store';
-import { addMinutesClamped, formatDate, formatShortDate, todayInRome } from '@/lib/time-format';
+import { addMinutesClamped, formatShortDate, todayInRome } from '@/lib/time-format';
 import { isCompleteSearch, parseSearch, serializeSearch, type UrlSearch } from '@/lib/url-state';
 import { usePlan } from '@/hooks/use-plan';
 import { shareUrl, useHistorySearch } from '@/hooks/use-history-search';
 import { usePlannerValues } from '@/hooks/use-planner-values';
 import { Icon } from './icons';
-import { MapPanel } from './map-panel';
+import { MapPanel, type MapView } from './map-panel';
 import { PlanForm } from './plan-form';
 import { ResultActions } from './result-actions';
 import { ResultPanel, type ResultContext } from './result-panel';
@@ -64,7 +64,11 @@ export function PlannerShell() {
   const [planned, setPlanned] = useState<PlannedSearch | null>(null);
   const [returnTime, setReturnTime] = useState<string | null>(null);
   const [linkNotice, setLinkNotice] = useState('');
+  /** Which trip the map draws once the return is calculated too (review B1). */
+  const [mapView, setMapView] = useState<MapView>('outbound');
   const linkHandled = useRef(false);
+  /** Move focus to the result title when the requested result arrives (point 11). */
+  const focusResult = useRef(false);
   const demoMode = apiConfig.useMock;
   const today = todayInRome();
 
@@ -118,6 +122,7 @@ export function PlannerShell() {
       if (validatePlannerValues(searchValues)) return false;
       const withReturn = searchValues.direction === 'outbound' ? lessonEnd : undefined;
       setPlanned({ values: searchValues, returnTime: withReturn });
+      setMapView('outbound');
       void outbound.submit(buildPlanRequest(searchValues));
       if (withReturn) {
         setReturnTime(withReturn);
@@ -157,16 +162,31 @@ export function PlannerShell() {
     setLinkNotice('');
     if (!runSearch(values)) return;
     push(serializeSearch(values));
+    focusResult.current = true;
     if (isNarrowViewport())
       document.getElementById('result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  // The answer is announced by moving focus to its title (no extra scroll:
+  // on narrow screens the smooth scroll above already brings it into view).
+  useEffect(() => {
+    if (!focusResult.current || outbound.status === 'loading' || outbound.status === 'idle') return;
+    focusResult.current = false;
+    document.getElementById('result-title')?.focus({ preventScroll: true });
+  }, [outbound.status]);
+
   const defaultReturnTime = planned ? addMinutesClamped(planned.values.time, 120) : '12:00';
   const effectiveReturnTime = returnTime ?? defaultReturnTime;
+  // Review B7: a proposed lesson end is never silent.
+  const returnTimeHint =
+    returnTime === null
+      ? `Proposta: inizio lezione + 2 ore (${defaultReturnTime}). Modificala con l’orario reale di fine lezione.`
+      : undefined;
 
   function handleReturn() {
     if (!planned) return;
     setPlanned({ ...planned, returnTime: effectiveReturnTime });
+    setMapView('return');
     void back.submit(buildPlanRequest(returnTripValues(planned.values, effectiveReturnTime)));
     push(serializeSearch(planned.values, effectiveReturnTime));
   }
@@ -192,16 +212,46 @@ export function PlannerShell() {
     outbound.status === 'success' &&
     !!outbound.lastRequest &&
     JSON.stringify(outbound.lastRequest) === JSON.stringify(buildPlanRequest(values));
-  const route = useMemo(
+  // The return trip of the planned search, once "Calcola il ritorno" ran.
+  const returnValues = useMemo(
     () =>
-      buildRoute(
-        values,
-        stations,
-        campuses.find((campus) => campus.id === values.campusId),
-        resultIsCurrent ? outbound.result?.itineraries[0] : undefined,
-      ),
-    [values, stations, campuses, resultIsCurrent, outbound.result],
+      planned?.returnTime && planned.values.direction === 'outbound'
+        ? returnTripValues(planned.values, planned.returnTime)
+        : undefined,
+    [planned],
   );
+  const hasReturnView = !!returnValues && back.status !== 'idle';
+  const showReturnOnMap = hasReturnView && mapView === 'return';
+  const returnIsCurrent =
+    !!returnValues &&
+    back.status === 'success' &&
+    JSON.stringify(back.lastRequest) === JSON.stringify(buildPlanRequest(returnValues));
+  const route = useMemo(() => {
+    const shown = showReturnOnMap ? returnValues! : values;
+    const itinerary = showReturnOnMap
+      ? returnIsCurrent
+        ? back.result?.itineraries[0]
+        : undefined
+      : resultIsCurrent
+        ? outbound.result?.itineraries[0]
+        : undefined;
+    return buildRoute(
+      shown,
+      stations,
+      campuses.find((campus) => campus.id === shown.campusId),
+      itinerary,
+    );
+  }, [
+    showReturnOnMap,
+    returnValues,
+    values,
+    stations,
+    campuses,
+    resultIsCurrent,
+    returnIsCurrent,
+    outbound.result,
+    back.result,
+  ]);
 
   const context: ResultContext | undefined = planned
     ? {
@@ -393,6 +443,7 @@ export function PlannerShell() {
               showReturn ? (
                 <ReturnTrip
                   endTime={effectiveReturnTime}
+                  endTimeHint={returnTimeHint}
                   onEndTimeChange={setReturnTime}
                   onCalculate={handleReturn}
                   loading={back.status === 'loading'}
@@ -432,7 +483,14 @@ export function PlannerShell() {
           />
         </div>
         <div className="planner-map">
-          {!catalogLoading && <MapPanel route={route} picking={picking} onPick={handlePick} />}
+          {!catalogLoading && (
+            <MapPanel
+              route={route}
+              picking={picking}
+              onPick={handlePick}
+              view={hasReturnView ? { active: mapView, onChange: setMapView } : undefined}
+            />
+          )}
         </div>
         <div className="planner-schedule">
           {catalogError || catalogLoading ? null : (
@@ -453,7 +511,7 @@ export function PlannerShell() {
           </span>
           <span>
             {health
-              ? `Orario valido fino al ${formatDate(`${health.data_valid_to}T12:00:00`)} · mappe e indirizzi © OpenStreetMap contributors (ODbL)`
+              ? `Orario valido fino a ${formatShortDate(health.data_valid_to)} · mappe e indirizzi © OpenStreetMap contributors (ODbL)`
               : 'Mappe e indirizzi © OpenStreetMap contributors (ODbL)'}
           </span>
         </div>

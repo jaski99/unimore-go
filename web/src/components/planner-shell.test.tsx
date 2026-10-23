@@ -19,8 +19,29 @@ vi.mock('@/lib/api/plan-service', () => ({
 }));
 // Leaflet needs a real browser; the map has its own geometry tests.
 vi.mock('./map-panel', () => ({
-  MapPanel: ({ route }: { route: { points: unknown[] } }) => (
-    <div data-testid="map">{route.points.length} punti</div>
+  MapPanel: ({
+    route,
+    view,
+  }: {
+    route: { points: { label: string }[] };
+    view?: { active: string; onChange: (view: 'outbound' | 'return') => void };
+  }) => (
+    <div data-testid="map">
+      <p data-testid="map-points">
+        {route.points.length} punti: {route.points.map((point) => point.label).join(' → ')}
+      </p>
+      {view && (
+        <p>
+          vista {view.active}
+          <button type="button" onClick={() => view.onChange('outbound')}>
+            Mappa andata
+          </button>
+          <button type="button" onClick={() => view.onChange('return')}>
+            Mappa ritorno
+          </button>
+        </p>
+      )}
+    </div>
   ),
 }));
 
@@ -28,6 +49,21 @@ const PREFS = 'unimorego.planner.v1';
 const SHARED =
   '/?sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-25&ora=09%3A00&mezzo=piedi&verso=andata';
 const demo = fixtures.demo.response as PlanResponse;
+/** Return trip of the demo: DIEF → Modena FS (bike), train Modena → Reggio Emilia. */
+const demoReturn: PlanResponse = {
+  ...demo,
+  planner: 'depart_after',
+  itineraries: [
+    {
+      ...demo.itineraries[0],
+      legs: [
+        { ...demo.itineraries[0].legs[2], from: 'DIEF', to: 'Modena FS' },
+        { ...demo.itineraries[0].legs[1], from: 'Modena', to: 'Reggio Emilia' },
+      ],
+    },
+  ],
+};
+const mapPoints = () => screen.getByTestId('map-points').textContent;
 const goBack = () => {
   window.history.back();
 };
@@ -194,6 +230,51 @@ describe('PlannerShell: andata e ritorno (C3)', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Esci alle 07:39' })).toBeInTheDocument();
   });
 
+  it('dopo "Calcola il ritorno" la mappa mostra il ritorno e segue ogni cambio andata/ritorno (B1)', async () => {
+    const user = userEvent.setup();
+    render(<PlannerShell />);
+    await user.click(await formReady());
+    await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
+    expect(mapPoints()).toBe(
+      '3 punti: Stazione partenza · Reggio Emilia FS → Stazione arrivo · Modena FS → Sede · DIEF',
+    );
+    expect(screen.queryByText(/vista/)).not.toBeInTheDocument();
+
+    service.createPlan.mockResolvedValueOnce(demoReturn);
+    const returnBox = screen.getByRole('region', { name: 'E per tornare?' });
+    await user.click(within(returnBox).getByRole('button', { name: 'Calcola il ritorno' }));
+    await within(returnBox).findByRole('heading', { level: 3, name: 'Parti alle 07:39' });
+    expect(mapPoints()).toBe(
+      '3 punti: Sede · DIEF → Stazione partenza · Modena FS → Stazione arrivo · Reggio Emilia FS',
+    );
+    expect(screen.getByText(/vista return/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mappa andata' }));
+    expect(mapPoints()).toMatch(/^3 punti: Stazione partenza · Reggio Emilia FS/);
+    await user.click(screen.getByRole('button', { name: 'Mappa ritorno' }));
+    expect(mapPoints()).toMatch(/^3 punti: Sede · DIEF/);
+
+    // A new outbound search shows the outbound again.
+    service.createPlan.mockResolvedValueOnce(demo);
+    await user.click(screen.getByRole('button', { name: /Calcola quando uscire/ }));
+    await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
+    expect(mapPoints()).toMatch(/^3 punti: Stazione partenza · Reggio Emilia FS/);
+  });
+
+  it('la fine lezione del ritorno è dichiarata come proposta da modificare (B7)', async () => {
+    const user = userEvent.setup();
+    render(<PlannerShell />);
+    await user.click(await formReady());
+    await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
+    const returnBox = screen.getByRole('region', { name: 'E per tornare?' });
+    const group = within(returnBox).getByRole('group', { name: 'Fine lezione' });
+    expect(group).toHaveAccessibleDescription(
+      'Proposta: inizio lezione + 2 ore (10:30). Modificala con l’orario reale di fine lezione.',
+    );
+    await user.selectOptions(within(returnBox).getByRole('combobox', { name: 'Ore' }), '13');
+    expect(group).not.toHaveAccessibleDescription(/Proposta/);
+  });
+
   it('il ritorno come ricerca principale si ricorda', async () => {
     const user = userEvent.setup();
     render(<PlannerShell />);
@@ -220,6 +301,18 @@ describe('PlannerShell: mobile ed errori', () => {
     await user.click(await formReady());
     expect(scroll).toHaveBeenCalled();
     expect(scroll.mock.contexts[0]).toBe(document.getElementById('result'));
+    // Accessible focus on the result title once it is there (round 3, point 11).
+    const title = await screen.findByRole('heading', { level: 2, name: 'Esci alle 07:39' });
+    await waitFor(() => expect(title).toHaveFocus());
+  });
+
+  it('anche quando non c’è un treno utile il focus va al titolo del risultato', async () => {
+    const user = userEvent.setup();
+    service.createPlan.mockResolvedValueOnce({ ...demo, itineraries: [], calculation: null });
+    render(<PlannerShell />);
+    await user.click(await formReady());
+    const title = await screen.findByRole('heading', { level: 2, name: 'Nessun treno utile' });
+    await waitFor(() => expect(title).toHaveFocus());
   });
 
   it('mostra un errore recuperabile se il catalogo non si carica', async () => {
@@ -238,7 +331,7 @@ describe('prefillMessage', () => {
       'Dal tuo orario: lezione di oggi alle 10:30.',
     );
     expect(prefillMessage({ lesson, date: '2026-10-27', today: false })).toBe(
-      'Dal tuo orario: prossima lezione mar 27 ott alle 10:30.',
+      'Dal tuo orario: prossima lezione mar 27 ott 2026 alle 10:30.',
     );
   });
 });

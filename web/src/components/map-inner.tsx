@@ -55,7 +55,7 @@ export function MapInner({ route, picking, onPick }: MapInnerProps) {
       ))}
       {route.points.map((point) => (
         <CircleMarker
-          key={point.role}
+          key={`${point.role}-${point.labelSide}`}
           center={point.position}
           radius={point.role === 'home' || point.role === 'campus' ? 9 : 7}
           pathOptions={{
@@ -65,19 +65,28 @@ export function MapInner({ route, picking, onPick }: MapInnerProps) {
             fillOpacity: 1,
           }}
         >
-          {/* Permanent labels: the markers are readable without hovering (touch). */}
-          <Tooltip permanent direction="top" offset={[0, -8]} className="map-label">
+          {/* Permanent labels, readable without hovering (touch); above or below the
+              marker so that nearby markers do not cover each other (B5). */}
+          <Tooltip
+            permanent
+            direction={point.labelSide}
+            offset={point.labelSide === 'top' ? [0, -8] : [0, 8]}
+            className="map-label"
+          >
             {point.label}
           </Tooltip>
         </CircleMarker>
       ))}
-      <FitAndResize positions={positions} />
+      <FitAndResize
+        positions={positions}
+        labelBelow={route.points.some((point) => point.labelSide === 'bottom')}
+      />
       <PickHandler picking={picking} onPick={onPick} />
     </MapContainer>
   );
 }
 
-function FitAndResize({ positions }: { positions: LatLon[] }) {
+function FitAndResize({ positions, labelBelow }: { positions: LatLon[]; labelBelow: boolean }) {
   const map = useMap();
   useEffect(() => {
     // The container may get its final size after mount (lazy load, layout shifts).
@@ -87,11 +96,11 @@ function FitAndResize({ positions }: { positions: LatLon[] }) {
       const side = Math.min(110, Math.round(map.getSize().x * 0.28));
       map.fitBounds(positions, {
         paddingTopLeft: [side, 40],
-        paddingBottomRight: [side, 24],
+        paddingBottomRight: [side, labelBelow ? 44 : 24],
         maxZoom: 15,
       });
     } else if (positions.length === 1) map.setView(positions[0], 14);
-  }, [map, positions]);
+  }, [map, positions, labelBelow]);
   useEffect(() => {
     const resize = () => map.invalidateSize();
     window.addEventListener('resize', resize);
