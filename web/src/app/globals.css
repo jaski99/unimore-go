@@ -497,3 +497,33 @@ fieldset {
 .today-badge {
   @apply rounded-full bg-pine px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white dark:bg-emerald-400 dark:text-slate-950;
 }
+
+/*
+ * The loading skeleton takes the height of the real form (measured with the
+ * default values), so the result below it does not jump when the catalog
+ * arrives (CLS). Values per width range: 360-399 / 400-639 / 640-1023 /
+ * 1024-1279 / >= 1280 px.
+ */
+.form-skeleton {
+  min-height: 984px;
+}
+@media (min-width: 400px) {
+  .form-skeleton {
+    min-height: 964px;
+  }
+}
+@media (min-width: 640px) {
+  .form-skeleton {
+    min-height: 880px;
+  }
+}
+@media (min-width: 1024px) {
+  .form-skeleton {
+    min-height: 944px;
+  }
+}
+@media (min-width: 1280px) {
+  .form-skeleton {
+    min-height: 896px;
+  }
+}

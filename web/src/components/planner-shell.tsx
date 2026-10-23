@@ -324,8 +324,12 @@ export function PlannerShell() {
             </p>
           )}
           {catalogLoading && (
-            <div className="space-y-4" role="status" aria-label="Caricamento sedi e stazioni">
-              {[1, 2, 3, 4].map((item) => (
+            <div
+              className="form-skeleton space-y-4"
+              role="status"
+              aria-label="Caricamento sedi e stazioni"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
                 <div className="skeleton h-12 rounded-xl" key={item} />
               ))}
             </div>
