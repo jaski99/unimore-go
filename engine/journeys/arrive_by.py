@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from engine.durations import MINUTES_PER_HOUR, format_minutes
 from engine.itinerary_builder import assemble, clock, station_wait_leg, timed_leg
 from engine.journeys.base import JourneyPlanner, category_hint
 from engine.journeys.context import Journey, PlanningContext, is_working_day, run_minutes
@@ -29,6 +30,11 @@ MAX_LATE_MIN = 60
 MAX_EARLY_MIN = 120
 
 
+def _of(minutes: int) -> str:
+    """Italian partitive before a duration: "dei 10 min", "di 1 h"."""
+    return "dei" if minutes < MINUTES_PER_HOUR else "di"
+
+
 def late_train_label(slack_min: int, margin_min: int) -> str:
     """One coherent text for the first train after the deadline.
 
@@ -37,17 +43,17 @@ def late_train_label(slack_min: int, margin_min: int) -> str:
     """
     if slack_min < 0:
         return (
-            f"Primo treno dopo: arrivi in sede {-slack_min} min in ritardo sull'inizio della "
-            "lezione."
+            f"Primo treno dopo: arrivi in sede {format_minutes(-slack_min)} in ritardo "
+            "sull'inizio della lezione."
         )
     when = (
         "all'inizio della lezione"
         if slack_min == 0
-        else f"{slack_min} min prima dell'inizio della lezione"
+        else f"{format_minutes(slack_min)} prima dell'inizio della lezione"
     )
     return (
-        f"Primo treno dopo: arrivi in sede {when}, meno dei {margin_min} min di anticipo che "
-        "hai scelto."
+        f"Primo treno dopo: arrivi in sede {when}, meno {_of(margin_min)} "
+        f"{format_minutes(margin_min)} di anticipo che hai scelto."
     )
 
 
@@ -103,10 +109,11 @@ class ArriveByPlanner(JourneyPlanner):
         request = journey.request
         terms = [f"lezione alle {clock(journey.target_min)}"]
         if request.margin_minutes:
-            terms.append(f"{request.margin_minutes} min di anticipo")
+            terms.append(f"{format_minutes(request.margin_minutes)} di anticipo")
         if journey.campus_leg_minutes:
             terms.append(
-                f"{journey.campus_leg_minutes} min {journey.campus_mode_label} dalla stazione "
+                f"{format_minutes(journey.campus_leg_minutes)} {journey.campus_mode_label} "
+                "dalla stazione "
                 "alla sede"
             )
         summary = (
@@ -146,7 +153,7 @@ class ArriveByPlanner(JourneyPlanner):
                 home.station_leg_minutes,
             ),
             station_wait_leg(home.station.name, dep - buffer, buffer),
-            ctx.train_leg_planner.build_train_leg(run),
+            ctx.train_leg_planner.build_train_leg(run, day),
             timed_leg(
                 journey.campus_mode,
                 journey.campus_station.name,
@@ -174,7 +181,8 @@ class ArriveByPlanner(JourneyPlanner):
                 NearbySolution(
                     "previous",
                     itinerary,
-                    f"Ultimo treno utile del giorno: arrivi in sede {itinerary.slack_min} min "
+                    "Ultimo treno utile del giorno: arrivi in sede "
+                    f"{format_minutes(itinerary.slack_min)} "
                     "prima dell'inizio della lezione.",
                 )
             )
@@ -224,4 +232,9 @@ class ArriveByPlanner(JourneyPlanner):
         arrive = journey.target_min - margin
         leg = timed_leg(journey.campus_mode, label, journey.campus.name, arrive - minutes, minutes)
         itinerary = assemble((leg,), margin, journey.day)
-        return PlanResult(self.name, (itinerary,), ctx.compose([*journey.notices, *extra]))
+        return PlanResult(
+            self.name,
+            (itinerary,),
+            ctx.compose([*journey.notices, *extra]),
+            suggestion=ctx.direct_suggestion(journey, minutes),
+        )

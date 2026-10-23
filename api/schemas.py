@@ -199,6 +199,15 @@ class TrainInfoSchema(BaseModel):
         description="Pagina del PDF Trenitalia da cui è tratta la corsa",
         examples=["Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8 e 35)"],
     )
+    festive_unverified: bool = Field(
+        False,
+        description=(
+            "True in un giorno festivo (domenica o festività) se l'orario non conferma "
+            "esplicitamente la circolazione della corsa (nessun simbolo †/Ⓑ/Ⓒ né nota che "
+            "nomini il giorno): la UI mostra «Circolazione nei festivi da verificare»"
+        ),
+        examples=[False],
+    )
 
 
 class LegSchema(BaseModel):
@@ -301,6 +310,20 @@ class CalculationSchema(BaseModel):
     )
 
 
+class SuggestionSchema(BaseModel):
+    """A faster mode for the same trip (same city, long walk -> bike)."""
+
+    mode: Literal["bike"] = Field(..., description="Mezzo suggerito", examples=["bike"])
+    minutes: int = Field(
+        ..., ge=0, description="Durata con il mezzo suggerito (bici a 15 km/h)", examples=[22]
+    )
+    message: str = Field(
+        ...,
+        description="Testo pronto per la UI",
+        examples=["In bici circa 22 min (a piedi 53 min)."],
+    )
+
+
 class PlanResponseSchema(BaseModel):
     """Trip planning result."""
 
@@ -320,6 +343,12 @@ class PlanResponseSchema(BaseModel):
     )
     calculation: CalculationSchema | None = Field(
         None, description="Calcolo dell'orario limite in stazione (assente per percorsi diretti)"
+    )
+    suggestion: SuggestionSchema | None = Field(
+        None,
+        description=(
+            "Stessa città a piedi oltre 20 min: la bici con il suo tempo; null altrimenti"
+        ),
     )
     notices: list[NoticeSchema] = Field(
         default_factory=list,

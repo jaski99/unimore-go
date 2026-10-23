@@ -11,6 +11,8 @@ import math
 from abc import ABC, abstractmethod
 from datetime import date, time
 
+from engine.calendar_rules import UNRESTRICTED, CalendarInterpretation
+from engine.festive_service import festive_service_unverified
 from engine.models import (
     Leg,
     TrainRun,
@@ -254,9 +256,18 @@ class TrainLegPlanner:
         qualified.sort(key=lambda t: time_to_minutes(t.depart_time), reverse=True)
         return qualified
 
-    def build_train_leg(self, train: TrainRun) -> Leg:
-        """Construct an immutable Leg from a TrainRun, with calendar-note warnings."""
+    def build_train_leg(self, train: TrainRun, day: date | None = None) -> Leg:
+        """Construct an immutable Leg from a TrainRun, with calendar-note warnings.
+
+        With ``day``, a Sunday/holiday run whose festive service is not
+        confirmed by the data is flagged (``festive_unverified``).
+        """
         warning = self.calendar.warning_for(train) if self.calendar else None
+        interpretation = (
+            self.calendar.interpretation(train)
+            if self.calendar
+            else CalendarInterpretation(status=UNRESTRICTED)
+        )
         return Leg(
             leg_type="train",
             origin=train.from_station,
@@ -266,4 +277,6 @@ class TrainLegPlanner:
             minutes=train.duration_minutes,
             train=train,
             notes=(warning,) if warning else (),
+            festive_unverified=day is not None
+            and festive_service_unverified(train, day, interpretation),
         )

@@ -429,7 +429,7 @@ def test_train_hours_before_the_lesson_is_an_alternative_not_a_result(planner: P
     assert "tra le 03:01 e le 05:01 di lun 26 ott 2026" in no_service.message
     previous, following = result.nearby
     assert (previous.kind, previous.itinerary.leave_at) == ("previous", "00:48")
-    assert previous.label.startswith("Ultimo treno utile del giorno: arrivi in sede 242 min")
+    assert previous.label.startswith("Ultimo treno utile del giorno: arrivi in sede 4 h 2 min")
     assert following.kind == "next" and following.itinerary.slack_min == -26
 
 

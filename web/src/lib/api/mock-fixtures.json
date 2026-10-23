@@ -112,7 +112,8 @@
                 "code": "RV",
                 "category_group": "regional",
                 "different_ticket": false,
-                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8, 35)"
+                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8, 35)",
+                "festive_unverified": false
               },
               "notes": []
             },
@@ -160,7 +161,8 @@
                 "code": "R",
                 "category_group": "regional",
                 "different_ticket": false,
-                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8; simbolo ⚒)"
+                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8; simbolo ⚒)",
+                "festive_unverified": false
               },
               "notes": []
             },
@@ -208,7 +210,8 @@
                 "code": "RV",
                 "category_group": "regional",
                 "different_ticket": false,
-                "source": "Regionale_Emilia.pdf, pag. 73 (pagina stampata 61; note 8)"
+                "source": "Regionale_Emilia.pdf, pag. 73 (pagina stampata 61; note 8)",
+                "festive_unverified": false
               },
               "notes": []
             },
@@ -234,6 +237,7 @@
         "time": "07:58",
         "summary": "Calcolo: lezione alle 08:30 − 10 min di anticipo − 22 min in bici dalla stazione alla sede = arrivo a Modena FS entro le 07:58."
       },
+      "suggestion": null,
       "notices": [
         {
           "code": "not_realtime",

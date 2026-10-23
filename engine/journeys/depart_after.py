@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from engine.durations import format_minutes
 from engine.itinerary_builder import assemble, clock, station_wait_leg, timed_leg
 from engine.journeys.base import JourneyPlanner, category_hint
 from engine.journeys.context import Journey, PlanningContext, run_minutes
@@ -68,10 +69,11 @@ class DepartAfterPlanner(JourneyPlanner):
         terms = [f"fine lezione alle {clock(journey.target_min)}"]
         if journey.campus_leg_minutes:
             terms.append(
-                f"{journey.campus_leg_minutes} min {journey.campus_mode_label} fino alla stazione"
+                f"{format_minutes(journey.campus_leg_minutes)} {journey.campus_mode_label} "
+                "fino alla stazione"
             )
         if request.station_buffer_minutes:
-            terms.append(f"{request.station_buffer_minutes} min in stazione")
+            terms.append(f"{format_minutes(request.station_buffer_minutes)} in stazione")
         summary = (
             f"Calcolo: {' + '.join(terms)} = treni da {journey.campus_station.name} dalle "
             f"{clock(ready)}."
@@ -100,7 +102,7 @@ class DepartAfterPlanner(JourneyPlanner):
                 journey.campus_leg_minutes,
             ),
             station_wait_leg(journey.campus_station.name, dep - buffer, buffer),
-            ctx.train_leg_planner.build_train_leg(run),
+            ctx.train_leg_planner.build_train_leg(run, day),
             timed_leg(
                 journey.home_mode, home.station.name, home.label, arr, home.station_leg_minutes
             ),
@@ -154,4 +156,9 @@ class DepartAfterPlanner(JourneyPlanner):
             journey.campus_mode, journey.campus.name, label, journey.target_min, minutes
         )
         itinerary = assemble((leg,), 0, journey.day)
-        return PlanResult(self.name, (itinerary,), ctx.compose([*journey.notices, *extra]))
+        return PlanResult(
+            self.name,
+            (itinerary,),
+            ctx.compose([*journey.notices, *extra]),
+            suggestion=ctx.direct_suggestion(journey, minutes),
+        )

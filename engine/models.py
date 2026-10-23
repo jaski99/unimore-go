@@ -116,6 +116,9 @@ class Leg:
     minutes: int
     train: TrainRun | None = None
     notes: tuple[str, ...] = ()  # leg-specific warnings (e.g. calendar notes)
+    # Train legs on Sundays/holidays whose festive service the data does not
+    # confirm (see engine/festive_service.py).
+    festive_unverified: bool = False
 
     @property
     def depart_time(self) -> time:
@@ -223,6 +226,15 @@ class Calculation:
 
 
 @dataclass(frozen=True)
+class ModeSuggestion:
+    """A faster mode worth suggesting (e.g. the bike for a long same-city walk)."""
+
+    mode: str  # "bike"
+    minutes: int
+    message: str
+
+
+@dataclass(frozen=True)
 class PlanResult:
     """Outcome of a journey planner run."""
 
@@ -231,6 +243,7 @@ class PlanResult:
     notices: tuple[Notice, ...] = ()
     nearby: tuple[NearbySolution, ...] = ()
     calculation: Calculation | None = None
+    suggestion: ModeSuggestion | None = None
 
     @property
     def warnings(self) -> tuple[str, ...]:

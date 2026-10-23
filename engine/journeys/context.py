@@ -7,8 +7,16 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from engine.holidays import holiday_name, is_festive
+from engine.journeys.suggestion import bike_suggestion
 from engine.legs import ActiveLegPlanner, TrainLegPlanner
-from engine.models import Campus, PlanRequest, Station, TrainRun, time_to_minutes
+from engine.models import (
+    Campus,
+    ModeSuggestion,
+    PlanRequest,
+    Station,
+    TrainRun,
+    time_to_minutes,
+)
 from engine.notices import (
     ESTIMATE,
     FESTIVE_DAY,
@@ -211,10 +219,20 @@ class PlanningContext:
                     "preciso.",
                 )
             )
-        minutes = self.active_planner(journey.campus_mode).calculate_minutes(
+        return self.direct_minutes_by(journey, journey.campus_mode), label, notices
+
+    def direct_minutes_by(self, journey: Journey, mode: str) -> int:
+        """Minutes of the same-city direct leg with ``mode`` (walk or bike)."""
+        home = journey.home
+        return self.active_planner(mode).calculate_minutes(
             origin_id=home.station.id if home.is_station or home.coords is None else None,
             destination_id=journey.campus.id,
             origin_coords=home.point,
             destination_coords=(journey.campus.lat, journey.campus.lon),
         )
-        return minutes, label, notices
+
+    def direct_suggestion(self, journey: Journey, minutes: int) -> ModeSuggestion | None:
+        """Bike suggestion for a long same-city walk (``minutes`` on foot)."""
+        return bike_suggestion(
+            journey.campus_mode, minutes, lambda: self.direct_minutes_by(journey, "bike")
+        )

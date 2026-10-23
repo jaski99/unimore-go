@@ -9,15 +9,16 @@ from api.schemas import (
     NearbySchema,
     NoticeSchema,
     PlanResponseSchema,
+    SuggestionSchema,
     TrainInfoSchema,
 )
-from engine.models import Itinerary, Leg, PlanResult, TrainRun
+from engine.models import Itinerary, Leg, ModeSuggestion, PlanResult, TrainRun
 from engine.notices import GENERIC, Notice, NoticeComposer, notice
 from engine.service_calendar import pdf_reference
 from engine.train_categories import category_code, category_group, requires_different_ticket
 
 
-def train_info(train: TrainRun) -> TrainInfoSchema:
+def train_info(train: TrainRun, festive_unverified: bool = False) -> TrainInfoSchema:
     return TrainInfoSchema(
         number=train.train,
         category=train.category,
@@ -26,6 +27,7 @@ def train_info(train: TrainRun) -> TrainInfoSchema:
         category_group=category_group(train.category),  # type: ignore[arg-type]
         different_ticket=requires_different_ticket(train.category),
         source=pdf_reference(train.source) if train.source else "",
+        festive_unverified=festive_unverified,
     )
 
 
@@ -37,7 +39,7 @@ def leg_schema(leg: Leg) -> LegSchema:
         depart=leg.depart,
         arrive=leg.arrive,
         minutes=leg.minutes,
-        train=train_info(leg.train) if leg.train else None,
+        train=train_info(leg.train, leg.festive_unverified) if leg.train else None,
         notes=list(leg.notes),
     )
 
@@ -51,6 +53,16 @@ def itinerary_schema(itinerary: Itinerary) -> ItinerarySchema:
         date=itinerary.service_date,
         duration_min=itinerary.door_to_door_minutes,
         changes=itinerary.changes,
+    )
+
+
+def suggestion_schema(suggestion: ModeSuggestion | None) -> SuggestionSchema | None:
+    if suggestion is None:
+        return None
+    return SuggestionSchema(
+        mode=suggestion.mode,  # type: ignore[arg-type]
+        minutes=suggestion.minutes,
+        message=suggestion.message,
     )
 
 
@@ -84,6 +96,7 @@ def plan_response(
             if calculation
             else None
         ),
+        suggestion=suggestion_schema(result.suggestion),
         notices=[
             NoticeSchema(code=n.code, level=n.level, message=n.message)  # type: ignore[arg-type]
             for n in notices

@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from engine.durations import format_minutes
 from engine.legs import ActiveLegPlanner, haversine_distance_m
 from engine.models import PlanRequest, Station
 from engine.notices import HOME_FAR, Notice, notice
@@ -137,7 +138,7 @@ class OriginResolver:
             )
             mode_label = MODE_LABELS.get(planner.mode, planner.mode)
             estimate_note = (
-                f"Tempo casa → {station.name} stimato: {minutes} min {mode_label} "
+                f"Tempo casa → {station.name} stimato: {format_minutes(minutes)} {mode_label} "
                 "(distanza in linea d'aria × 1,3). Inserisci i tuoi minuti per un calcolo preciso."
             )
         return HomeEndpoint(
