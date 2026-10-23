@@ -40,6 +40,9 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
         aria-autocomplete="list"
         aria-controls="campus-options"
         aria-expanded={open}
+        aria-activedescendant={
+          open && filtered[activeIndex] ? `campus-option-${filtered[activeIndex].id}` : undefined
+        }
         autoComplete="off"
         value={open ? query : selected ? `${selected.name} · ${selected.city}` : query}
         placeholder="Cerca una sede…"
@@ -65,7 +68,7 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
             event.preventDefault();
             choose(filtered[activeIndex]);
           }
-          if (event.key === 'Escape') setOpen(false);
+          if (event.key === 'Escape' || event.key === 'Tab') setOpen(false);
         }}
         onBlur={() => window.setTimeout(() => setOpen(false), 120)}
       />
@@ -73,20 +76,26 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
         <ul id="campus-options" role="listbox" className="campus-options">
           {filtered.length ? (
             filtered.map((campus, index) => (
-              <li key={campus.id} role="option" aria-selected={campus.id === selectedId}>
+              <li
+                key={campus.id}
+                id={`campus-option-${campus.id}`}
+                role="option"
+                aria-selected={campus.id === selectedId}
+              >
                 <button
                   type="button"
+                  tabIndex={-1}
                   className={`campus-option ${index === activeIndex ? 'campus-option-active' : ''}`}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => choose(campus)}
                 >
                   <span>{campus.name}</span>
-                  <span className="text-xs text-slate-500">{campus.city}</span>
+                  <span className="text-xs text-slate-600">{campus.city}</span>
                 </button>
               </li>
             ))
           ) : (
-            <li className="px-4 py-3 text-sm text-slate-500">Nessuna sede trovata</li>
+            <li className="px-4 py-3 text-sm text-slate-600">Nessuna sede trovata</li>
           )}
         </ul>
       )}

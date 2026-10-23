@@ -1,7 +1,23 @@
 import type { ReactNode, SVGProps } from 'react';
 
-type IconName =
-  'walk' | 'bike' | 'train' | 'pin' | 'calendar' | 'clock' | 'arrow' | 'close' | 'sun' | 'spark';
+export type IconName =
+  | 'walk'
+  | 'bike'
+  | 'train'
+  | 'wait'
+  | 'pin'
+  | 'calendar'
+  | 'clock'
+  | 'arrow'
+  | 'close'
+  | 'sun'
+  | 'spark'
+  | 'home'
+  | 'search'
+  | 'alert'
+  | 'ticket'
+  | 'map'
+  | 'back';
 
 const paths: Record<IconName, ReactNode> = {
   walk: (
@@ -55,6 +71,46 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </>
+  ),
+  wait: (
+    <>
+      <path d="M7 3h10M7 21h10M8 3c0 4 8 5 8 9s-8 5-8 9M16 3c0 4-8 5-8 9" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="m3 11 9-7 9 7" />
+      <path d="M5 10v10h14V10M10 20v-5h4v5" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6" />
+      <path d="m20 20-4.5-4.5" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M12 4 2.5 20h19L12 4Z" />
+      <path d="M12 10v4m0 3v.01" />
+    </>
+  ),
+  ticket: (
+    <>
+      <path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4V7Z" />
+      <path d="M14 7v10" strokeDasharray="2 2" />
+    </>
+  ),
+  map: (
+    <>
+      <path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2V6Z" />
+      <path d="M9 4v14m6-12v14" />
+    </>
+  ),
+  back: (
+    <>
+      <path d="M19 12H5m6 6-6-6 6-6" />
     </>
   ),
   spark: (

@@ -1,135 +1,209 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { Campus, PlanRequest, Station, TravelMode } from '@/lib/api/types';
-import { buildPlanRequest, DEFAULT_PLANNER_VALUES } from '@/lib/plan-request';
+import type { Campus, GeocodeResult, Station } from '@/lib/api/types';
+import {
+  STATION_BUFFER_RANGE,
+  validatePlannerValues,
+  type PlannerValues,
+} from '@/lib/plan-request';
 import { CampusSearch } from './campus-search';
+import { HomeLocationField } from './home-location-field';
 import { Icon } from './icons';
 
-export interface FormPrefill {
-  campusId: string;
-  date: string;
-  time: string;
-}
-
 interface PlanFormProps {
+  values: PlannerValues;
+  onChange: (patch: Partial<PlannerValues>) => void;
   campuses: Campus[];
   stations: Station[];
-  onSubmit: (request: PlanRequest) => void;
-  prefill: FormPrefill | null;
+  onSubmit: () => void;
   loading: boolean;
-  onSelectionChange: (selection: { campusId: string; stationId: string }) => void;
+  /** Last day covered by the timetable (YYYY-MM-DD), from /api/health. */
+  validTo?: string;
+  onSearchAddress: (query: string) => Promise<GeocodeResult[]>;
+  onPickOnMap: () => void;
+  pickingOnMap: boolean;
+  /** Note shown when the form was prefilled from the weekly schedule. */
+  prefillNote?: string;
 }
 
 export function PlanForm({
+  values,
+  onChange,
   campuses,
   stations,
   onSubmit,
-  prefill,
   loading,
-  onSelectionChange,
+  validTo,
+  onSearchAddress,
+  onPickOnMap,
+  pickingOnMap,
+  prefillNote,
 }: PlanFormProps) {
-  const [values, setValues] = useState(DEFAULT_PLANNER_VALUES);
-  const [geoError, setGeoError] = useState('');
-
-  useEffect(() => {
-    if (prefill) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Apply an external saved-class selection to the local form.
-      setValues((current) => ({
-        ...current,
-        campusId: prefill.campusId,
-        date: prefill.date,
-        time: prefill.time,
-      }));
-    }
-  }, [prefill]);
-
-  const selectedStation =
-    stations.find((station) => station.id === values.stationId) ?? stations[0];
-
-  useEffect(() => {
-    if (values.campusId && values.stationId)
-      onSelectionChange({ campusId: values.campusId, stationId: values.stationId });
-  }, [onSelectionChange, values.campusId, values.stationId]);
-
-  function chooseMode(mode: TravelMode) {
-    setValues((current) => ({ ...current, mode }));
-  }
-
-  function chooseLocation() {
-    setGeoError('');
-    if (!navigator.geolocation) {
-      setGeoError('La geolocalizzazione non è disponibile in questo browser.');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) =>
-        setValues((current) => ({
-          ...current,
-          originKind: 'location',
-          coordinates: { lat: position.coords.latitude, lon: position.coords.longitude },
-        })),
-      () =>
-        setGeoError('Non è stato possibile ottenere la posizione. Puoi scegliere una stazione.'),
-      { enableHighAccuracy: true, timeout: 10_000 },
-    );
-  }
+  const isReturn = values.direction === 'return';
+  const error = validatePlannerValues(values);
+  const afterValidity = !!validTo && !!values.date && values.date > validTo;
+  const showStation = values.originKind === 'station' || !values.home;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSubmit(buildPlanRequest({ ...values, stationId: selectedStation?.id ?? values.stationId }));
+    if (!error) onSubmit();
   }
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit} aria-label="Calcola l’orario di partenza">
-      <div className="space-y-2">
-        <CampusSearch
-          campuses={campuses}
-          selectedId={values.campusId}
-          onChange={(campusId) => setValues((current) => ({ ...current, campusId }))}
-        />
-        <p className="field-hint">Seleziona la sede dove si svolge la lezione.</p>
-      </div>
+    <form className="space-y-5" onSubmit={handleSubmit} aria-label="Calcola l’orario">
+      <fieldset>
+        <legend className="sr-only">Andata o ritorno</legend>
+        <div className="segmented">
+          {(
+            [
+              ['outbound', 'Andata', 'a che ora esco?'],
+              ['return', 'Ritorno', 'a che ora parto?'],
+            ] as const
+          ).map(([direction, title, hint]) => (
+            <button
+              key={direction}
+              type="button"
+              aria-pressed={values.direction === direction}
+              className={`segmented-option ${values.direction === direction ? 'segmented-active' : ''}`}
+              onClick={() => onChange({ direction })}
+            >
+              <span className="font-bold">{title}</span>
+              <span className="text-xs">{hint}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      {prefillNote && (
+        <p className="rounded-xl bg-mint/70 px-3 py-2 text-sm text-pine dark:bg-emerald-950/60 dark:text-emerald-200">
+          {prefillNote}
+        </p>
+      )}
+
+      <CampusSearch
+        campuses={campuses}
+        selectedId={values.campusId}
+        onChange={(campusId) => onChange({ campusId })}
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="field-label" htmlFor="lesson-date">
             Giorno
           </label>
-          <div className="input-with-icon">
-            <Icon name="calendar" className="field-icon" />
-            <input
-              id="lesson-date"
-              className="field-input field-input-icon"
-              type="date"
-              required
-              value={values.date}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, date: event.target.value }))
-              }
-            />
-          </div>
+          <input
+            id="lesson-date"
+            className="field-input"
+            type="date"
+            required
+            value={values.date}
+            aria-describedby={afterValidity ? 'validity-alert' : undefined}
+            onChange={(event) => onChange({ date: event.target.value })}
+          />
         </div>
         <div>
           <label className="field-label" htmlFor="lesson-time">
-            Inizio lezione
+            {isReturn ? 'Fine lezione' : 'Inizio lezione'}
           </label>
-          <div className="input-with-icon">
-            <Icon name="clock" className="field-icon" />
-            <input
-              id="lesson-time"
-              className="field-input field-input-icon"
-              type="time"
-              required
-              value={values.time}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, time: event.target.value }))
-              }
-            />
-          </div>
+          <input
+            id="lesson-time"
+            className="field-input"
+            type="time"
+            required
+            value={values.time}
+            onChange={(event) => onChange({ time: event.target.value })}
+          />
         </div>
       </div>
+      {afterValidity && (
+        <p id="validity-alert" role="alert" className="alert-box">
+          <Icon name="alert" className="h-5 w-5 shrink-0" />
+          <span>
+            L’orario caricato vale fino al {validTo!.split('-').reverse().join('/')}: per questa
+            data non ci sono treni affidabili.
+          </span>
+        </p>
+      )}
+
+      <fieldset>
+        <legend className="field-label mb-2">{isReturn ? 'Dove torni?' : 'Da dove parti?'}</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              ['station', 'Dalla stazione', 'Alla stazione', 'train'],
+              ['home', 'Da casa', 'A casa', 'home'],
+            ] as const
+          ).map(([kind, outboundLabel, returnLabel, icon]) => (
+            <button
+              key={kind}
+              type="button"
+              aria-pressed={values.originKind === kind}
+              className={`origin-option ${values.originKind === kind ? 'origin-option-active' : ''}`}
+              onClick={() => onChange({ originKind: kind })}
+            >
+              <Icon name={icon} className="h-5 w-5" />
+              <span className="flex-1 text-left">{isReturn ? returnLabel : outboundLabel}</span>
+            </button>
+          ))}
+        </div>
+
+        {values.originKind === 'home' && (
+          <div className="mt-3 space-y-3">
+            <HomeLocationField
+              home={values.home}
+              onChange={(home) => onChange({ home })}
+              onSearch={onSearchAddress}
+              onPickOnMap={onPickOnMap}
+              picking={pickingOnMap}
+            />
+            <div>
+              <label className="field-label" htmlFor="home-minutes">
+                Minuti casa ↔ stazione <span className="font-normal">(facoltativo)</span>
+              </label>
+              <input
+                id="home-minutes"
+                className="field-input"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="180"
+                placeholder={values.home ? 'Stima automatica' : 'Es. 12'}
+                value={values.homeToStationMin ?? ''}
+                onChange={(event) =>
+                  onChange({
+                    homeToStationMin: event.target.value ? Number(event.target.value) : null,
+                  })
+                }
+              />
+              <p className="field-hint">
+                Se casa è nella stessa città della sede calcoliamo solo il tragitto a piedi o in
+                bici, senza treno.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {showStation && (
+          <div className="mt-3">
+            <label className="field-label" htmlFor="origin-station">
+              {values.originKind === 'home' ? 'Stazione che usi' : 'Stazione'}
+            </label>
+            <select
+              id="origin-station"
+              className="field-input"
+              value={values.stationId}
+              onChange={(event) => onChange({ stationId: event.target.value })}
+            >
+              {stations.map((station) => (
+                <option value={station.id} key={station.id}>
+                  {station.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </fieldset>
 
       <fieldset>
         <legend className="field-label mb-2">Come ti muovi in città?</legend>
@@ -139,7 +213,7 @@ export function PlanForm({
               key={mode}
               type="button"
               aria-pressed={values.mode === mode}
-              onClick={() => chooseMode(mode)}
+              onClick={() => onChange({ mode })}
               className={`mode-button ${values.mode === mode ? 'mode-button-active' : ''}`}
             >
               <Icon name={mode} className="h-5 w-5" />
@@ -149,125 +223,80 @@ export function PlanForm({
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend className="field-label mb-2">Da dove parti?</legend>
-        <div className="space-y-2">
-          <button
-            type="button"
-            aria-pressed={values.originKind === 'location'}
-            onClick={chooseLocation}
-            className={`origin-option ${values.originKind === 'location' ? 'origin-option-active' : ''}`}
-          >
-            <span className="origin-radio" />
-            <span className="flex-1 text-left">Uso la mia posizione</span>
-            <Icon name="pin" className="h-4 w-4 text-pine" />
-          </button>
-          <button
-            type="button"
-            aria-pressed={values.originKind === 'station'}
-            onClick={() => setValues((current) => ({ ...current, originKind: 'station' }))}
-            className={`origin-option ${values.originKind === 'station' ? 'origin-option-active' : ''}`}
-          >
-            <span className="origin-radio" />
-            <span className="flex-1 text-left">Parto dalla stazione</span>
-          </button>
-          <button
-            type="button"
-            aria-pressed={values.originKind === 'home'}
-            onClick={() => setValues((current) => ({ ...current, originKind: 'home' }))}
-            className={`origin-option ${values.originKind === 'home' ? 'origin-option-active' : ''}`}
-          >
-            <span className="origin-radio" />
-            <span className="flex-1 text-left">Da casa, fino alla stazione</span>
-          </button>
-        </div>
-        {values.originKind !== 'location' && (
-          <div className="mt-3 grid grid-cols-[1fr_auto] items-end gap-3">
-            <div>
-              <label className="field-label" htmlFor="origin-station">
-                Stazione di partenza
-              </label>
-              <select
-                id="origin-station"
-                className="field-input"
-                value={values.stationId}
-                onChange={(event) =>
-                  setValues((current) => ({ ...current, stationId: event.target.value }))
-                }
-              >
-                {stations.map((station) => (
-                  <option value={station.id} key={station.id}>
-                    {station.name}
-                  </option>
-                ))}
-              </select>
+      <div className="space-y-4 rounded-2xl bg-mint/60 px-4 py-4 dark:bg-emerald-950/40">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            className="mt-1 h-5 w-5 accent-pine"
+            checked={values.regionalOnly}
+            onChange={(event) => onChange({ regionalOnly: event.target.checked })}
+          />
+          <span>
+            <span className="block font-semibold text-ink dark:text-white">
+              Solo regionali (R/RV)
+            </span>
+            <span className="block text-xs text-slate-700 dark:text-slate-300">
+              Togli la spunta per vedere anche Intercity e Frecciarossa: richiedono un biglietto
+              diverso o un supplemento.
+            </span>
+          </span>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="field-label" htmlFor="station-buffer">
+              Tempo in stazione
+            </label>
+            <div className="relative">
+              <input
+                id="station-buffer"
+                className="field-input pr-12"
+                type="number"
+                inputMode="numeric"
+                min={STATION_BUFFER_RANGE.min}
+                max={STATION_BUFFER_RANGE.max}
+                required
+                value={values.stationBufferMin}
+                aria-describedby="station-buffer-hint"
+                onChange={(event) => onChange({ stationBufferMin: Number(event.target.value) })}
+              />
+              <span className="pointer-events-none absolute right-3 top-3 text-sm text-slate-600">
+                min
+              </span>
             </div>
-            {values.originKind === 'home' && (
-              <div className="w-28">
-                <label className="field-label" htmlFor="home-minutes">
-                  Casa → FS
-                </label>
-                <div className="relative">
-                  <input
-                    id="home-minutes"
-                    className="field-input pr-10"
-                    type="number"
-                    min="0"
-                    max="180"
-                    required
-                    value={values.homeToStationMin}
-                    onChange={(event) =>
-                      setValues((current) => ({
-                        ...current,
-                        homeToStationMin: Number(event.target.value),
-                      }))
-                    }
-                  />
-                  <span className="absolute right-3 top-3 text-xs text-slate-500">min</span>
-                </div>
-              </div>
-            )}
           </div>
-        )}
-        {geoError && (
-          <p role="alert" className="mt-2 text-sm text-rose-700 dark:text-rose-300">
-            {geoError}
-          </p>
-        )}
-      </fieldset>
-
-      <div className="rounded-2xl bg-mint/70 px-4 py-3 dark:bg-emerald-950/50">
-        <div className="flex items-center justify-between gap-3">
-          <label className="field-label mb-0" htmlFor="margin">
-            Margine prima della lezione
-          </label>
-          <output className="font-bold text-pine dark:text-emerald-300" htmlFor="margin">
-            {values.marginMin} min
-          </output>
+          {!isReturn && (
+            <div>
+              <label className="field-label" htmlFor="margin">
+                Anticipo a lezione
+              </label>
+              <div className="relative">
+                <input
+                  id="margin"
+                  className="field-input pr-12"
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  max="60"
+                  required
+                  value={values.marginMin}
+                  onChange={(event) => onChange({ marginMin: Number(event.target.value) })}
+                />
+                <span className="pointer-events-none absolute right-3 top-3 text-sm text-slate-600">
+                  min
+                </span>
+              </div>
+            </div>
+          )}
         </div>
-        <input
-          id="margin"
-          className="mt-3 w-full accent-pine"
-          type="range"
-          min="0"
-          max="60"
-          step="1"
-          value={values.marginMin}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, marginMin: Number(event.target.value) }))
-          }
-        />
-        <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-          <span>0 min</span>
-          <span>60 min</span>
-        </div>
+        <p id="station-buffer-hint" className="field-hint -mt-2">
+          Biglietto, binario, sottopasso: l’uscita non coincide mai con la partenza del treno.
+        </p>
       </div>
 
-      <button
-        className="primary-button w-full"
-        type="submit"
-        disabled={loading || !values.campusId}
-      >
+      {error && values.originKind === 'home' && (
+        <p className="text-sm text-slate-700 dark:text-slate-300">{error}</p>
+      )}
+      <button className="primary-button w-full" type="submit" disabled={loading || !!error}>
         {loading ? (
           <>
             <span className="loading-dot" />
@@ -275,14 +304,11 @@ export function PlanForm({
           </>
         ) : (
           <>
-            Calcola quando uscire <Icon name="arrow" className="h-5 w-5" />
+            {isReturn ? 'Calcola quando partire' : 'Calcola quando uscire'}
+            <Icon name="arrow" className="h-5 w-5" />
           </>
         )}
       </button>
-      <p className="text-center text-xs leading-5 text-slate-500">
-        Orario programmato Trenitalia, non in tempo reale: verifica sempre ritardi e variazioni
-        prima di partire.
-      </p>
     </form>
   );
 }
