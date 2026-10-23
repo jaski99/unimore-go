@@ -149,3 +149,30 @@ def test_train_leg_planner():
     assert leg.arrive == "07:20"
     assert leg.minutes == 16
     assert leg.train == train_mon
+
+
+def test_train_leg_planner_with_calendar_categories_and_slots() -> None:
+    from engine.calendar_rules import CalendarNoteParser
+    from engine.repositories import JsonTrainRepository
+    from engine.service_calendar import ServiceCalendar
+    from engine.train_categories import REGIONAL
+
+    repo = JsonTrainRepository()
+    planner = TrainLegPlanner(ServiceCalendar(CalendarNoteParser(date(2026, 10, 17))))
+    trains = repo.get_trains("Reggio Emilia", "Modena")
+
+    monday = planner.running_trains(trains, "2026-10-26", frozenset({REGIONAL}))
+    assert all(t.category.startswith("Regionale") for t in monday)
+    departures = [t.depart for t in monday]
+    assert departures == sorted(departures) and len(departures) == len(set(departures))
+    # Tuesday 22:43 slot: R 3947 (no limitation) wins over R 3945 (truncated note)
+    tuesday = planner.running_trains(trains, "2026-10-27", frozenset({REGIONAL}))
+    assert [t.train for t in tuesday if t.depart == "22:43"] == ["3947"]
+
+    # RV 3907 runs "fino al 16/11" (PDF page 75)
+    assert "3907" in {t.train for t in monday}
+    assert "3907" not in {t.train for t in planner.running_trains(trains, "2026-11-17")}
+
+    fr = next(t for t in trains if t.category == "Frecciarossa")
+    assert planner.build_train_leg(fr).notes  # ambiguous FR note -> warning on the leg
+    assert TrainLegPlanner().build_train_leg(fr).notes == ()

@@ -20,6 +20,8 @@ from engine.models import (
     time_to_minutes,
 )
 from engine.repositories import SegmentRepository
+from engine.service_calendar import DAY_KEYS, ServiceCalendar
+from engine.train_categories import allowed
 
 # Documented estimation constants
 HAVERSINE_DETOUR_FACTOR = 1.3  # Street network circuity factor
@@ -187,53 +189,74 @@ class BikeLegPlanner(ActiveLegPlanner):
 
 
 class TrainLegPlanner:
-    """Strategy for filtering and planning train legs."""
+    """Strategy for selecting train runs and building train legs.
 
-    DAY_MAP = {
-        0: "mon",
-        1: "tue",
-        2: "wed",
-        3: "thu",
-        4: "fri",
-        5: "sat",
-        6: "sun",
-    }
+    With a :class:`ServiceCalendar` the PDF calendar notes and holidays are
+    applied; without it only ``valid_from``/``valid_to`` and ``days`` are used.
+    """
+
+    DAY_MAP = dict(enumerate(DAY_KEYS))
+
+    def __init__(self, calendar: ServiceCalendar | None = None) -> None:
+        self.calendar = calendar
+
+    def runs_on(self, train: TrainRun, day: date) -> bool:
+        if self.calendar is not None:
+            return self.calendar.runs_on(train, day)
+        if not (parse_date_str(train.valid_from) <= day <= parse_date_str(train.valid_to)):
+            return False
+        return self.DAY_MAP[day.weekday()] in train.days
+
+    def running_trains(
+        self,
+        trains: list[TrainRun],
+        target_date: date | str,
+        categories: frozenset[str] | None = None,
+    ) -> list[TrainRun]:
+        """Runs operating on ``target_date`` in the allowed category groups, by departure."""
+        day = parse_date_str(target_date)
+        selected = [t for t in trains if allowed(t.category, categories) and self.runs_on(t, day)]
+        selected.sort(key=lambda t: time_to_minutes(t.depart_time))
+        return self._one_per_slot(selected)
+
+    def _one_per_slot(self, trains: list[TrainRun]) -> list[TrainRun]:
+        """Keep one run per (departure, arrival) slot.
+
+        The PDF prints the same slot in separate columns with different train
+        numbers (e.g. weekday/Friday variants); the user needs it once. Runs
+        whose calendar note was interpreted win over ambiguous ones.
+        """
+        best: dict[tuple[str, str], TrainRun] = {}
+        for train in trains:
+            slot = (train.depart, train.arrive)
+            current = best.get(slot)
+            if current is None or (self._has_warning(current) and not self._has_warning(train)):
+                best[slot] = train
+        return [t for t in trains if best[(t.depart, t.arrive)] is t]
+
+    def _has_warning(self, train: TrainRun) -> bool:
+        return self.calendar is not None and self.calendar.warning_for(train) is not None
 
     def filter_trains(
         self,
         trains: list[TrainRun],
         target_date: date | str,
         latest_arrival: time,
+        categories: frozenset[str] | None = None,
     ) -> list[TrainRun]:
-        """Filter train runs by calendar date, weekday, and arrival deadline."""
-        d = parse_date_str(target_date)
-        day_str = self.DAY_MAP[d.weekday()]
+        """Runs operating on the date that arrive by ``latest_arrival`` (latest departure first)."""
         deadline_min = time_to_minutes(latest_arrival)
-
-        qualified: list[TrainRun] = []
-        for t in trains:
-            # Check calendar validity range
-            v_from = parse_date_str(t.valid_from)
-            v_to = parse_date_str(t.valid_to)
-            if not (v_from <= d <= v_to):
-                continue
-
-            # Check day of week
-            if day_str not in t.days:
-                continue
-
-            # Check arrival deadline
-            if time_to_minutes(t.arrive_time) > deadline_min:
-                continue
-
-            qualified.append(t)
-
-        # Sort by departure time descending (latest departure first)
+        qualified = [
+            t
+            for t in self.running_trains(trains, target_date, categories)
+            if time_to_minutes(t.arrive_time) <= deadline_min
+        ]
         qualified.sort(key=lambda t: time_to_minutes(t.depart_time), reverse=True)
         return qualified
 
     def build_train_leg(self, train: TrainRun) -> Leg:
-        """Construct an immutable Leg from a TrainRun."""
+        """Construct an immutable Leg from a TrainRun, with calendar-note warnings."""
+        warning = self.calendar.warning_for(train) if self.calendar else None
         return Leg(
             leg_type="train",
             origin=train.from_station,
@@ -242,4 +265,5 @@ class TrainLegPlanner:
             arrive=train.arrive,
             minutes=train.duration_minutes,
             train=train,
+            notes=(warning,) if warning else (),
         )
