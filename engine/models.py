@@ -106,13 +106,14 @@ class TrainRun:
 class Leg:
     """A single segment of an itinerary (walk, bike, or train)."""
 
-    leg_type: str  # "walk" | "bike" | "train"
+    leg_type: str  # "walk" | "bike" | "train" | "wait"
     origin: str
     destination: str
     depart: str
     arrive: str
     minutes: int
     train: TrainRun | None = None
+    notes: tuple[str, ...] = ()  # leg-specific warnings (e.g. calendar notes)
 
     @property
     def depart_time(self) -> time:
@@ -132,6 +133,7 @@ class Itinerary:
     arrive_at: str
     slack_min: int
     warnings: tuple[str, ...] = ()
+    service_date: str = ""  # ISO date the itinerary refers to
 
     @property
     def leave_time(self) -> time:
@@ -148,7 +150,13 @@ class Itinerary:
 
 @dataclass(frozen=True)
 class PlanRequest:
-    """Request parameters for door-to-door itinerary planning."""
+    """Request parameters for door-to-door itinerary planning.
+
+    The same request serves every journey planner: ``origin_*`` and
+    ``first_mile_*`` always describe the *home* side, ``destination_campus_id``
+    and ``last_mile_mode`` the *campus* side. ``target_time`` is the lesson
+    start for ``arrive_by`` and the lesson end for ``depart_after``.
+    """
 
     target_date: str | date
     target_time: str | time
@@ -160,6 +168,10 @@ class PlanRequest:
     first_mile_minutes: int | None = None
     last_mile_mode: str = "walk"  # "walk" | "bike"
     margin_minutes: int = 10
+    # Minutes spent in the station before boarding (ticket, platform, ...).
+    station_buffer_minutes: int = 5
+    # Allowed train category groups (see engine.train_categories); None = all.
+    train_categories: frozenset[str] | None = None
 
     @property
     def parsed_date(self) -> date:
@@ -168,3 +180,21 @@ class PlanRequest:
     @property
     def parsed_time(self) -> time:
         return parse_time_str(self.target_time)
+
+
+@dataclass(frozen=True)
+class NearbySolution:
+    """Closest solution outside the requested window ("previous" or "next")."""
+
+    kind: str  # "previous" | "next"
+    itinerary: Itinerary
+
+
+@dataclass(frozen=True)
+class PlanResult:
+    """Outcome of a journey planner run."""
+
+    planner: str
+    itineraries: tuple[Itinerary, ...]
+    warnings: tuple[str, ...] = ()
+    nearby: tuple[NearbySolution, ...] = ()
