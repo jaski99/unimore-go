@@ -1,12 +1,32 @@
 import type { Itinerary, Leg } from '@/lib/api/types';
+import { DIFFERENT_TICKET_LABEL, trainLabel } from '@/lib/itinerary-summary';
 import { formatClock } from '@/lib/time-format';
 import { Icon } from './icons';
 
-const labels: Record<Leg['type'], string> = { walk: 'A piedi', bike: 'In bici', train: 'Treno' };
+const labels: Record<Leg['type'], string> = {
+  walk: 'A piedi',
+  bike: 'In bici',
+  train: 'Treno',
+  wait: 'In stazione',
+};
 
-/** Hide zero-length active legs (e.g. when the trip already starts at the station). */
+/** Defensive: never show 0-minute walk/bike/wait legs (the API no longer sends them). */
 export function visibleLegs(legs: Leg[]): Leg[] {
   return legs.filter((leg) => leg.type === 'train' || leg.minutes > 0);
+}
+
+export function TicketBadge() {
+  return (
+    <span className="ticket-badge">
+      <Icon name="ticket" className="h-3.5 w-3.5" />
+      {DIFFERENT_TICKET_LABEL}
+    </span>
+  );
+}
+
+function legDescription(leg: Leg): string {
+  if (leg.type === 'wait') return `${leg.from}: biglietto e binario`;
+  return `${leg.from} → ${leg.to}`;
 }
 
 export function ItineraryTimeline({ itinerary }: { itinerary: Itinerary }) {
@@ -21,25 +41,32 @@ export function ItineraryTimeline({ itinerary }: { itinerary: Itinerary }) {
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <p className="font-semibold text-ink dark:text-white">
                 {labels[leg.type]}
-                {leg.train ? (
-                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                    {leg.train.category} · {leg.train.number}
-                  </span>
-                ) : null}
+                {leg.train ? <span className="train-chip">{trainLabel(leg)}</span> : null}
               </p>
-              <span className="text-sm tabular-nums text-slate-600 dark:text-slate-300">
+              <span className="text-sm tabular-nums text-slate-700 dark:text-slate-300">
                 {formatClock(leg.depart)}–{formatClock(leg.arrive)}{' '}
-                <span className="text-slate-400">· {leg.minutes} min</span>
+                <span className="text-slate-600 dark:text-slate-400">· {leg.minutes} min</span>
               </span>
             </div>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              {leg.from} <span aria-hidden="true">→</span> {leg.to}
-            </p>
-            {leg.train && (
-              <p className="mt-1 text-xs text-slate-500">
-                {leg.train.operator} · orario programmato, non in tempo reale
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{legDescription(leg)}</p>
+            {leg.train?.different_ticket && (
+              <p className="mt-2">
+                <TicketBadge />
               </p>
             )}
+            {leg.train && (
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                {leg.train.category} · {leg.train.operator} · orario programmato
+              </p>
+            )}
+            {leg.notes?.map((note) => (
+              <details className="calendar-note" key={note}>
+                <summary>
+                  <Icon name="alert" className="h-4 w-4 shrink-0" /> Calendario da verificare
+                </summary>
+                <p>{note}</p>
+              </details>
+            ))}
           </div>
         </li>
       ))}

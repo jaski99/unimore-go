@@ -1,90 +1,164 @@
-import type { PlanResponse } from '@/lib/api/types';
+import type { PlanResponse, PlannerName } from '@/lib/api/types';
 import type { PlanStatus } from '@/hooks/use-plan';
-import { formatClock, formatDate } from '@/lib/time-format';
+import {
+  describeSlack,
+  hasCalendarNotes,
+  leaveVerb,
+  needsDifferentTicket,
+  slackCaption,
+  stationWaitMinutes,
+  trainLabel,
+  trainLeg,
+} from '@/lib/itinerary-summary';
+import { formatClock, formatDuration, formatShortDate } from '@/lib/time-format';
 import { Icon } from './icons';
-import { ItineraryTimeline } from './itinerary-timeline';
+import { ItineraryTimeline, TicketBadge } from './itinerary-timeline';
+import { NearbySolutions } from './nearby-solutions';
+
+export interface ResultContext {
+  planner: PlannerName;
+  date: string;
+  time: string;
+  campusName?: string;
+}
 
 interface ResultPanelProps {
   status: PlanStatus;
   result: PlanResponse | null;
   error: string | null;
   onRetry: () => void;
-  /** ISO date-time of the lesson, used to show the travel day. */
-  lessonDateTime?: string;
+  context?: ResultContext;
 }
 
-export function ResultPanel({ status, result, error, onRetry, lessonDateTime }: ResultPanelProps) {
+/** Warnings that deserve an alert box instead of the small notes list. */
+const isCritical = (warning: string) =>
+  warning.startsWith('Attenzione') || warning.includes('festivo') || warning.includes('domenica');
+
+export function ResultPanel({ status, result, error, onRetry, context }: ResultPanelProps) {
   if (status === 'idle') return <EmptyPrompt />;
   if (status === 'loading') return <LoadingSkeleton />;
   if (status === 'error')
     return <ErrorState message={error ?? 'Si è verificato un errore.'} onRetry={onRetry} />;
 
+  const planner: PlannerName = result?.planner ?? context?.planner ?? 'arrive_by';
+  const warnings = result?.warnings ?? [];
+  const critical = warnings.filter(isCritical);
+  const notes = warnings.filter((warning) => !isCritical(warning));
   const itinerary = result?.itineraries[0];
-  if (!itinerary) return <EmptyResult warnings={result?.warnings ?? []} />;
+
+  if (!itinerary)
+    return (
+      <EmptyResult
+        planner={planner}
+        critical={critical}
+        notes={notes}
+        result={result}
+        requestDate={context?.date}
+      />
+    );
+
+  const train = trainLeg(itinerary);
+  const wait = stationWaitMinutes(itinerary);
+  const isReturn = planner === 'depart_after';
 
   return (
-    <section className="result-card" aria-live="polite" aria-label="Risultato del viaggio">
+    <section className="result-card" aria-live="polite" aria-labelledby="result-title">
       <div className="result-banner">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="result-eyebrow">Il tuo orario</p>
-            <h2 className="result-title">
-              Esci alle <span>{formatClock(itinerary.leave_at)}</span>
-            </h2>
-            <p className="mt-1 text-sm text-emerald-50/90">per arrivare a lezione con calma</p>
-          </div>
-          <div className="rounded-2xl bg-white/15 p-3">
-            <Icon name="spark" className="h-6 w-6" />
-          </div>
-        </div>
+        <p className="result-eyebrow">
+          {isReturn ? 'Ritorno' : 'Andata'}
+          {context
+            ? ` · ${formatShortDate(context.date)} · lezione ${isReturn ? 'fino alle' : 'alle'} ${context.time}`
+            : ''}
+        </p>
+        <h2 id="result-title" className="result-title">
+          {leaveVerb(planner)} <span>{formatClock(itinerary.leave_at)}</span>
+        </h2>
+        <p className="mt-1 text-sm text-white">
+          {train
+            ? `${trainLabel(train)} alle ${formatClock(train.depart)} da ${train.from}${wait ? ` · ${wait} min in stazione` : ''}`
+            : `Diretto ${itinerary.legs[0]?.type === 'bike' ? 'in bici' : 'a piedi'}, senza treno`}
+        </p>
+        {context?.campusName && (
+          <p className="mt-0.5 truncate text-xs text-white/90">
+            {isReturn ? 'Da ' : 'Verso '}
+            {context.campusName}
+          </p>
+        )}
+        {needsDifferentTicket(itinerary) && (
+          <p className="mt-3">
+            <TicketBadge />
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 dark:divide-slate-700 dark:border-slate-700">
         <div className="p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Arrivo previsto
-          </p>
+          <p className="stat-label">{isReturn ? 'A casa alle' : 'Arrivo in sede'}</p>
           <p className="mt-1 text-xl font-bold text-ink dark:text-white">
             {formatClock(itinerary.arrive_at)}
           </p>
-          {lessonDateTime && <p className="text-xs text-slate-500">{formatDate(lessonDateTime)}</p>}
         </div>
         <div className="p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Anticipo</p>
+          <p className="stat-label">{isReturn ? 'Tempo libero' : 'Anticipo'}</p>
           <p className="mt-1 text-xl font-bold text-pine dark:text-emerald-300">
-            {itinerary.slack_min} min
+            {formatDuration(itinerary.slack_min)}
           </p>
-          <p className="text-xs text-slate-500">prima dell’inizio lezione</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            {slackCaption(planner, itinerary.slack_min)}
+          </p>
         </div>
       </div>
       <div className="p-5 sm:p-6">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <h3 className="text-base font-bold text-ink dark:text-white">Il tuo percorso</h3>
-          <span className="rounded-full bg-mint px-3 py-1 text-xs font-semibold text-pine dark:bg-emerald-950 dark:text-emerald-300">
-            {result?.itineraries.length ?? 1}{' '}
-            {result?.itineraries.length === 1 ? 'opzione' : 'opzioni'}
-          </span>
-        </div>
-        {result?.itineraries.slice(0, 3).map((option, index) => (
-          <div
-            key={`${option.leave_at}-${index}`}
-            className={index > 0 ? 'mt-5 border-t border-slate-200 pt-5 dark:border-slate-700' : ''}
-          >
-            {index > 0 && (
-              <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Alternativa {index + 1} · esci alle {formatClock(option.leave_at)}
-              </p>
-            )}
-            <ItineraryTimeline itinerary={option} />
-          </div>
+        {critical.map((warning) => (
+          <p className="alert-box mb-4" role="alert" key={warning}>
+            <Icon name="alert" className="h-5 w-5 shrink-0" />
+            <span>{warning}</span>
+          </p>
         ))}
-        {!!result?.warnings.length && (
-          <div className="warning-note mt-1" role="note">
-            <span className="warning-mark">i</span>
-            <p>{result.warnings.join(' ')}</p>
+        <h3 className="mb-4 text-base font-bold text-ink dark:text-white">Il tuo percorso</h3>
+        <ItineraryTimeline itinerary={itinerary} />
+        {result!.itineraries.length > 1 && (
+          <div className="mt-2 space-y-2">
+            <h3 className="text-sm font-bold text-ink dark:text-white">Alternative</h3>
+            {result!.itineraries.slice(1, 3).map((option, index) => {
+              const optionTrain = trainLeg(option);
+              return (
+                <details className="nearby-card" key={`${option.leave_at}-${index}`}>
+                  <summary>
+                    <span className="block font-semibold text-ink dark:text-white">
+                      {leaveVerb(planner)} {formatClock(option.leave_at)}
+                      {optionTrain ? ` · ${trainLabel(optionTrain)}` : ''}
+                    </span>
+                    <span className="block text-sm text-slate-700 dark:text-slate-300">
+                      arrivo {formatClock(option.arrive_at)} ·{' '}
+                      {describeSlack(planner, option.slack_min)}
+                      {needsDifferentTicket(option) ? ' · biglietto diverso' : ''}
+                      {hasCalendarNotes(option) ? ' · calendario da verificare' : ''}
+                    </span>
+                  </summary>
+                  <div className="mt-4">
+                    <ItineraryTimeline itinerary={option} />
+                  </div>
+                </details>
+              );
+            })}
           </div>
         )}
+        {notes.length > 0 && <WarningList warnings={notes} />}
       </div>
     </section>
+  );
+}
+
+function WarningList({ warnings }: { warnings: string[] }) {
+  return (
+    <div className="warning-note mt-4" role="note">
+      <span className="warning-mark">i</span>
+      <ul className="space-y-1">
+        {warnings.map((warning) => (
+          <li key={warning}>{warning}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -97,9 +171,8 @@ function EmptyPrompt() {
       <h2 className="mt-4 text-lg font-bold text-ink dark:text-white">
         Il tuo tragitto, senza corse
       </h2>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-600 dark:text-slate-400">
-        Inserisci sede e orario della lezione: ti aiutiamo a pianificare l’uscita e ogni cambio di
-        mezzo.
+      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-700 dark:text-slate-400">
+        Inserisci sede e orario della lezione: ti diciamo quando uscire.
       </p>
     </div>
   );
@@ -114,17 +187,6 @@ function LoadingSkeleton() {
         <div className="skeleton h-16 rounded-xl" />
         <div className="skeleton h-16 rounded-xl" />
       </div>
-      <div className="mt-6 space-y-4">
-        {[1, 2, 3].map((item) => (
-          <div className="flex gap-3" key={item}>
-            <div className="skeleton h-10 w-10 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <div className="skeleton h-4 w-1/3 rounded" />
-              <div className="skeleton h-3 w-2/3 rounded" />
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -136,7 +198,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
       <h2 className="mt-4 text-lg font-bold text-ink dark:text-white">
         Non siamo riusciti a calcolare il percorso
       </h2>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{message}</p>
+      <p className="mt-2 text-sm text-slate-700 dark:text-slate-400">{message}</p>
       <button type="button" className="secondary-button mt-5" onClick={onRetry}>
         Riprova
       </button>
@@ -144,22 +206,51 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   );
 }
 
-function EmptyResult({ warnings }: { warnings: string[] }) {
+function EmptyResult({
+  planner,
+  critical,
+  notes,
+  result,
+  requestDate,
+}: {
+  planner: PlannerName;
+  critical: string[];
+  notes: string[];
+  result: PlanResponse | null;
+  requestDate?: string;
+}) {
+  const headline = notes.find((warning) => warning.startsWith('Nessun treno utile'));
+  const others = notes.filter((warning) => warning !== headline);
   return (
-    <div className="result-placeholder" aria-live="polite">
+    <section className="result-placeholder" aria-live="polite" aria-labelledby="empty-title">
       <div className="placeholder-art placeholder-art-muted">
         <Icon name="train" className="h-8 w-8" />
       </div>
-      <h2 className="mt-4 text-lg font-bold text-ink dark:text-white">Nessun treno trovato</h2>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-600 dark:text-slate-400">
-        Non abbiamo trovato un itinerario nel perimetro del prototipo. Prova un altro orario o una
-        sede servita.
+      <h2 id="empty-title" className="mt-4 text-lg font-bold text-ink dark:text-white">
+        Nessun treno utile
+      </h2>
+      <p className="mt-2 max-w-md text-sm leading-6 text-slate-700 dark:text-slate-300">
+        {headline ??
+          'Non c’è un treno utile per questo orario. Prova un altro orario o un altro giorno.'}
       </p>
-      {warnings.map((warning) => (
-        <p className="warning-note mt-4 text-left" key={warning}>
-          {warning}
-        </p>
-      ))}
-    </div>
+      <div className="w-full max-w-md">
+        {critical.map((warning) => (
+          <p className="alert-box mt-4 text-left" role="alert" key={warning}>
+            <Icon name="alert" className="h-5 w-5 shrink-0" />
+            <span>{warning}</span>
+          </p>
+        ))}
+        <NearbySolutions
+          nearby={result?.nearby ?? []}
+          planner={planner}
+          requestDate={requestDate}
+        />
+        {others.length > 0 && (
+          <div className="text-left">
+            <WarningList warnings={others} />
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

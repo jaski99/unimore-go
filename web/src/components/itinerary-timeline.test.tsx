@@ -1,48 +1,49 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ItineraryTimeline } from './itinerary-timeline';
+import fixtures from '@/lib/api/mock-fixtures.json';
+import type { Itinerary } from '@/lib/api/types';
+import { ItineraryTimeline, visibleLegs } from './itinerary-timeline';
 
-const sample = {
-  leave_at: '07:34',
-  arrive_at: '08:18',
-  slack_min: 12,
-  legs: [
-    {
-      type: 'bike' as const,
-      from: 'Casa · Reggio Emilia',
-      to: 'Reggio Emilia FS',
-      depart: '07:34',
-      arrive: '07:48',
-      minutes: 14,
-    },
-    {
-      type: 'train' as const,
-      from: 'Reggio Emilia FS',
-      to: 'Modena FS',
-      depart: '07:48',
-      arrive: '08:09',
-      minutes: 21,
-      train: { number: '3907', category: 'Regionale Veloce', operator: 'Trenitalia Tper' },
-    },
-  ],
-};
+const demo = fixtures.demo.response.itineraries[0] as Itinerary;
 
 describe('ItineraryTimeline', () => {
-  it('mostra tratte, orari localizzati e dati del treno', () => {
-    render(<ItineraryTimeline itinerary={sample} />);
-    expect(screen.getByText('In bici')).toBeInTheDocument();
-    expect(screen.getByText('Regionale Veloce · 3907')).toBeInTheDocument();
-    expect(screen.getAllByText('Reggio Emilia FS', { exact: false })).toHaveLength(2);
-    expect(screen.getAllByRole('listitem')[0]).toHaveTextContent(/07:34.*07:48.*14 min/);
+  it('mostra attesa in stazione, treno con sigla e ultimo tratto', () => {
+    render(<ItineraryTimeline itinerary={demo} />);
+    const items = screen.getAllByRole('listitem');
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveTextContent(/In stazione.*07:39.*07:44.*5 min/);
+    expect(items[0]).toHaveTextContent('biglietto e binario');
+    expect(items[1]).toHaveTextContent(/Treno.*RV 3907.*07:44.*07:56/);
+    expect(items[1]).toHaveTextContent('orario programmato');
+    expect(items[2]).toHaveTextContent(/In bici.*22 min/);
   });
 
-  it('nasconde i tratti attivi di 0 minuti restituiti partendo dalla stazione', () => {
-    const fromStation = {
-      ...sample,
-      legs: [{ ...sample.legs[0], minutes: 0, depart: '07:48', train: null }, sample.legs[1]],
+  it('mostra il badge biglietto diverso e le note di calendario da verificare', () => {
+    const fr: Itinerary = {
+      ...demo,
+      legs: demo.legs.map((leg) =>
+        leg.type === 'train'
+          ? {
+              ...leg,
+              train: { ...leg.train!, code: 'FR', number: '9505', different_ticket: true },
+              notes: ['Nota di calendario non interpretata: verificare (pag. 74).'],
+            }
+          : leg,
+      ),
     };
-    render(<ItineraryTimeline itinerary={fromStation} />);
+    render(<ItineraryTimeline itinerary={fr} />);
+    expect(screen.getByText('Biglietto diverso / supplemento')).toBeInTheDocument();
+    expect(screen.getByText('Calendario da verificare')).toBeInTheDocument();
+    expect(screen.getByText(/pag\. 74/)).toBeInTheDocument();
+  });
+
+  it('non mostra mai tratti a piedi/bici/attesa da 0 minuti', () => {
+    const zero: Itinerary = {
+      ...demo,
+      legs: [{ ...demo.legs[2], minutes: 0 }, demo.legs[1], { ...demo.legs[0], minutes: 0 }],
+    };
+    expect(visibleLegs(zero.legs).map((leg) => leg.type)).toEqual(['train']);
+    render(<ItineraryTimeline itinerary={zero} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
-    expect(screen.getByRole('listitem')).toHaveTextContent(/Treno.*07:48.*08:09/);
   });
 });
