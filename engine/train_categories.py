@@ -1,7 +1,7 @@
 """Train category groups and the fare implications of each group.
 
 Raw categories come from the PDF ("Regionale", "Regionale Veloce",
-"Intercity", "Intercity Notte", "Frecciarossa"). Groups let users filter
+"Intercity", "Intercity Notte", "EuroCity", "Frecciarossa"). Groups let users filter
 by ticket type; adding a category is a one-line change in ``CATEGORY_GROUPS``.
 """
 
@@ -25,7 +25,9 @@ class CategoryGroup:
 
 GROUPS: dict[str, CategoryGroup] = {
     REGIONAL: CategoryGroup(REGIONAL, "Regionale (R/RV)", ("R", "RV"), regional_ticket=True),
-    INTERCITY: CategoryGroup(INTERCITY, "Intercity (IC/ICN)", ("IC", "ICN"), regional_ticket=False),
+    INTERCITY: CategoryGroup(
+        INTERCITY, "Intercity (IC/ICN/EC)", ("IC", "ICN", "EC"), regional_ticket=False
+    ),
     HIGH_SPEED: CategoryGroup(HIGH_SPEED, "Frecciarossa (FR)", ("FR",), regional_ticket=False),
 }
 
@@ -35,6 +37,7 @@ CATEGORY_GROUPS: dict[str, tuple[str, str]] = {
     "regionale veloce": ("RV", REGIONAL),
     "intercity": ("IC", INTERCITY),
     "intercity notte": ("ICN", INTERCITY),
+    "eurocity": ("EC", INTERCITY),
     "frecciarossa": ("FR", HIGH_SPEED),
 }
 
@@ -48,7 +51,7 @@ def category_group(category: str) -> str:
 
 
 def category_code(category: str) -> str:
-    """Short code (R, RV, IC, ICN, FR); unknown categories return the raw value."""
+    """Short code (R, RV, IC, ICN, EC, FR); unknown categories return the raw value."""
     entry = CATEGORY_GROUPS.get(category.strip().lower())
     return entry[0] if entry else category
 

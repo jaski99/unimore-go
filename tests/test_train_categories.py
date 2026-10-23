@@ -33,12 +33,18 @@ def test_known_categories(raw: str, code: str, group: str, different: bool) -> N
 
 def test_every_category_in_data_is_known() -> None:
     raw = {t.category for t in JsonTrainRepository().all_trains()}
-    assert {category_code(c) for c in raw} == {"R", "RV", "IC", "ICN", "FR"}
+    assert {category_code(c) for c in raw} == {"R", "RV", "IC", "ICN", "EC", "FR"}
+
+
+def test_eurocity_is_an_intercity_class_train_with_a_different_ticket() -> None:
+    assert category_code("EuroCity") == "EC"
+    assert category_group("EuroCity") == INTERCITY
+    assert requires_different_ticket("EuroCity")
 
 
 def test_unknown_category_is_conservative() -> None:
-    assert category_code("Eurocity") == "Eurocity"
-    assert requires_different_ticket("Eurocity")
+    assert category_code("Railjet") == "Railjet"
+    assert requires_different_ticket("Railjet")
 
 
 def test_normalize_and_allowed() -> None:
