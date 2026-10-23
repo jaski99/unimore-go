@@ -29,7 +29,7 @@ Commuter review (Phase 5). Details and measurements: [`docs/review-phase5.md`](d
 - No walk/bike/wait leg of 0 minutes is ever generated (and the UI filters them defensively).
 - Home origin resolution was extracted into `OriginResolver`; itinerary assembly into `ItineraryBuilder`.
 - Contrast fixes (no `text-slate-400` text), combobox keyboard behaviour, `fieldset` overflow fix, SVG app icon.
-- Lighthouse mobile (production build): Performance 89 → 95–98, Accessibility 96 → 100, Best Practices 96 → 100.
+- Lighthouse mobile (production build): Performance 89 → 91–98 (6 runs, first-run variance), Accessibility 96 → 100, Best Practices 96 → 100.
 
 ### Fixed
 - Map tiles rendered only in the centre (missing `invalidateSize`).

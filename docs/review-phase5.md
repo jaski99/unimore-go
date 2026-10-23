@@ -22,10 +22,10 @@ in sandbox; i numeri qui sotto sono quelli realmente ottenuti.
 | Tocchi per partire da casa (indirizzo) | non disponibile | 5 (Da casa → indirizzo → Cerca → risultato → Calcola) |
 | Chiavi localStorage dopo l'uso | `[]` | `unimorego.planner.v1` (+ `unimorego.schedule.v1` se usi l'orario) |
 | axe-core (wcag2a, wcag2aa, best-practice) | 6 violazioni *serious* (color-contrast) | **0** in 6 stati (mobile e desktop × risultato+mappa+dettagli aperti, casa+ritorno, nessun treno+validità) |
-| Lighthouse mobile — Performance | 89 | **95 / 98 / 95** (3 esecuzioni) |
+| Lighthouse mobile — Performance | 89 | **95 / 98 / 95** (3 esecuzioni); build finale di rilascio: **91 / 93 / 97** |
 | Lighthouse mobile — Accessibility | 96 | **100** (3/3) |
 | Lighthouse mobile — Best Practices | 96 | **100** (3/3) |
-| Lighthouse — FCP / LCP / TBT / CLS | 0,8 s / 2,2 s / 390 ms / 0,03 | 0,8 s / 2,2–2,3 s / 130–200 ms / **0** |
+| Lighthouse — FCP / LCP / TBT / CLS | 0,8 s / 2,2 s / 390 ms / 0,03 | 0,8 s / 2,2–2,3 s / 130–200 ms / **0**; build finale: 0,8–0,9 s / 2,2–2,4 s / 160–320 ms / **0** |
 | Mappa | tile solo al centro, 2 punti, nessun percorso | tile complete, percorso (treno continuo + tratti attivi tratteggiati), marker casa/stazioni/sede; Leaflet caricato solo vicino alla vista (0 istanze prima dello scroll) |
 | E2E browser (`scripts/e2e_ui.py`, UI == API) | 5/5 casi v0.3 | **8/8** casi v0.4 (andata, buffer 15, a piedi, casa+minuti, margine 15, ritorno, tutti i treni, stessa città) |
 

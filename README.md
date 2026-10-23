@@ -178,7 +178,7 @@ Domain rule: **never take the train within the same city**. When no train is use
 
 The screenshot shows a real API result: Reggio Emilia FS → DIEF, Monday 26/10/2026, 08:30 lesson, bike, 10 min margin, 5 min station time, regional only. Result: **leave at 07:39**, 5 min at the station, RV 3907 07:44 → 07:56, 22 min bike ride, arrival 08:18 with 12 min of slack. Alternatives: 07:28 (R 17405) and 06:59 (RV 2451).
 
-Commuter review with measurements (Lighthouse mobile 95–98 / 100 / 100, axe 0 violations): [`docs/review-phase5.md`](docs/review-phase5.md). Changes: [`CHANGELOG.md`](CHANGELOG.md).
+Commuter review with measurements (Lighthouse mobile 91–98 / 100 / 100 over 6 runs, axe 0 violations): [`docs/review-phase5.md`](docs/review-phase5.md). Changes: [`CHANGELOG.md`](CHANGELOG.md).
 
 ### Getting started
 
