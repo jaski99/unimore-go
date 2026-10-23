@@ -1,0 +1,159 @@
+"""Shared services and per-request preparation for journey planners."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date, timedelta
+
+from engine.holidays import holiday_name
+from engine.legs import ActiveLegPlanner, TrainLegPlanner
+from engine.models import Campus, PlanRequest, Station, TrainRun, time_to_minutes
+from engine.origin import MODE_LABELS, HomeEndpoint, OriginResolver
+from engine.repositories import LocationRepository, TrainRepository
+from engine.validity import TimetableValidity, format_it_date
+
+SEARCH_DAYS = 7  # how far previous/next solutions are searched
+
+
+def run_minutes(train: TrainRun) -> tuple[int, int]:
+    """Departure and arrival in minutes from midnight (arrival may exceed 24h)."""
+    dep = time_to_minutes(train.depart_time)
+    return dep, dep + train.duration_minutes
+
+
+@dataclass(frozen=True)
+class Journey:
+    """Everything a planner needs about one request, resolved once."""
+
+    request: PlanRequest
+    day: date
+    target_min: int
+    campus: Campus
+    campus_station: Station
+    home: HomeEndpoint
+    same_city: bool
+    home_mode: str
+    campus_mode: str
+    campus_leg_minutes: int  # campus station <-> campus
+    warnings: tuple[str, ...]
+
+    def offset_min(self, day: date) -> int:
+        """Minutes between the start of ``day`` and the start of the request day."""
+        return (day - self.day).days * 24 * 60
+
+
+class PlanningContext:
+    """Repositories, leg strategies and data-derived settings shared by planners."""
+
+    def __init__(
+        self,
+        train_repo: TrainRepository,
+        location_repo: LocationRepository,
+        active_planners: Mapping[str, ActiveLegPlanner],
+        default_active: ActiveLegPlanner,
+        train_leg_planner: TrainLegPlanner,
+        validity: TimetableValidity | None,
+    ) -> None:
+        self.train_repo = train_repo
+        self.location_repo = location_repo
+        self.active_planners = dict(active_planners)
+        self.default_active = default_active
+        self.train_leg_planner = train_leg_planner
+        self.validity = validity
+        self.origin_resolver = OriginResolver(location_repo, self.active_planner)
+
+    def active_planner(self, mode: str) -> ActiveLegPlanner:
+        """Strategy for an active mode; unknown modes fall back to walking."""
+        return self.active_planners.get((mode or "").lower(), self.default_active)
+
+    def runs_between(
+        self,
+        origin: Station,
+        destination: Station,
+        day: date,
+        categories: frozenset[str] | None,
+    ) -> list[TrainRun]:
+        """Runs operating on ``day`` between two stations, by departure time."""
+        trains = self.train_repo.get_trains(origin.name, destination.name)
+        return self.train_leg_planner.running_trains(trains, day, categories)
+
+    def search_days(self, day: date, direction: int) -> list[date]:
+        """Days before (direction=-1) or after (+1) ``day`` within the search horizon."""
+        return [day + timedelta(days=direction * i) for i in range(1, SEARCH_DAYS + 1)]
+
+    def campus_station(self, campus: Campus) -> Station:
+        station = self.location_repo.get_station_by_name(campus.reference_station)
+        return station or self.origin_resolver.station_in_city(campus.city)
+
+    def prepare(self, request: PlanRequest) -> Journey:
+        campus = self.location_repo.get_campus(request.destination_campus_id)
+        if campus is None:
+            raise ValueError(f"Unknown campus id: {request.destination_campus_id!r}")
+        day = request.parsed_date
+        home = self.origin_resolver.resolve(request, campus.city)
+        same_city = home.city.lower().strip() == campus.city.lower().strip()
+        campus_station = self.campus_station(campus)
+        campus_mode = self.active_planner(request.last_mile_mode).mode
+        campus_leg_minutes = self.active_planner(campus_mode).calculate_minutes(
+            origin_id=campus_station.id,
+            destination_id=campus.id,
+            origin_coords=(campus_station.lat, campus_station.lon),
+            destination_coords=(campus.lat, campus.lon),
+        )
+
+        warnings = list(home.warnings)
+        if self.validity is not None:
+            out_of_range = self.validity.warning_for(day)
+            if out_of_range:
+                warnings.append(out_of_range)
+        if not same_city:
+            if home.estimate_note:
+                warnings.append(home.estimate_note)
+            holiday = holiday_name(day)
+            if holiday or day.weekday() == 6:
+                label = f"festivo ({holiday})" if holiday else "domenica"
+                warnings.append(
+                    f"Il {format_it_date(day)} è {label}: l'orario caricato descrive soprattutto "
+                    "il servizio feriale, quindi vengono usate solo le corse segnate anche di "
+                    "domenica. Verifica sul PDF Trenitalia."
+                )
+        else:
+            mode_label = MODE_LABELS.get(campus_mode, campus_mode)
+            warnings.append(
+                f"Casa e sede sono nella stessa città ({campus.city}): percorso diretto "
+                f"{mode_label}, nessun treno."
+            )
+
+        return Journey(
+            request=request,
+            day=day,
+            target_min=time_to_minutes(request.parsed_time),
+            campus=campus,
+            campus_station=campus_station,
+            home=home,
+            same_city=same_city,
+            home_mode=self.active_planner(request.first_mile_mode).mode,
+            campus_mode=campus_mode,
+            campus_leg_minutes=campus_leg_minutes,
+            warnings=tuple(warnings),
+        )
+
+    def direct_minutes(self, journey: Journey) -> tuple[int, str, list[str]]:
+        """Same-city direct leg: minutes, home-side label and extra warnings."""
+        home = journey.home
+        warnings: list[str] = []
+        label = home.label
+        if not home.is_station and home.coords is None:
+            label = home.station.name
+            warnings.append(
+                "Posizione di casa non indicata: il percorso è calcolato dalla stazione "
+                f"{home.station.name}. Inserisci l'indirizzo o tocca la mappa per un tempo preciso."
+            )
+        minutes = self.active_planner(journey.campus_mode).calculate_minutes(
+            origin_id=home.station.id if home.is_station or home.coords is None else None,
+            destination_id=journey.campus.id,
+            origin_coords=home.point,
+            destination_coords=(journey.campus.lat, journey.campus.lon),
+        )
+        return minutes, label, warnings

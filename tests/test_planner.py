@@ -5,13 +5,17 @@ from datetime import date
 import pytest
 
 from engine.legs import ActiveLegPlanner
-from engine.models import PlanRequest
+from engine.models import Itinerary, Leg, PlanRequest
 from engine.planner import Planner
 from engine.repositories import (
     JsonLocationRepository,
     JsonSegmentRepository,
     JsonTrainRepository,
 )
+
+
+def train_leg(itinerary: Itinerary) -> Leg:
+    return next(leg for leg in itinerary.legs if leg.leg_type == "train")
 
 
 @pytest.fixture
@@ -43,12 +47,11 @@ def test_edge_case_dief_830_from_reggio_walk(planner: Planner):
     # Check that arrival at campus is at or before target_time
     assert best.arrive_time <= req.parsed_time
     assert best.slack_min >= req.margin_minutes
-    assert len(best.legs) == 3
-    assert best.legs[0].leg_type == "walk"
-    assert best.legs[1].leg_type == "train"
-    assert best.legs[2].leg_type == "walk"
-    assert best.legs[1].origin == "Reggio Emilia"
-    assert best.legs[1].destination == "Modena"
+    assert [leg.leg_type for leg in best.legs] == ["walk", "wait", "train", "walk"]
+    assert best.legs[1].minutes == 5  # default station buffer
+    assert best.legs[2].origin == "Reggio Emilia"
+    assert best.legs[2].destination == "Modena"
+    assert best.leave_time < best.legs[2].depart_time
 
 
 def test_edge_case_dief_830_from_reggio_bike(planner: Planner):
@@ -66,8 +69,8 @@ def test_edge_case_dief_830_from_reggio_bike(planner: Planner):
     assert len(itineraries) == 3
 
     best = itineraries[0]
-    assert best.legs[2].leg_type == "bike"
-    assert best.legs[2].minutes == 22
+    assert best.legs[3].leg_type == "bike"
+    assert best.legs[3].minutes == 22
     assert best.slack_min >= 10
     # With bike (22m), train arrives later than with walk (53m), so leave home later
     assert best.leave_at >= "07:00"
@@ -90,13 +93,13 @@ def test_edge_case_palazzo_dossetti_from_modena(planner: Planner):
     best = itineraries[0]
     assert best.arrive_time <= req.parsed_time
     assert best.slack_min >= 10
-    assert best.legs[1].origin == "Modena"
-    assert best.legs[1].destination == "Reggio Emilia"
+    assert train_leg(best).origin == "Modena"
+    assert train_leg(best).destination == "Reggio Emilia"
     # Destination campus is Palazzo Dossetti
     assert (
-        best.legs[2].destination == "Dipartimento di Comunicazione ed Economia - Palazzo Dossetti"
+        best.legs[-1].destination == "Dipartimento di Comunicazione ed Economia - Palazzo Dossetti"
     )
-    assert best.legs[2].minutes == 19
+    assert best.legs[-1].minutes == 19
 
 
 def test_edge_case_same_city_no_trains(planner: Planner):
@@ -226,7 +229,7 @@ def test_origin_coords_resolution(planner: Planner):
     )
     itineraries = planner.arrive_by(req)
     assert len(itineraries) > 0
-    assert itineraries[0].legs[1].origin == "Reggio Emilia"
+    assert train_leg(itineraries[0]).origin == "Reggio Emilia"
 
 
 def test_planner_origin_station_id_explicit(planner: Planner):
@@ -240,8 +243,10 @@ def test_planner_origin_station_id_explicit(planner: Planner):
     )
     itineraries = planner.arrive_by(req)
     assert len(itineraries) > 0
-    # First leg minutes is 0 because already at origin station
-    assert itineraries[0].legs[0].minutes == 0
+    # Already at the station: no 0-minute walk, the trip starts with the station buffer
+    assert itineraries[0].legs[0].leg_type == "wait"
+    assert all(leg.minutes > 0 for it in itineraries for leg in it.legs)
+    assert itineraries[0].leave_at != train_leg(itineraries[0]).depart
 
 
 def test_planner_destination_in_reggio_default_origin_modena(planner: Planner):
@@ -254,8 +259,8 @@ def test_planner_destination_in_reggio_default_origin_modena(planner: Planner):
     )
     itineraries = planner.arrive_by(req)
     assert len(itineraries) > 0
-    assert itineraries[0].legs[1].origin == "Modena"
-    assert itineraries[0].legs[1].destination == "Reggio Emilia"
+    assert train_leg(itineraries[0]).origin == "Modena"
+    assert train_leg(itineraries[0]).destination == "Reggio Emilia"
 
 
 def test_planner_first_mile_coords(planner: Planner):
