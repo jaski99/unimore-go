@@ -16,7 +16,7 @@ from engine.models import (
     TrainRun,
 )
 from engine.notices import NO_SERVICE, notice
-from engine.validity import format_it_weekday_date
+from engine.validity import format_it_day
 
 MAX_RESULTS = 3
 
@@ -51,12 +51,15 @@ class DepartAfterPlanner(JourneyPlanner):
                     NO_SERVICE,
                     f"Nessun treno da {journey.campus_station.name} a "
                     f"{journey.home.station.name} parte dopo le {clock(ready)} di "
-                    f"{format_it_weekday_date(journey.day)}. {calculation.summary}"
+                    f"{format_it_day(journey.day)}. {calculation.summary}"
                     f"{category_hint(request)}",
                 )
             )
             nearby = self._nearby(journey, ctx, runs, ready)
-        return PlanResult(self.name, itineraries, ctx.compose(notices), nearby, calculation)
+        # The formula is shown once: in the result box when there is a result for
+        # this date, otherwise inside the no-service notice (dropped out of validity).
+        shown = calculation if itineraries else None
+        return PlanResult(self.name, itineraries, ctx.compose(notices), nearby, shown)
 
     @staticmethod
     def calculation(journey: Journey, ready: int) -> Calculation:
@@ -128,7 +131,7 @@ class DepartAfterPlanner(JourneyPlanner):
                         NearbySolution(
                             "previous",
                             self.itinerary(journey, ctx, previous[-1], day),
-                            f"Ultimo treno di {format_it_weekday_date(day)}.",
+                            f"Ultimo treno di {format_it_day(day)}.",
                         )
                     )
                     break
@@ -139,7 +142,7 @@ class DepartAfterPlanner(JourneyPlanner):
                     NearbySolution(
                         "next",
                         self.itinerary(journey, ctx, following[0], day),
-                        f"Primo treno di {format_it_weekday_date(day)}.",
+                        f"Primo treno di {format_it_day(day)}.",
                     )
                 )
                 break

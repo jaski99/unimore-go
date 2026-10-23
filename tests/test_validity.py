@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 
 from engine.repositories import JsonTrainRepository
-from engine.validity import TimetableValidity, format_it_date, format_it_weekday_date
+from engine.validity import TimetableValidity, format_it_day
 
 
 def test_validity_derived_from_data() -> None:
@@ -19,11 +19,11 @@ def test_validity_derived_from_data() -> None:
 def test_warning_after_and_before_validity() -> None:
     validity = TimetableValidity(date(2026, 10, 17), date(2026, 12, 12))
     after = validity.warning_for(date(2026, 12, 14))
-    assert after is not None and "14/12/2026" in after and "12/12/2026" in after
-    assert after.startswith("Lunedì 14/12/2026 è dopo la fine di validità")
+    assert after is not None and "dal sab 17 ott 2026 al sab 12 dic 2026" in after
+    assert after.startswith("Lun 14 dic 2026 è dopo la fine di validità")
     before = validity.warning_for(date(2026, 10, 1))
-    assert before is not None and "17/10/2026" in before
-    assert before.startswith("Giovedì 01/10/2026 è prima")
+    assert before is not None and "sab 17 ott 2026" in before
+    assert before.startswith("Gio 1 ott 2026 è prima")
 
 
 def test_empty_data_rejected() -> None:
@@ -31,6 +31,19 @@ def test_empty_data_rejected() -> None:
         TimetableValidity.from_trains([])
 
 
-def test_format_it_date() -> None:
-    assert format_it_date(date(2026, 1, 5)) == "05/01/2026"
-    assert format_it_weekday_date(date(2026, 10, 25)) == "domenica 25/10/2026"
+@pytest.mark.parametrize(
+    ("day", "text"),
+    [
+        # Same strings as Intl.DateTimeFormat('it-IT', short weekday/month) in Node 20.
+        (date(2026, 10, 26), "lun 26 ott 2026"),
+        (date(2026, 10, 25), "dom 25 ott 2026"),
+        (date(2026, 12, 8), "mar 8 dic 2026"),
+        (date(2026, 11, 1), "dom 1 nov 2026"),
+        (date(2026, 6, 3), "mer 3 giu 2026"),
+        (date(2026, 9, 14), "lun 14 set 2026"),
+        (date(2026, 7, 1), "mer 1 lug 2026"),
+        (date(2027, 1, 5), "mar 5 gen 2027"),
+    ],
+)
+def test_format_it_day_matches_intl_it(day: date, text: str) -> None:
+    assert format_it_day(day) == text

@@ -16,7 +16,7 @@ from engine.models import (
     TrainRun,
 )
 from engine.notices import NO_SERVICE, notice
-from engine.validity import format_it_weekday_date
+from engine.validity import format_it_day
 
 MAX_RESULTS = 3
 # A same-day train arriving after the lesson start is proposed only if the
@@ -27,6 +27,28 @@ MAX_LATE_MIN = 60
 # sensible main answer (e.g. the 00:53 night train for a 05:30 lesson): it is
 # offered as a labelled alternative instead.
 MAX_EARLY_MIN = 120
+
+
+def late_train_label(slack_min: int, margin_min: int) -> str:
+    """One coherent text for the first train after the deadline.
+
+    That train misses the chosen margin, but may still arrive before the lesson
+    (``slack_min`` >= 0) or after it (``slack_min`` < 0, a real delay).
+    """
+    if slack_min < 0:
+        return (
+            f"Primo treno dopo: arrivi in sede {-slack_min} min in ritardo sull'inizio della "
+            "lezione."
+        )
+    when = (
+        "all'inizio della lezione"
+        if slack_min == 0
+        else f"{slack_min} min prima dell'inizio della lezione"
+    )
+    return (
+        f"Primo treno dopo: arrivi in sede {when}, meno dei {margin_min} min di anticipo che "
+        "hai scelto."
+    )
 
 
 class ArriveByPlanner(JourneyPlanner):
@@ -64,13 +86,16 @@ class ArriveByPlanner(JourneyPlanner):
                     NO_SERVICE,
                     f"Nessun treno da {journey.home.station.name} arriva a "
                     f"{journey.campus_station.name} {window} di "
-                    f"{format_it_weekday_date(journey.day)}. {calculation.summary}"
+                    f"{format_it_day(journey.day)}. {calculation.summary}"
                     f"{category_hint(request)}",
                 )
             )
             too_early = useful[0] if useful else None
             nearby = self._nearby(journey, ctx, runs, deadline, too_early)
-        return PlanResult(self.name, itineraries, ctx.compose(notices), nearby, calculation)
+        # The formula is shown once: in the result box when there is a result for
+        # this date, otherwise inside the no-service notice (dropped out of validity).
+        shown = calculation if itineraries else None
+        return PlanResult(self.name, itineraries, ctx.compose(notices), nearby, shown)
 
     @staticmethod
     def calculation(journey: Journey, deadline: int) -> Calculation:
@@ -165,8 +190,7 @@ class ArriveByPlanner(JourneyPlanner):
                     NearbySolution(
                         "next",
                         itinerary,
-                        f"Primo treno dopo: arrivi in sede con {-itinerary.slack_min} min di "
-                        "ritardo sull'inizio della lezione.",
+                        late_train_label(itinerary.slack_min, journey.request.margin_minutes),
                     )
                 )
                 return tuple(found)
@@ -190,7 +214,7 @@ class ArriveByPlanner(JourneyPlanner):
             return NearbySolution(
                 "previous" if direction < 0 else "next",
                 self.itinerary(journey, ctx, best, day, same_lesson_time=True),
-                f"Stessa ora di lezione, {format_it_weekday_date(day)} (giorno feriale {which}).",
+                f"Stessa ora di lezione, {format_it_day(day)} (giorno feriale {which}).",
             )
         return None
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 
 from engine.journeys import JourneyPlanner, PlanningContext
+from engine.journeys.arrive_by import late_train_label
 from engine.models import Itinerary, Leg, PlanRequest, PlanResult
 from engine.notices import GENERIC, notice
 from engine.planner import Planner
@@ -158,7 +159,7 @@ def test_night_lesson_offers_the_first_train_with_its_delay(planner: Planner) ->
     assert following.kind == "next" and following.itinerary.service_date == "2026-10-26"
     lateness = -following.itinerary.slack_min
     assert 0 < lateness <= 60
-    assert f"{lateness} min di ritardo" in following.label
+    assert f"arrivi in sede {lateness} min in ritardo" in following.label
 
 
 def test_no_train_message_explains_the_calculation(planner: Planner) -> None:
@@ -169,10 +170,10 @@ def test_no_train_message_explains_the_calculation(planner: Planner) -> None:
         "Calcolo: lezione alle 05:00 − 10 min di anticipo − 53 min a piedi dalla stazione alla "
         "sede = arrivo a Modena FS entro le 03:57."
     )
-    assert result.calculation is not None and result.calculation.summary == expected
-    assert result.calculation.time == "03:57"
+    # No result for the date: the formula is shown once, inside the notice (round 3).
+    assert result.calculation is None
     (no_service,) = [n for n in result.notices if n.code == "no_service"]
-    assert "entro le 03:57 di lunedì 26/10/2026" in no_service.message
+    assert "entro le 03:57 di lun 26 ott 2026" in no_service.message
     assert expected in no_service.message
 
 
@@ -228,7 +229,7 @@ def test_sunday_lesson_is_planned_without_a_sunday_warning(planner: Planner) -> 
 def test_after_validity_has_explicit_warning_and_previous_solution(planner: Planner) -> None:
     result = planner.plan(req(target_date="2026-12-14"))
     assert result.itineraries == ()
-    assert any("dopo la fine di validità" in w and "12/12/2026" in w for w in result.warnings)
+    assert any("dopo la fine di validità" in w and "12 dic 2026" in w for w in result.warnings)
     assert [n.kind for n in result.nearby] == ["previous"]
     assert result.nearby[0].itinerary.service_date == "2026-12-12"
 
@@ -242,7 +243,7 @@ def test_out_of_validity_sunday_has_one_primary_notice(planner: Planner) -> None
     (previous,) = result.nearby
     assert previous.itinerary.service_date == "2026-12-12"
     assert previous.itinerary.slack_min >= 0  # same lesson time on that day
-    assert "sabato 12/12/2026 (giorno feriale precedente)" in previous.label
+    assert "sab 12 dic 2026 (giorno feriale precedente)" in previous.label
 
 
 def test_before_validity_searches_forward_from_the_first_day(planner: Planner) -> None:
@@ -344,7 +345,7 @@ def test_return_trip_too_late_offers_previous_and_next(planner: Planner) -> None
     assert previous.kind == "previous" and previous.itinerary.slack_min < 0
     assert "prima della fine della lezione" in previous.label
     assert following.kind == "next" and following.itinerary.service_date == "2026-10-27"
-    assert following.label == "Primo treno di martedì 27/10/2026."
+    assert following.label == "Primo treno di mar 27 ott 2026."
 
 
 def test_return_calculation(planner: Planner) -> None:
@@ -359,7 +360,7 @@ def test_return_calculation(planner: Planner) -> None:
 def test_return_trip_without_trains_that_day_searches_previous_days(planner: Planner) -> None:
     result = planner.plan(req(target_date="2026-12-14", target_time="13:00"), "depart_after")
     assert [n.kind for n in result.nearby] == ["previous"]
-    assert result.nearby[0].label == "Ultimo treno di sabato 12/12/2026."
+    assert result.nearby[0].label == "Ultimo treno di sab 12 dic 2026."
     assert result.nearby[0].itinerary.service_date == "2026-12-12"
 
 
@@ -425,8 +426,29 @@ def test_train_hours_before_the_lesson_is_an_alternative_not_a_result(planner: P
     )
     assert result.itineraries == ()
     (no_service,) = [n for n in result.notices if n.code == "no_service"]
-    assert "tra le 03:01 e le 05:01 di lunedì 26/10/2026" in no_service.message
+    assert "tra le 03:01 e le 05:01 di lun 26 ott 2026" in no_service.message
     previous, following = result.nearby
     assert (previous.kind, previous.itinerary.leave_at) == ("previous", "00:48")
     assert previous.label.startswith("Ultimo treno utile del giorno: arrivi in sede 242 min")
     assert following.kind == "next" and following.itinerary.slack_min == -26
+
+
+@pytest.mark.parametrize(
+    ("slack", "label"),
+    [
+        (-7, "Primo treno dopo: arrivi in sede 7 min in ritardo sull'inizio della lezione."),
+        (
+            0,
+            "Primo treno dopo: arrivi in sede all'inizio della lezione, meno dei 10 min di "
+            "anticipo che hai scelto.",
+        ),
+        (
+            4,
+            "Primo treno dopo: arrivi in sede 4 min prima dell'inizio della lezione, meno dei "
+            "10 min di anticipo che hai scelto.",
+        ),
+    ],
+)
+def test_late_train_label_is_coherent_with_the_sign_of_the_slack(slack: int, label: str) -> None:
+    """Round 3, item 4: never "4 min prima" next to "-4 min di ritardo"."""
+    assert late_train_label(slack, 10) == label

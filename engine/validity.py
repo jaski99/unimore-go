@@ -13,17 +13,31 @@ from datetime import date
 
 from engine.models import TrainRun, parse_date_str
 
-WEEKDAYS_IT = ("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")
+WEEKDAYS_IT_SHORT = ("lun", "mar", "mer", "gio", "ven", "sab", "dom")
+MONTHS_IT_SHORT = (
+    "gen",
+    "feb",
+    "mar",
+    "apr",
+    "mag",
+    "giu",
+    "lug",
+    "ago",
+    "set",
+    "ott",
+    "nov",
+    "dic",
+)
 
 
-def format_it_date(day: date) -> str:
-    """Format a date as DD/MM/YYYY (Italian convention)."""
-    return day.strftime("%d/%m/%Y")
+def format_it_day(day: date) -> str:
+    """Short Italian date, e.g. "dom 25 ott 2026" (locale independent).
 
-
-def format_it_weekday_date(day: date) -> str:
-    """Weekday and date, e.g. "domenica 25/10/2026" (locale independent)."""
-    return f"{WEEKDAYS_IT[day.weekday()]} {format_it_date(day)}"
+    Same text as ``Intl.DateTimeFormat('it-IT', {weekday, day, month: 'short',
+    year})`` in the web app, so API messages and UI read alike.
+    """
+    weekday = WEEKDAYS_IT_SHORT[day.weekday()]
+    return f"{weekday} {day.day} {MONTHS_IT_SHORT[day.month - 1]} {day.year}"
 
 
 @dataclass(frozen=True)
@@ -48,17 +62,17 @@ class TimetableValidity:
 
     def warning_for(self, day: date) -> str | None:
         """Explicit Italian warning when ``day`` is outside the window."""
-        window = f"valido dal {format_it_date(self.valid_from)} al {format_it_date(self.valid_to)}"
+        window = f"valido dal {format_it_day(self.valid_from)} al {format_it_day(self.valid_to)}"
         if day > self.valid_to:
             return (
-                f"{format_it_weekday_date(day).capitalize()} è dopo la fine di validità "
+                f"{format_it_day(day).capitalize()} è dopo la fine di validità "
                 "dell'orario caricato "
                 f"({window}): non ci sono dati sui treni per questa data. Controlla il nuovo "
                 "orario Trenitalia; qui sotto trovi la soluzione più vicina nel periodo coperto."
             )
         if day < self.valid_from:
             return (
-                f"{format_it_weekday_date(day).capitalize()} è prima dell'inizio di validità "
+                f"{format_it_day(day).capitalize()} è prima dell'inizio di validità "
                 f"dell'orario caricato ({window}): non ci sono dati sui treni per questa data."
             )
         return None

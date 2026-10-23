@@ -21,9 +21,34 @@ from engine.notices import (
 )
 from engine.origin import MODE_LABELS, HomeEndpoint, OriginResolver
 from engine.repositories import LocationRepository, TrainRepository
-from engine.validity import TimetableValidity, format_it_date
+from engine.validity import TimetableValidity, format_it_day
 
 SEARCH_DAYS = 7  # how far previous/next solutions are searched
+
+FESTIVE_TEXT = (
+    "orario festivo, servizio ridotto. Valgono solo le corse che il PDF Trenitalia indica "
+    "per i festivi (non quelle con ⚒, solo giorni lavorativi). Verifica su Trenitalia prima "
+    "di partire."
+)
+
+
+def festive_notice(day: date) -> Notice | None:
+    """Info note for Sundays and national holidays, also when trains are found.
+
+    On festive days the dataset keeps only runs marked for them (PDF day
+    symbols and notes); e.g. 142 R/RV on Sun 25/10 against 156 on Mon 26/10.
+    """
+    if not is_festive(day):
+        return None
+    holiday = holiday_name(day)
+    when = format_it_day(day).capitalize()
+    prefix = f"{when} è festivo ({holiday})" if holiday else when
+    return notice(FESTIVE_DAY, f"{prefix}: {FESTIVE_TEXT}")
+
+
+def origin_name(home: HomeEndpoint) -> str:
+    """How the start point is called in messages: the station by name, or "Casa"."""
+    return f"Stazione di {home.station.name}" if home.is_station else "Casa"
 
 
 def is_working_day(day: date) -> bool:
@@ -144,22 +169,16 @@ class PlanningContext:
         if not same_city:
             if home.estimate_note:
                 notices.append(notice(ESTIMATE, home.estimate_note))
-            holiday = holiday_name(day)
-            if holiday:
-                notices.append(
-                    notice(
-                        FESTIVE_DAY,
-                        f"Il {format_it_date(day)} è festivo ({holiday}): valgono le corse e le "
-                        "note del PDF per i giorni festivi.",
-                    )
-                )
+            festive = festive_notice(day)
+            if festive:
+                notices.append(festive)
         else:
             mode_label = MODE_LABELS.get(campus_mode, campus_mode)
             notices.append(
                 notice(
                     SAME_CITY,
-                    f"Casa e sede sono nella stessa città ({campus.city}): percorso diretto "
-                    f"{mode_label}, nessun treno.",
+                    f"{origin_name(home)} e sede sono nella stessa città ({campus.city}): "
+                    f"percorso diretto {mode_label}, nessun treno.",
                 )
             )
 

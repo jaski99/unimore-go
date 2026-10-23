@@ -110,7 +110,7 @@ def test_notices_are_ordered_and_not_realtime_is_last() -> None:
     assert data["warnings"][0].startswith("Orari pianificati")
     assert len(data["warnings"]) == 2
     (nearby,) = data["nearby"]
-    assert nearby["label"].startswith("Stessa ora di lezione, sabato 12/12/2026")
+    assert nearby["label"].startswith("Stessa ora di lezione, sab 12 dic 2026")
 
 
 def test_return_trip_depart_after() -> None:
