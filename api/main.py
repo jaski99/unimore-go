@@ -68,3 +68,14 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+def run() -> None:  # pragma: no cover - thin CLI wrapper around uvicorn
+    """Console entry point: serve the API with uvicorn (HOST/PORT from env)."""
+    import uvicorn
+
+    uvicorn.run(
+        "api.main:app",
+        host=os.getenv("HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", "8000")),
+    )

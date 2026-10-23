@@ -27,7 +27,7 @@ dev = [
 ]
 
 [project.scripts]
-unimore-api = "uvicorn api.main:app --reload"
+unimore-api = "api.main:run"
 
 [tool.setuptools.packages.find]
 include = ["engine*", "api*"]
