@@ -29,19 +29,22 @@ Opzioni (v0.5):
 
 Stazioni coperte: **Reggio Emilia FS, Rubiera, Modena FS** (la home lo dice sotto «Da dove parti», con il periodo di validità). Altre stazioni verranno aggiunte solo con orari verificabili ([`data/SOURCES.md`](data/SOURCES.md)).
 
-Cosa fa la pagina (v0.5):
+Cosa fa la pagina (v0.6):
 
 - **Nessun risultato non richiesto.** Il calcolo parte solo con **Calcola** oppure aprendo un link condiviso completo.
 - **Cosa si ricorda.** Dopo il reload restano sede, stazione, modo e anticipo (`localStorage`, mai la data). Il giorno è sempre **oggi**, con il badge «Oggi» e il pulsante «Torna a oggi». L'orario settimanale può precompilare la lezione.
-- **Orario calcolato spiegato:** per esempio domenica 25/10, Modena FS → Palazzo Dossetti, lezione 09:00: «Calcolo: lezione alle 09:00 − 10 min di anticipo − 19 min a piedi dalla stazione alla sede = arrivo a Reggio Emilia FS entro le 08:31.»
+- **Orario calcolato spiegato, una volta sola:** il riquadro del calcolo compare solo quando c'è un risultato per quella data; senza treni la formula è dentro l'unico avviso, e fuori validità resta solo l'avviso con la soluzione del giorno vicino. Per esempio domenica 25/10, Modena FS → Palazzo Dossetti, lezione 09:00: «Calcolo: lezione alle 09:00 − 10 min di anticipo − 19 min a piedi dalla stazione alla sede = arrivo a Reggio Emilia FS entro le 08:31.»
 - **Un solo avviso** per volta, con priorità chiara (fuori validità > nessun treno > nota di calendario > …), più la nota «Orari programmati, non in tempo reale».
 - **Durata porta a porta e numero di cambi;** i pulsanti «?» spiegano anticipo e tempo in stazione.
-- **Domenica/festivi senza treni utili:** propone lo stesso orario nel giorno feriale precedente/successivo, spiegato.
+- **Domenica/festivi senza treni utili:** propone lo stesso orario nel giorno feriale precedente/successivo, spiegato. Con un treno trovato aggiunge comunque «orario festivo, servizio ridotto: verifica su Trenitalia».
+- **Primo treno dopo l'orario:** un solo testo coerente, per esempio «arrivi in sede 4 min prima dell'inizio della lezione, meno dei 10 min di anticipo che hai scelto» oppure «arrivi in sede 7 min in ritardo».
+- **Date in italiano ovunque,** nel formato «lun 26 ott 2026» (Intl it-IT nel sito, stesso testo negli avvisi dell'API).
 - **Ritardi e scioperi.** Riquadro con il numero del treno («Copia numero») e i link a ViaggiaTreno e all'infomobilità Trenitalia. ViaggiaTreno non documenta un formato di link per singolo treno, quindi il numero va incollato nella sua ricerca.
-- **«Calcola il ritorno»** dal risultato dell'andata, con le stesse impostazioni: vista andata + ritorno.
+- **«Calcola il ritorno»** dal risultato dell'andata, con le stesse impostazioni: vista andata + ritorno. La fine lezione proposta (inizio + 2 ore) è dichiarata finché non la modifichi; «Tempo per uscire dall'aula» ha un aiuto che lo spiega.
 - **Azioni:** «Aggiungi al calendario» (file `.ics` generato nel browser, promemoria 10 min prima di «Esci alle»), «Copia link» e «Condividi» (Web Share API, con la copia come alternativa).
-- **Mappa sotto il risultato** con zoom automatico. Le etichette sono Casa / Stazione partenza / Stazione arrivo / Sede; il treno è una linea continua, i tratti a piedi/in bici sono tratteggiati.
-- **Mobile 375×667 e 414×896:** risultato e mappa subito sotto il pulsante, nessuno scroll orizzontale.
+- **Mappa sotto il risultato** con zoom automatico. Le etichette sono Casa / Stazione partenza / Stazione arrivo / Sede, sopra o sotto il marker per non sovrapporsi; la legenda mostra solo ciò che è sulla mappa. Il treno è una linea continua, i tratti a piedi/in bici sono tratteggiati. Dopo «Calcola il ritorno» la mappa disegna il ritorno, con un selettore Andata/Ritorno.
+- **Sede:** il campo seleziona tutto il testo al focus e il nome completo della sede scelta resta leggibile sotto il campo.
+- **Mobile 375×667 e 414×896:** pulsante Calcola fisso in basso mentre compili; dopo il calcolo, scroll al risultato e focus sul suo titolo. Risultato e mappa subito sotto il modulo, nessuno scroll orizzontale.
 
 #### Link condivisibili (parametri URL)
 
@@ -70,6 +73,8 @@ Revisione da pendolare, round 1 e 2 (mobile e desktop, Lighthouse mobile 93–95
 ### Avvio rapido
 
 Requisiti: Python ≥ 3.11, Node.js ≥ 20, npm, `make`.
+
+**Memoria (verificato da un solo clone pulito, v0.6, A8):** su una macchina con 2 vCPU e 2 GB di RAM, `npm ci --prefer-offline` riesce in 14 s con un picco di 816 MB di memoria di sistema; `next build` arriva a 1340 MB. Servono quindi circa **1,5 GB di RAM libera** durante la build. Non clonare in una `/tmp` di tipo *tmpfs*: `node_modules` finirebbe in RAM (era la causa dell'exit 137 del round 2). Se la memoria non basta, ferma API e sito prima di `npm ci`/`next build`.
 
 ```bash
 make install   # .venv + pip install -e ".[dev]"  e  npm ci in web/
@@ -112,7 +117,7 @@ make test    # pytest (copertura ≥ 90%) + vitest
 make lint    # ruff, validazione dataset, eslint, tsc
 make build   # build di produzione Next.js
 make smoke   # curl end-to-end su un'API in esecuzione
-python scripts/e2e_ui.py http://localhost:3000   # browser reale (Playwright): 8 casi UI == API, 4 flussi (URL/cronologia, ritorno, .ics, mappa, combobox), mobile 375×667 e 414×896, axe-core
+python scripts/e2e_ui.py http://localhost:3000   # browser reale (Playwright): 8 casi UI == API, 5 flussi (URL/cronologia, ritorno e mappa del ritorno, .ics, mappa e legenda, combobox, testi del round 3), mobile 375×667 e 414×896 (pulsante fisso, focus sul risultato), axe-core
 # opzioni: --only cases|flows|mobile|axe, --screenshot PERCORSO
 ```
 
@@ -164,6 +169,7 @@ Le dipendenze vanno in una sola direzione: `web → (HTTP) → api → engine`. 
 - **Non è in tempo reale.** Gli orari sono uno snapshot manuale del PDF ufficiale Trenitalia *Regionale Emilia*, edizione valida dal **17/10/2026 al 12/12/2026**: [Regionale_Emilia.pdf](https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf). Il PDF è stato verificato il 23/10/2026; il metodo è descritto in `docs/research/STATUS_treni.md`. Ritardi, soppressioni, scioperi e lavori non sono considerati. Fuori dal periodo di validità l'API aggiunge un avviso.
 - `data/trains.json` contiene 402 corse estratte dal PDF Trenitalia (17/10–12/12/2026) tra Reggio Emilia FS, Rubiera e Modena FS, su tutti i giorni della settimana con le note di calendario del PDF: Regionale, Regionale Veloce, Intercity, Intercity Notte, EuroCity e Frecciarossa. Le ultime quattro categorie richiedono titoli di viaggio diversi dal regionale. Fonti e metodo: [`data/SOURCES.md`](data/SOURCES.md).
 - Il motore filtra per `valid_from`/`valid_to`, per le note di calendario e per le **festività nazionali** (es. 1/11, 8/12).
+- **Domeniche e festivi (v0.6).** Il PDF indica i giorni di circolazione con simboli stampati accanto all'orario (legenda a pag. 6 del file): ⚒ lavorativi, † festivi, Ⓐ lavorativi escluso il sabato, Ⓑ tutti i giorni escluso il sabato, Ⓒ sabato e festivi. Fino alla v0.5 l'estrattore li ignorava e ogni corsa valeva tutti i giorni: una domenica dava lo stesso risultato di un lunedì. Ora **30 corse su 402** hanno un simbolo di giorno (19 ⚒, 6 †, 3 Ⓑ, 1 Ⓐ, 1 Ⓒ); le altre **372 non hanno simbolo**, quindi secondo il PDF circolano tutti i giorni, salvo le loro note di calendario. Esempio: alle 12:44 Reggio Emilia → Modena circola R 3921 nei giorni lavorativi e R 3953 nei festivi (pag. 92). Treni R/RV da Reggio Emilia a Modena: 39 lun 26/10, 38 dom 25/10, 36 mar 8/12. Di domenica e nei festivi la risposta aggiunge sempre, anche quando c'è un treno, l'avviso «orario festivo, servizio ridotto: verifica su Trenitalia».
 - **Note di calendario.** `calendar_rules` interpreta le note del PDF con una grammatica rigorosa: giorni, elenchi di date, periodi, sospensioni, feriali e festivi. Sulle 402 corse:
   - 287 hanno note interpretate;
   - 115 hanno solo note informative (operatore);
@@ -175,7 +181,7 @@ Le dipendenze vanno in una sola direzione: `web → (HTTP) → api → engine`. 
 - **Tempi attivi.** A piedi: durata OSRM *routed-foot*. In bici: distanza OSRM / 15 km/h, arrotondata per eccesso. Se si parte da coordinate, il tratto casa→stazione è stimato (distanza in linea d'aria × 1,3).
 - **Tempo in stazione:** 5 minuti di default, configurabile 1–30 (non è un dato misurato, è una scelta dell'utente).
 - **Indirizzi:** la ricerca usa il servizio pubblico Nominatim (solo all'invio, 1 richiesta/s, area Modena/Reggio Emilia). L'indirizzo di casa resta solo nel browser.
-- La mappa disegna un percorso indicativo in linea retta; le durate vengono dall'API.
+- **Limite noto: mappa in linea d'aria (A5).** La mappa disegna un percorso indicativo in linea retta, non stradale: l'instradamento richiederebbe un servizio di routing esterno chiamato dal browser (i server pubblici OSRM sono demo con limiti d'uso, gli altri richiedono una chiave). Le durate vengono comunque dall'API (OSRM). La mappa lo dichiara nella didascalia.
 
 ### Licenze e attribuzioni
 
@@ -206,14 +212,18 @@ Options (v0.5):
 
 Covered stations: **Reggio Emilia FS, Rubiera, Modena FS**. The home page lists them, with the validity window, under "Da dove parti". More stations will only be added with verifiable timetables ([`data/SOURCES.md`](data/SOURCES.md)).
 
-What the page does (v0.5):
+What the page does (v0.6):
 
 - **No unrequested result.** Nothing is planned until **Calcola** is pressed or a complete shared link is opened.
 - **What is remembered.** After a reload, campus, station, mode and margin are kept (`localStorage`, never the date). The date always starts at **today**, labelled "Oggi", with a "Torna a oggi" button. The weekly schedule can prefill the lesson.
-- **The computed time is explained,** e.g. Sunday 25/10, Modena FS → Palazzo Dossetti, 09:00 lesson: «Calcolo: lezione alle 09:00 − 10 min di anticipo − 19 min a piedi dalla stazione alla sede = arrivo a Reggio Emilia FS entro le 08:31.»
+- **The computed time is explained once:** the calculation box appears only with a result for that date; without trains the formula is inside the single notice, and out of validity only that notice and the nearby-day solution remain. E.g. Sunday 25/10, Modena FS → Palazzo Dossetti, 09:00 lesson: «Calcolo: lezione alle 09:00 − 10 min di anticipo − 19 min a piedi dalla stazione alla sede = arrivo a Reggio Emilia FS entro le 08:31.»
 - **One prioritised notice** (out of validity > no service > calendar note > …), plus "not real time".
 - **Door-to-door duration and number of changes.** "?" toggletips explain margin and station time.
-- **Sundays/holidays without useful trains** get the same time on the previous/next working day, explained.
+- **Sundays/holidays without useful trains** get the same time on the previous/next working day, explained. With a train found, "orario festivo, servizio ridotto: verifica su Trenitalia" is still added.
+- **First train after the deadline:** one coherent text, either "4 min before the lesson, less than the chosen 10-min margin" or "X min late".
+- **Italian dates everywhere,** formatted "lun 26 ott 2026" (Intl it-IT in the web app, the same text in API notices). The return lesson end proposed (start + 2 h) is labelled until changed; "Tempo per uscire dall'aula" has a toggletip.
+- **Map:** labels sit above or below their marker so they never overlap; the legend lists only what is drawn; after "Calcola il ritorno" the map draws the return, with an Andata/Ritorno switch.
+- **Mobile:** a sticky Calcola button while filling the form; after Calcola, scroll to the result and focus on its title. The campus field selects all on focus and shows the full campus name.
 - **Delays and strikes.** A box shows the train number ("Copia numero") with links to ViaggiaTreno and Trenitalia infomobilità. ViaggiaTreno documents no per-train link format, so the number is pasted into its search.
 - **"Calcola il ritorno"** from the outbound result, with the same settings: an outbound + return view.
 - **Actions:** "Aggiungi al calendario" (`.ics` built in the browser, with an alarm 10 min before leaving), "Copia link" and "Condividi" (Web Share API with a copy fallback).
@@ -245,6 +255,8 @@ Commuter review, rounds 1 and 2, with measurements (round 2 Lighthouse mobile 93
 
 ### Getting started
 
+**Memory (checked from a single fresh clone, v0.6, A8):** on 2 vCPU / 2 GB RAM, `npm ci --prefer-offline` takes 14 s with a system-memory peak of 816 MB, and `next build` peaks at 1340 MB, so plan for about **1.5 GB of free RAM** while building. Do not clone into a *tmpfs* `/tmp` (node_modules would live in RAM). If memory is short, stop the API and the web server before `npm ci`/`next build`.
+
 Requirements: Python ≥ 3.11, Node.js ≥ 20, npm, `make`.
 
 ```bash
@@ -261,7 +273,7 @@ Environment variables:
 
 The mock's data is generated from the real API by `make fixtures`; no hand-written timetables.
 
-Quality: `make test` (pytest ≥ 90% coverage + vitest), `make lint`, `make build`, `make smoke`, and `python scripts/e2e_ui.py` (Playwright: 8 UI == API cases, 4 flows covering URL history, return, .ics, map and combobox, mobile 375×667 and 414×896, axe-core; `--only cases|flows|mobile|axe`). CI runs a Python job (ruff + pytest) and a web job (lint + vitest + build).
+Quality: `make test` (pytest ≥ 90% coverage + vitest), `make lint`, `make build`, `make smoke`, and `python scripts/e2e_ui.py` (Playwright: 8 UI == API cases, 5 flows covering URL history, return and its map, .ics, map and legend, combobox and the round-3 texts, mobile 375×667 and 414×896 including the sticky button and result focus, axe-core; `--only cases|flows|mobile|axe`). CI runs a Python job (ruff + pytest) and a web job (lint + vitest + build).
 
 ### Architecture
 
@@ -288,12 +300,13 @@ Extension points:
 
 - **Not real time.** Trains are a manual snapshot of the official Trenitalia *Regionale Emilia* PDF, valid **17/10/2026–12/12/2026**. Delays, cancellations and strikes are ignored, and the API warns when a date falls outside the validity window.
 - The snapshot has 402 runs extracted from the PDF (`tools/trenitalia_pdf.py`, see `data/SOURCES.md`) between Reggio Emilia FS, Rubiera and Modena FS, on every day of the week. It includes Intercity/EuroCity/Frecciarossa, which need non-regional tickets.
+- **Sundays and holidays (v0.6).** The PDF prints day symbols next to the times (legend on file page 6): ⚒ working days, † holidays, Ⓐ working days except Saturday, Ⓑ every day except Saturday, Ⓒ Saturdays and holidays. Up to v0.5 they were ignored, so a Sunday gave the same result as a Monday. Now **30 of 402 runs** carry a day symbol (19 ⚒, 6 †, 3 Ⓑ, 1 Ⓐ, 1 Ⓒ); the other **372 have none**, so per the PDF they run every day, subject to their calendar notes. Example: at 12:44 Reggio Emilia → Modena, R 3921 runs on working days and R 3953 on holidays (page 92). On Sundays and holidays the answer always adds "orario festivo, servizio ridotto: verifica su Trenitalia", also when a train is found.
 - **Calendar notes.** PDF calendar notes are interpreted by a strict grammar (`calendar_rules`); national holidays are applied. Of 402 runs, 287 have interpreted notes, 115 have informational notes only and 0 cannot be interpreted. The validator rejects uninterpretable notes; at runtime such a run would stay valid, with a warning citing the PDF page. No meaning is invented.
 - Only Reggio Emilia FS, Rubiera and Modena FS, plus 5 campuses, are covered.
 - Walking times come from OSRM durations; cycling is OSRM distance / 15 km/h.
 - **Station time.** It is a user setting (default 5 min), not measured data.
 - **Address search.** It uses the public Nominatim service (on submit only, 1 req/s, Modena/Reggio area). The home address stays in the browser.
-- The map shows an indicative straight-line route; durations come from the API.
+- **Known limit: straight-line map (A5).** The map draws an indicative straight line, not the street route: street routing would need an external routing service called from the browser (public OSRM servers are demos with usage limits, others need a key). Durations still come from the API (OSRM), and the map caption says so.
 
 ### Licences and attribution
 
