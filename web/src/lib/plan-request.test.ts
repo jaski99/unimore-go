@@ -91,3 +91,21 @@ describe('validatePlannerValues', () => {
     expect(validatePlannerValues({ ...base, ...patch })).toMatch(message);
   });
 });
+
+describe('returnTripValues', () => {
+  it('stesse impostazioni dell’andata, partenza dopo la fine lezione', async () => {
+    const {
+      buildPlanRequest: build,
+      defaultPlannerValues: defaults,
+      returnTripValues,
+    } = await import('./plan-request');
+    const outbound = {
+      ...defaults(new Date('2026-10-26T06:00:00Z')),
+      date: '2026-10-26',
+      time: '08:30',
+    };
+    const back = returnTripValues(outbound, '13:00');
+    expect(back).toEqual({ ...outbound, direction: 'return', time: '13:00' });
+    expect(build(back)).toMatchObject({ depart_after: '2026-10-26T13:00:00+01:00' });
+  });
+});

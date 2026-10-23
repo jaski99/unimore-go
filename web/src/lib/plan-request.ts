@@ -90,3 +90,8 @@ export function buildPlanRequest(values: PlannerValues): PlanRequest {
       : {}),
   };
 }
+
+/** The return trip of an outbound search: same settings, departing after the lesson end. */
+export function returnTripValues(outbound: PlannerValues, lessonEnd: string): PlannerValues {
+  return { ...outbound, direction: 'return', time: lessonEnd };
+}
