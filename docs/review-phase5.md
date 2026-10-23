@@ -171,3 +171,48 @@ spingendo giù il risultato.
 - **`npm ci` in un secondo clone** non eseguito per limiti di memoria del sandbox (A8).
 - **Lighthouse TBT** 210–310 ms: dentro la soglia del punteggio, ma è la voce che pesa di più. Il JavaScript non usato è soprattutto Leaflet, già caricato solo quando la mappa entra in vista.
 - **Nominatim** resta un servizio pubblico con limiti d'uso (1 richiesta/s, solo all'invio).
+
+# Round 3 — v0.6 (`v0.6-review`)
+
+Brief: `P7_followup.txt`. Base: `v0.5-review` (fbc5031). Bugs first, each with a test that reproduces it written before the fix. No push, no remote.
+
+## Numeri finali
+
+| Verifica | Risultato |
+|---|---|
+| pytest + coverage | **280 passed**, coverage **99 %** (round 2: 249) |
+| ruff check / format, validazione dataset | puliti / 402 corse valide |
+| smoke (`scripts/smoke.sh`) | 8/8 ok |
+| vitest | **33 file, 175 test** (round 2: 32 / 159) |
+| tsc, eslint, prettier | puliti |
+| `next build` | ok |
+| E2E (`scripts/e2e_ui.py`) | casi **8/8**, flussi **5/5** (nuovo: round 3, 7 controlli), mobile **2/2** (13 + 13 controlli), axe **7/7 stati, 0 violazioni** |
+| Lighthouse mobile (1 tentativo) | Performance **93**, Accessibilità **100**, Best practices **100**; LCP 2,3 s, TBT 250 ms, CLS 0 |
+
+## Punti → stato
+
+| # | Punto | Stato | Cosa è stato fatto / motivo | Test |
+|---|---|---|---|---|
+| 1 | B1 mappa dopo «Calcola il ritorno» | **fatto** | `planner-shell` costruisce il percorso da `back.result` quando la vista è «ritorno»; selettore Andata/Ritorno in `map-panel`; un nuovo Calcola torna all'andata. | `planner-shell.test.tsx` (B1), `map-panel.test.tsx`; E2E «map shows the return», «switch to outbound/back to return» |
+| 2 | B2 riquadro di calcolo fuori validità | **fatto** | API: `calculation` è `null` senza itinerari; web: `EmptyResult` non mostra più `CalculationNote` né il testo generico accanto all'avviso. | `tests/api/test_plan_round3.py` (20/12, 01/10), `result-panel.test.tsx`; E2E «20/12: no calculation box» |
+| 3 | B3 formula due volte (dom 06:00) | **fatto** | La formula resta solo nel messaggio `no_service`. | `test_plan_round3.py`, `test_journeys.py`; E2E «Sun 06:00: formula once» |
+| 4 | B4 «4 min prima» e «-4 min di ritardo» | **fatto** | `late_train_label()`: anticipo insufficiente («…meno dei 10 min di anticipo che hai scelto»), all'inizio, oppure «X min in ritardo»; la card non ripete lo slack. | `test_journeys.py` (parametrico), `test_plan_round3.py`, `result-panel.test.tsx`; E2E «coherent late text» |
+| 5 | B5 legenda ed etichette | **fatto** | Legenda dai ruoli/linee presenti; `assignLabelSides()` mette l'etichetta sopra/sotto lontano dal marker più vicino (indipendente dallo zoom), con margine inferiore nel `fitBounds`. Scelta: etichette sempre visibili anche su mobile (nessun hover). | `route-geometry.test.ts`, `map-panel.test.tsx`; E2E «legend without Casa», «map labels do not overlap» |
+| 6 | B6 «Casa e sede» partendo da stazione | **fatto** | `origin_name()`: «Stazione di Modena FS e sede…», «Casa e sede…» solo da casa. | `test_plan_round3.py`; E2E «same city names the station» |
+| 7 | B7 fine lezione del ritorno precompilata | **fatto** | Descrizione accessibile del gruppo: «Proposta: inizio lezione + 2 ore (10:30). Modificala con l'orario reale di fine lezione.», sparisce dopo la modifica. | `planner-shell.test.tsx` (B7), `return-trip.test.tsx` |
+| 8 | B8 «Tempo dopo la lezione» | **fatto** | Ora «Tempo per uscire dall'aula» con toggletip. | `result-panel.test.tsx` |
+| 9 | Festivi: nota + calendario reale | **fatto** | Il calendario festivo **non** era applicato: l'estrattore ignorava i simboli di giorno (vedi CHANGELOG). Ora 30/402 corse limitate; R/RV Reggio→Modena: 39 lun 26/10, 38 dom 25/10, 36 mar 8/12. Avviso `festive_day` sempre la domenica e nei festivi, anche con risultato; README IT/EN aggiornato. | `test_trenitalia_pdf.py`, `test_day_symbols_data.py`, `test_plan_round3.py` (dom, 8/12, lun senza nota); E2E «festive note», «no festive note» |
+| 10 | Selettore sede | **fatto** | Selezione completa al focus con `setSelectionRange` dopo il frame (iOS); nome completo sotto il campo + `title`; le opzioni andavano già a capo. | `campus-search.test.tsx` |
+| 11 | Mobile: scroll, focus, pulsante fisso | **fatto** | Focus sul titolo del risultato (anche «Nessun treno utile» ed errore); pulsante Calcola *sticky* sotto i 1024 px solo mentre il modulo è in vista. | `planner-shell.test.tsx`, `plan-form.test.tsx`; E2E mobile «Calcola sticky on screen», «focus on result title» |
+| 12 | C2 link ViaggiaTreno per treno | **no** (scelta motivata) | Non esiste un URL pubblico e documentato per singolo treno: la scheda si apre cercando il numero; gli URL usati da progetti terzi sono endpoint `resteasy` non documentati che richiedono codice stazione d'origine e timestamp, e il numero da solo non è univoco. Resta il link generico + «Copia numero». | — |
+| 13 | A3 date italiane | **fatto** | Formato unico «lun 26 ott 2026»: `formatShortDate` (Intl it-IT) nel web, `format_it_day` nell'API; nessuna data gg/mm/aaaa generata da API o web (le note di calendario restano citazioni letterali del PDF, es. «dal 17/11»). | `time-format.test.ts` e `tests/test_validity.py` con le stesse 8 stringhe |
+| 14 | A5 mappa stradale | **limite documentato** | Non implementata (motivo in round 2, tabella A); ora registrata come limite noto nel README IT e EN. | — |
+| 15 | A8 install da un solo clone | **fatto** | Un solo clone in `/home/user/work/fresh` (non tmpfs): `npm ci --prefer-offline` exit 0 in 14 s, picco 816 MB; pytest 249, vitest 159, tsc ok; `next build` picco 1340 MB. Requisiti minimi nel README (≈ 1,5 GB RAM libera, no `/tmp` tmpfs). | evidenza in `work/a8_fresh_clone_evidence.txt` (fuori dal repo) |
+
+## Limiti noti dopo il round 3
+
+- **Mappa in linea d'aria** (A5) e **nessun link ViaggiaTreno per treno** (C2): motivi sopra.
+- **Simboli di giorno:** letti solo nei quadri 1–2 usati dall'app; la verifica è sui glifi LogoFS confrontati con la legenda di pag. 6. Un PDF di un'altra edizione va riestratto e ricontrollato.
+- **Copertura:** Reggio Emilia FS, Rubiera, Modena FS; orario valido fino al 12/12/2026.
+- **Docker** non ricontrollato in questo round (verificato in v0.5).
+- **Lighthouse TBT** 250 ms: entro soglia, è la voce che pesa di più (Leaflet, già caricato solo quando la mappa entra in vista).

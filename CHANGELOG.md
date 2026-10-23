@@ -3,6 +3,37 @@
 All notable changes to UnimoreGo. Format inspired by [Keep a Changelog](https://keepachangelog.com/);
 versions follow the API version reported by `GET /api/health`.
 
+## [0.6.0] — 2026-10-24 · tag `v0.6-review`
+
+Commuter review, round 3 (`P7_followup.txt`). Per-point status, reasons and measurements: [`docs/review-phase5.md`](docs/review-phase5.md#round-3--v06-v06-review).
+
+### Fixed
+- **Sunday/holiday timetable (point 9).** The extractor ignored the day symbols that the PDF prints next to the times (LogoFS font; legend on file page 6), so every run ran daily and Sun 25/10 gave the same trains as Mon 26/10. Now 30 of 402 runs are day-restricted (19 ⚒ working days, 6 † holidays, 3 Ⓑ, 1 Ⓐ, 1 Ⓒ). The other 372 have no symbol and run daily per the PDF. Example: R 17405 07:33 Reggio Emilia → Modena no longer runs on Sundays.
+- **Map after "Calcola il ritorno" (B1).** The map draws the return (sede → station → train → arrival station), and an Andata/Ritorno switch follows every change.
+- **Calculation box without a result (B2, B3).** `calculation` is `null` when there is no itinerary for the date. The formula is written once, inside the no-service notice; out of validity, only that notice and the nearby-day solution remain.
+- **"Primo treno dopo" (B4).** One coherent sentence: "arrivi in sede 4 min prima dell'inizio della lezione, meno dei 10 min di anticipo che hai scelto", or "arrivi in sede 7 min in ritardo". The slack is no longer repeated next to it.
+- **Map legend and labels (B5).** The legend lists only the markers and line kinds drawn, so there is no "Casa" from a station. Labels sit above or below their marker, away from the nearest one, so Modena FS and DIEF never overlap.
+- **Same city from a station (B6).** "Stazione di Modena FS e sede sono nella stessa città…" instead of "Casa e sede".
+- **Return lesson end (B7).** The proposed end (start + 2 h) is announced as a proposal until the user changes it.
+- **"Tempo dopo la lezione" (B8).** Renamed "Tempo per uscire dall'aula", with a toggletip.
+
+### Added
+- **Festive notice (point 9).** On every Sunday and national holiday, also with a result: "orario festivo, servizio ridotto … verifica su Trenitalia".
+- **Campus field (point 10).** Selects all the text on focus (also on iOS) and shows the full campus name under the input.
+- **Mobile (point 11).**
+  - Sticky Calcola button while the form is in view.
+  - After Calcola, scroll to the result and move focus to its title.
+  - New E2E mobile checks for both.
+- **Italian dates (point 13).** A single format, "lun 26 ott 2026": Intl it-IT in the web app and `format_it_day` in the API, tested against the same strings.
+- **E2E.** A new round-3 flow (formula once, late text, festive note, origin name), plus checks on the return map, the legend, label overlap and the 20/12 case.
+
+### Docs
+- README IT/EN:
+  - festive data (30/372);
+  - straight-line map as a known limit (A5, point 14);
+  - minimum memory from a single fresh clone (A8, point 15): `npm ci` peak 816 MB, `next build` 1340 MB, about 1.5 GB free RAM.
+- No per-train ViaggiaTreno link (C2, point 12): there is no public, documented, stable URL, so the generic link stays.
+
 ## [0.5.0] — 2026-10-23 · tag `v0.5-review`
 
 Commuter review, round 2 (`P6_followup.txt`). The per-item status (done / partial / not done, with reasons) and the measurements are in [`docs/review-phase5.md`](docs/review-phase5.md#round-2--v05-v05-review).
