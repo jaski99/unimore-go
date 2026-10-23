@@ -1,6 +1,13 @@
 import fixtures from './mock-fixtures.json';
 import type { PlanService } from './plan-service';
-import type { Campus, HealthResponse, PlanRequest, PlanResponse, Station } from './types';
+import type {
+  Campus,
+  GeocodeResponse,
+  HealthResponse,
+  PlanRequest,
+  PlanResponse,
+  Station,
+} from './types';
 
 /**
  * Offline PlanService, enabled only with NEXT_PUBLIC_USE_MOCK=1.
@@ -10,7 +17,7 @@ import type { Campus, HealthResponse, PlanRequest, PlanResponse, Station } from 
  * Only the recorded demo request yields itineraries.
  */
 export const MOCK_ONLY_DEMO_WARNING =
-  'Modalità mock: è disponibile solo l’esempio registrato Reggio Emilia FS → DIEF, lunedì 26/10/2026 alle 08:30 in bici. Avvia l’API per gli altri casi.';
+  'Modalità mock: è disponibile solo l’esempio registrato Reggio Emilia FS → DIEF, lunedì 26/10/2026 alle 08:30 in bici (solo regionali, 5 min in stazione). Avvia l’API per gli altri casi.';
 
 const demoRequest = fixtures.demo.request as PlanRequest;
 
@@ -21,9 +28,12 @@ function sameRequest(request: PlanRequest): boolean {
     'station_id' in demoRequest.origin &&
     origin.station_id === demoRequest.origin.station_id &&
     request.campus_id === demoRequest.campus_id &&
-    new Date(request.arrive_by).getTime() === new Date(demoRequest.arrive_by).getTime() &&
+    !!request.arrive_by &&
+    new Date(request.arrive_by).getTime() === new Date(demoRequest.arrive_by!).getTime() &&
     request.mode === demoRequest.mode &&
     request.margin_min === demoRequest.margin_min &&
+    (request.station_buffer_min ?? 5) === demoRequest.station_buffer_min &&
+    JSON.stringify(request.train_categories) === JSON.stringify(demoRequest.train_categories) &&
     !request.home_to_station_min
   );
 }
@@ -45,6 +55,10 @@ export class MockPlanService implements PlanService {
 
   async createPlan(request: PlanRequest): Promise<PlanResponse> {
     if (sameRequest(request)) return clone(fixtures.demo.response as PlanResponse);
-    return { itineraries: [], warnings: [MOCK_ONLY_DEMO_WARNING] };
+    return { itineraries: [], nearby: [], warnings: [MOCK_ONLY_DEMO_WARNING] };
+  }
+
+  async geocode(): Promise<GeocodeResponse> {
+    return { results: [], attribution: 'Modalità mock: ricerca indirizzi non disponibile.' };
   }
 }

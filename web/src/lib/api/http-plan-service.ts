@@ -3,6 +3,7 @@ import type { PlanService } from './plan-service';
 import type {
   ApiErrorPayload,
   Campus,
+  GeocodeResponse,
   HealthResponse,
   PlanRequest,
   PlanResponse,
@@ -39,6 +40,12 @@ export class HttpPlanService implements PlanService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
+    });
+  }
+
+  geocode(query: string): Promise<GeocodeResponse> {
+    return this.request<GeocodeResponse>(`/api/geocode?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
     });
   }
 

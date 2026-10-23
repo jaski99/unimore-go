@@ -30,11 +30,27 @@ describe('MockPlanService', () => {
       { ...demo, mode: 'walk' as const },
       { ...demo, home_to_station_min: 12 },
       { ...demo, origin: { lat: 44.7, lon: 10.6 } },
+      { ...demo, station_buffer_min: 10 },
+      { ...demo, train_categories: ['regional' as const, 'high_speed' as const] },
+      { ...demo, arrive_by: undefined, depart_after: demo.arrive_by },
     ]) {
       expect(await service.createPlan(variant)).toEqual({
         itineraries: [],
+        nearby: [],
         warnings: [MOCK_ONLY_DEMO_WARNING],
       });
     }
+  });
+
+  it('il percorso registrato include 5 min in stazione e non ha tratti da 0 minuti', async () => {
+    const result = await new MockPlanService().createPlan({ ...demo });
+    const [first] = result.itineraries;
+    expect(first.leave_at).toBe('07:39');
+    expect(first.legs[0]).toMatchObject({ type: 'wait', minutes: 5 });
+    expect(first.legs.every((leg) => leg.minutes > 0)).toBe(true);
+  });
+
+  it('non offre ricerca indirizzi in modalità mock', async () => {
+    expect((await new MockPlanService().geocode()).results).toEqual([]);
   });
 });

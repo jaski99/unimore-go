@@ -18,6 +18,7 @@ function serviceWith(createPlan: PlanService['createPlan']): PlanService {
     getHealth: vi.fn(),
     getCampuses: vi.fn(),
     getStations: vi.fn(),
+    geocode: vi.fn(),
     createPlan,
   };
 }

@@ -1,7 +1,14 @@
 import { apiConfig, type ApiConfig } from './config';
 import { HttpPlanService } from './http-plan-service';
 import { MockPlanService } from './mock-plan-service';
-import type { Campus, HealthResponse, PlanRequest, PlanResponse, Station } from './types';
+import type {
+  Campus,
+  GeocodeResponse,
+  HealthResponse,
+  PlanRequest,
+  PlanResponse,
+  Station,
+} from './types';
 
 export { ApiRequestError } from './errors';
 export { HttpPlanService } from './http-plan-service';
@@ -13,6 +20,8 @@ export interface PlanService {
   getCampuses(): Promise<Campus[]>;
   getStations(): Promise<Station[]>;
   createPlan(request: PlanRequest): Promise<PlanResponse>;
+  /** Address search for the home location (submit-only, never autocomplete). */
+  geocode(query: string): Promise<GeocodeResponse>;
 }
 
 /** Real HTTP client by default; the mock only when explicitly requested. */
