@@ -8,6 +8,7 @@ Respects Europe/Rome timezone, SOLID principles, and clean strategy decoupling.
 from __future__ import annotations
 
 import zoneinfo
+from collections.abc import Mapping
 from datetime import date
 
 from engine.legs import (
@@ -48,13 +49,26 @@ class Planner:
         walk_planner: ActiveLegPlanner | None = None,
         bike_planner: ActiveLegPlanner | None = None,
         train_leg_planner: TrainLegPlanner | None = None,
+        active_planners: Mapping[str, ActiveLegPlanner] | None = None,
     ) -> None:
+        """Wire repositories and leg strategies.
+
+        ``active_planners`` maps a mode name (e.g. ``"walk"``, ``"bike"``) to its
+        ActiveLegPlanner, so new first/last-mile modes can be registered
+        without modifying the planner (Open/Closed). Unknown modes fall back
+        to walking.
+        """
         self.train_repo = train_repo
         self.location_repo = location_repo
         self.segment_repo = segment_repo
         self.walk_planner = walk_planner or WalkLegPlanner(segment_repo)
         self.bike_planner = bike_planner or BikeLegPlanner(segment_repo)
         self.train_leg_planner = train_leg_planner or TrainLegPlanner()
+        self.active_planners: dict[str, ActiveLegPlanner] = {
+            self.walk_planner.mode: self.walk_planner,
+            self.bike_planner.mode: self.bike_planner,
+            **{key.lower(): value for key, value in (active_planners or {}).items()},
+        }
 
     def _resolve_origin_city(
         self,
@@ -80,7 +94,7 @@ class Planner:
         return "Reggio Emilia" if campus_city.lower() == "modena" else "Modena"
 
     def _get_active_planner(self, mode: str) -> ActiveLegPlanner:
-        return self.bike_planner if mode.lower() == "bike" else self.walk_planner
+        return self.active_planners.get(mode.lower(), self.walk_planner)
 
     def arrive_by(self, request: PlanRequest) -> list[Itinerary]:
         """Calculate the best commuter itineraries arriving before class time.
