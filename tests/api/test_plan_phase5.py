@@ -136,3 +136,4 @@ def test_openapi_documents_new_fields() -> None:
     spec = client.get("/openapi.json").json()
     props = spec["components"]["schemas"]["PlanRequestSchema"]["properties"]
     assert {"depart_after", "station_buffer_min", "train_categories"} <= set(props)
+    assert "/api/geocode" in spec["paths"]

@@ -19,6 +19,7 @@ from api.errors import (
 )
 from api.routers import (
     campuses_router,
+    geocode_router,
     health_router,
     plan_router,
     stations_router,
@@ -66,6 +67,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(campuses_router)
     app.include_router(stations_router)
     app.include_router(plan_router)
+    app.include_router(geocode_router)
 
     return app
 

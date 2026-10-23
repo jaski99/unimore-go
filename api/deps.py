@@ -10,6 +10,7 @@ from functools import lru_cache
 
 from fastapi import Depends
 
+from api.geocoding import Geocoder, NominatimGeocoder
 from engine.planner import Planner
 from engine.repositories import (
     JsonLocationRepository,
@@ -63,3 +64,9 @@ def get_validity(
 ) -> TimetableValidity:
     """Timetable validity window derived from the loaded train data."""
     return TimetableValidity.from_trains(train_repo.all_trains())
+
+
+@lru_cache
+def get_geocoder() -> Geocoder:
+    """Provide the address geocoder (OpenStreetMap Nominatim)."""
+    return NominatimGeocoder()

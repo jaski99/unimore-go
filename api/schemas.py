@@ -288,3 +288,20 @@ class PlanResponseSchema(BaseModel):
         ],
     )
 
+
+class GeocodeResult(BaseModel):
+    """Address search result (OpenStreetMap Nominatim)."""
+
+    label: str = Field(
+        ..., description="Indirizzo trovato", examples=["Via Emilia Centro 1, Modena"]
+    )
+    lat: float = Field(..., examples=[44.6466])
+    lon: float = Field(..., examples=[10.9253])
+
+
+class GeocodeResponse(BaseModel):
+    results: list[GeocodeResult] = Field(default_factory=list)
+    attribution: str = Field(
+        "Dati © OpenStreetMap contributors, ODbL. Ricerca: Nominatim.",
+        description="Attribuzione obbligatoria dei dati OSM",
+    )
