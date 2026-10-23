@@ -8,7 +8,7 @@ from api.schemas import HealthResponse
 
 router = APIRouter(prefix="/api", tags=["Monitoring"])
 
-API_VERSION = "0.2.0"
+API_VERSION = "0.3.0"
 DATA_VALID_TO = "2026-12-12"
 
 
