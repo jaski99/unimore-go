@@ -8,14 +8,21 @@ sidebar on the same page.
 
 Facts verified on the edition valid 17/10–12/12/2026 (SHA-256 below):
 
-* quadro 1 (Bologna–Milano, both directions) prints **no day-of-week symbol**
-  in its column headers: every restriction is a numbered note, so a column
-  without a restricting note runs every day of the edition;
+* day-of-week restrictions are printed **inside the column**, in the ``LogoFS``
+  font, just left of a time (the first and usually the last time of the train),
+  not in the header. Glyphs, checked visually against the legend on file page 6:
+  ``:`` ⚒ lavorativi (Mon–Sat), ``7`` Ⓐ lavorativi escluso il sabato, ``;`` †
+  festivi, ``8`` Ⓑ tutti i giorni escluso il sabato, ``9`` Ⓒ sabato e festivi.
+  A column without one of these runs every day, subject to its notes. (Up to
+  v0.5 these symbols were ignored: weekday trains ran on Sundays in the data,
+  and ⚒ before a departure was mistaken for the ``:`` stop marker.)
+  Public holidays follow the Sunday service (see ``engine/service_calendar.py``);
 * note keys in headers are either boxed characters (``8`` = "Servizio di
   Trenitalia Tper") or numbers encoded with ``chr(digit + 33)`` per digit;
-* cell markers: ``|`` passes without stopping, ``·`` does not serve the
-  station, ``!`` boarding only, ``"`` alighting only, ``:`` stops only in the
-  periods given by a note (excluded: the stop note is not machine-readable).
+* cell markers (``infotra1`` font): ``|`` passes without stopping, ``·`` does
+  not serve the station, ``!`` boarding only, ``"`` alighting only, ``:`` stops
+  only in the periods given by a note (excluded: not machine-readable). In this
+  edition every ``:`` in quadri 1–2 is the LogoFS ⚒, none is the stop marker.
 
 The module is split in two layers: :func:`read_pdf_pages` adapts PyMuPDF to
 plain :class:`Word` records; everything else is pure and unit-tested.
@@ -59,6 +66,8 @@ CATEGORY_GLYPHS = {
     "M": "Suburbano",
 }
 SYMBOL_FONT = "infotra1"
+DAY_SYMBOL_FONT = "LogoFS"
+STOP_MARKERS = ("!", '"', ":")
 NOTE_KEY_FONTS = ("Infotra2", "FontTimeNotes")
 TIME_RE = re.compile(r"^\d{2}\.\d{2}$")
 NUMBER_RE = re.compile(r"^[A-Z]?\d{2,5}[A-Z]?$")
@@ -95,6 +104,7 @@ class Column:
     number: str
     category: str
     note_keys: list[str] = field(default_factory=list)
+    day_glyphs: list[str] = field(default_factory=list)  # keys of DAY_SYMBOLS
     cells: dict[tuple[str, str], Cell] = field(default_factory=dict)  # (station, arr|dep)
 
 
@@ -106,6 +116,34 @@ class PageTable:
     rows: list[tuple[str, str, float]]  # (station label, "arr"|"dep", y)
     columns: list[Column]
     notes: dict[str, str]
+
+
+@dataclass(frozen=True)
+class DaySymbol:
+    symbol: str
+    legend: str  # verbatim from the legend, file page 6
+    days: tuple[str, ...]
+
+
+DAY_SYMBOLS = {
+    ":": DaySymbol(
+        "⚒",
+        "Si effettua nei giorni lavorativi (dal lunedì al sabato)",
+        ("mon", "tue", "wed", "thu", "fri", "sat"),
+    ),
+    "7": DaySymbol(
+        "Ⓐ",
+        "Si effettua nei giorni lavorativi escluso il sabato",
+        ("mon", "tue", "wed", "thu", "fri"),
+    ),
+    ";": DaySymbol("†", "Si effettua nei giorni festivi", ("sun",)),
+    "8": DaySymbol(
+        "Ⓑ",
+        "Si effettua tutti i giorni escluso il sabato",
+        ("mon", "tue", "wed", "thu", "fri", "sun"),
+    ),
+    "9": DaySymbol("Ⓒ", "Si effettua il sabato e nei giorni festivi", ("sat", "sun")),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +284,18 @@ def parse_table(
             if column:
                 column.note_keys.append(word.text)
 
+    # Day symbols sit in the body, just left of a time of their own column.
+    for word in words:
+        if (
+            word.font == DAY_SYMBOL_FONT
+            and word.text in DAY_SYMBOLS
+            and word.y0 > anchor.y0 - 0.5
+            and table_lo - 6 <= word.x0 < table_hi
+        ):
+            column = _nearest(columns, word.cx, reach)
+            if column and word.text not in column.day_glyphs:
+                column.day_glyphs.append(word.text)
+
     rows: list[tuple[str, str, float]] = []
     for line in group_lines(w for w in words if label_lo - 1 <= w.x0 < labels_x + 73):
         label = " ".join(w.text for w in line if w.x0 < label_hi)
@@ -267,7 +317,9 @@ def parse_table(
         )
         pending_marker: tuple[float, str] | None = None
         for word in cells:
-            if word.text in ("!", '"', ":"):
+            if word.font == DAY_SYMBOL_FONT:
+                continue  # day symbol (read above) or the periodic-service brace
+            if word.text in STOP_MARKERS and word.font == SYMBOL_FONT:
                 pending_marker = (word.x1, word.text)
                 continue
             target = _nearest(time_columns, word.cx, reach + 2)
@@ -334,6 +386,13 @@ def runs_from_table(table: PageTable, report: list[str]) -> list[dict]:
         if any(UNUSABLE_NOTE.search(table.notes.get(k, "")) for k in column.note_keys):
             report.append(f"skip {where}: sleeper/couchette ticket only")
             continue
+        if len(column.day_glyphs) > 1:
+            symbols = " ".join(DAY_SYMBOLS[g].symbol for g in column.day_glyphs)
+            report.append(f"skip {where}: conflicting day symbols {symbols}")
+            continue
+        day_symbol = DAY_SYMBOLS[column.day_glyphs[0]] if column.day_glyphs else None
+        days = list(day_symbol.days) if day_symbol else list(ALL_DAYS)
+        symbol_ref = f"; simbolo {day_symbol.symbol}" if day_symbol else ""
         for i, origin in enumerate(order):
             dep = _departure(column, origin)
             if not dep or not dep.time or dep.marker in ('"', ":"):
@@ -362,13 +421,13 @@ def runs_from_table(table: PageTable, report: list[str]) -> list[dict]:
                         "train": column.number,
                         "category": column.category,
                         "operator": operator_for(note_texts),
-                        "days": list(ALL_DAYS),
+                        "days": days,
                         "valid_from": EDITION[0],
                         "valid_to": EDITION[1],
                         "calendar_note": calendar_note(column, table.notes),
                         "source": (
                             f"{PDF_URL}#page={table.file_page} (pagina stampata "
-                            f"{table.printed_page}; note {labels or '-'})"
+                            f"{table.printed_page}; note {labels or '-'}{symbol_ref})"
                         ),
                     }
                 )

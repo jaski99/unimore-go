@@ -3,9 +3,9 @@
 Combines three sources, in this order:
 
 1. the structured fields of the run (``valid_from``/``valid_to``, ``days``);
-2. national public holidays: the dataset transcribes weekday service, so on a
-   weekday holiday (e.g. 8/12) a run is kept only if it is marked as running
-   on Sundays (holidays follow the Sunday service);
+2. national public holidays follow the Sunday service: on a weekday holiday
+   (e.g. Tuesday 8/12) a run is kept only if its ``days`` include ``sun``
+   (PDF day symbols † festivi, Ⓑ, Ⓒ, or no symbol at all);
 3. the interpreted calendar note (see :mod:`engine.calendar_rules`).
 
 Notes that cannot be interpreted never filter a run; they produce a warning

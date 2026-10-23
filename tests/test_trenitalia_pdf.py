@@ -10,6 +10,8 @@ import pytest
 
 from tools.trenitalia_pdf import (
     ALL_DAYS,
+    DAY_SYMBOL_FONT,
+    DAY_SYMBOLS,
     PDF_URL,
     Cell,
     Column,
@@ -59,7 +61,7 @@ def table_words() -> list[Word]:
         word(320, 120, "|", width=2),
         word(318, 130, "07.56"),
         word(358, 110, "07.04"),
-        word(352, 120, ":", width=4),  # "solo periodi indicati"
+        word(352, 120, ":", "infotra1", width=4),  # "solo periodi indicati"
         word(358, 120, "07.12"),
         word(358, 130, "07.20"),
     ]
@@ -243,3 +245,84 @@ def test_parse_page_reads_sidebar_title_and_printed_page() -> None:
 def test_parse_page_without_tables_or_quadro_number() -> None:
     assert parse_page([word(10, 10, "Legenda")], 6) == []
     assert parse_page(table_words(), 75) == []  # no bold quadro number at the top
+
+
+# --- day-of-week symbols (legend p. 6, printed in the LogoFS font next to a time) ----
+
+
+def _table_with(extra: list[Word]) -> PageTable:
+    words = table_words() + extra
+    anchor = next(w for w in words if w.text == "Km")
+    parsed = parse_table(words, anchor, KM_X, 553.0, 75)
+    assert parsed is not None
+    parsed.printed_page, parsed.notes = "63", NOTES
+    return parsed
+
+
+@pytest.mark.parametrize(
+    ("glyph", "days"),
+    [
+        (":", ["mon", "tue", "wed", "thu", "fri", "sat"]),  # crossed hammers: lavorativi
+        ("7", ["mon", "tue", "wed", "thu", "fri"]),  # (A) lavorativi escluso il sabato
+        (";", ["sun"]),  # dagger: festivi
+        ("8", ["mon", "tue", "wed", "thu", "fri", "sun"]),  # (B) tutti i giorni escluso sabato
+        ("9", ["sat", "sun"]),  # (C) sabato e festivi
+    ],
+)
+def test_day_symbol_next_to_a_time_restricts_the_column(glyph: str, days: list[str]) -> None:
+    """Regression (round 3, item 9): day symbols were ignored, so every run ran daily."""
+    table = _table_with([word(311, 110, glyph, DAY_SYMBOL_FONT, width=4)])  # before RV 07.44
+    report: list[str] = []
+    runs = runs_from_table(table, report)
+    rv = next(r for r in runs if r["train"] == "3907")
+    other = next(r for r in runs if r["train"] == "2451")
+    assert rv["days"] == days
+    assert other["days"] == list(ALL_DAYS)
+    assert f"simbolo {DAY_SYMBOLS[glyph].symbol}" in rv["source"]
+
+
+def test_hammers_before_a_departure_are_not_a_stop_marker() -> None:
+    """Regression: LogoFS ':' (crossed hammers) was read as 'solo periodi indicati'.
+
+    The run was dropped (e.g. R 19587 from Modena, ⚒ 08.06, file page 75).
+    """
+    words = [w for w in table_words() if not (w.text == ":" and w.font == "infotra1")]
+    words.append(word(351, 110, ":", DAY_SYMBOL_FONT, width=4))  # ⚒ before 2451 07.04
+    anchor = next(w for w in words if w.text == "Km")
+    table = parse_table(words, anchor, KM_X, 553.0, 75)
+    assert table is not None
+    table.printed_page, table.notes = "63", NOTES
+    assert table.columns[1].cells[("Reggio Emilia", "dep")] == Cell("07:04", "")
+    report: list[str] = []
+    runs = runs_from_table(table, report)
+    regional = [r for r in runs if r["train"] == "2451"]
+    assert {(r["from"], r["to"]) for r in regional} == {
+        ("Reggio Emilia", "Rubiera"),
+        ("Reggio Emilia", "Modena"),
+        ("Rubiera", "Modena"),
+    }
+    assert all(r["days"] == ["mon", "tue", "wed", "thu", "fri", "sat"] for r in regional)
+    assert not any("stop marker" in line for line in report)
+
+
+def test_conflicting_day_symbols_skip_the_column() -> None:
+    table = _table_with(
+        [
+            word(311, 110, ":", DAY_SYMBOL_FONT, width=4),
+            word(311, 130, ";", DAY_SYMBOL_FONT, width=4),
+        ]
+    )
+    report: list[str] = []
+    runs = runs_from_table(table, report)
+    assert all(r["train"] != "3907" for r in runs)
+    assert any("3907" in line and "conflicting day symbols" in line for line in report)
+
+
+def test_day_symbols_match_the_legend() -> None:
+    assert {g: s.legend for g, s in DAY_SYMBOLS.items()} == {
+        ":": "Si effettua nei giorni lavorativi (dal lunedì al sabato)",
+        "7": "Si effettua nei giorni lavorativi escluso il sabato",
+        ";": "Si effettua nei giorni festivi",
+        "8": "Si effettua tutti i giorni escluso il sabato",
+        "9": "Si effettua il sabato e nei giorni festivi",
+    }

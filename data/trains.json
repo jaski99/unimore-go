@@ -343,13 +343,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=19 (pagina stampata 7; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=19 (pagina stampata 7; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -585,13 +584,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -871,13 +869,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -1619,13 +1616,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -1636,18 +1632,12 @@
     "category": "Regionale Veloce",
     "operator": "Trenitalia Tper",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1; simbolo †)"
   },
   {
     "from": "Modena",
@@ -2278,14 +2268,12 @@
       "tue",
       "wed",
       "thu",
-      "fri",
-      "sat",
-      "sun"
+      "fri"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=58 (pagina stampata 46; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=58 (pagina stampata 46; note 1; simbolo Ⓐ)"
   },
   {
     "from": "Modena",
@@ -3269,13 +3257,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -3357,13 +3344,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -3467,13 +3453,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1; simbolo ⚒)"
   },
   {
     "from": "Modena",
@@ -3484,18 +3469,12 @@
     "category": "Regionale Veloce",
     "operator": "Trenitalia Tper",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1; simbolo †)"
   },
   {
     "from": "Modena",
@@ -4039,13 +4018,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=75 (pagina stampata 63; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=75 (pagina stampata 63; note 8; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -4694,18 +4672,13 @@
     "category": "Regionale Veloce",
     "operator": "Trenitalia Tper",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
       "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=83 (pagina stampata 71; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=83 (pagina stampata 71; note 8; simbolo Ⓒ)"
   },
   {
     "from": "Reggio Emilia",
@@ -4721,13 +4694,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -4853,13 +4825,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8; simbolo Ⓑ)"
   },
   {
     "from": "Reggio Emilia",
@@ -4985,13 +4956,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -5007,13 +4977,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note -)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note -; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -5024,18 +4993,12 @@
     "category": "Regionale Veloce",
     "operator": "Trenitalia",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note -)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note -; simbolo †)"
   },
   {
     "from": "Reggio Emilia",
@@ -5711,13 +5674,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -5728,18 +5690,12 @@
     "category": "Regionale",
     "operator": "Trenitalia Tper",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=107 (pagina stampata 95; note 8; simbolo †)"
   },
   {
     "from": "Reggio Emilia",
@@ -6542,18 +6498,12 @@
     "category": "Regionale",
     "operator": "Trenitalia Tper",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=124 (pagina stampata 112; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=124 (pagina stampata 112; note 8; simbolo †)"
   },
   {
     "from": "Reggio Emilia",
@@ -7097,13 +7047,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -7119,13 +7068,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8; simbolo Ⓑ)"
   },
   {
     "from": "Reggio Emilia",
@@ -7163,13 +7111,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8; simbolo ⚒)"
   },
   {
     "from": "Reggio Emilia",
@@ -7823,13 +7770,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=85 (pagina stampata 73; note 8; simbolo ⚒)"
   },
   {
     "from": "Rubiera",
@@ -7845,13 +7791,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=88 (pagina stampata 76; note 8; simbolo Ⓑ)"
   },
   {
     "from": "Rubiera",
@@ -7889,13 +7834,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 8: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=92 (pagina stampata 80; note 8; simbolo ⚒)"
   },
   {
     "from": "Rubiera",
@@ -8439,13 +8383,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=22 (pagina stampata 10; note 1; simbolo ⚒)"
   },
   {
     "from": "Rubiera",
@@ -8527,13 +8470,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=28 (pagina stampata 16; note 1; simbolo ⚒)"
   },
   {
     "from": "Rubiera",
@@ -8637,13 +8579,12 @@
       "wed",
       "thu",
       "fri",
-      "sat",
-      "sun"
+      "sat"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1; simbolo ⚒)"
   },
   {
     "from": "Rubiera",
@@ -8654,18 +8595,12 @@
     "category": "Regionale Veloce",
     "operator": "Trenitalia Tper",
     "days": [
-      "mon",
-      "tue",
-      "wed",
-      "thu",
-      "fri",
-      "sat",
       "sun"
     ],
     "valid_from": "2026-10-17",
     "valid_to": "2026-12-12",
     "calendar_note": "Nota 1: Servizio di Trenitalia Tper.",
-    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1)"
+    "source": "https://www.trenitalia.com/content/dam/trenitalia/allegati/info/orario-digitale/orari-regionali/Regionale_Emilia.pdf#page=44 (pagina stampata 32; note 1; simbolo †)"
   },
   {
     "from": "Rubiera",

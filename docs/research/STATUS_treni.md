@@ -3,8 +3,8 @@
 > **Aggiornamento 2026-10-23 (Fase 5, round 2): questo documento è superato per
 > il dataset.** `data/trains.json` ora è estratto in automatico dallo stesso
 > PDF con `tools/trenitalia_pdf.py`. Sono 402 corse su tutti i giorni, tra Reggio
-> Emilia, Rubiera e Modena, con le note di calendario complete. Le tabelle del
-> quadro 1/2 non hanno simboli di giorno: il vecchio default «lun–ven» e
+> Emilia, Rubiera e Modena, con le note di calendario complete e (dal round 3) i
+> simboli di giorno ⚒ † Ⓐ Ⓑ Ⓒ letti dentro le colonne. Il vecchio default «lun–ven» e
 > l'esclusione delle colonne del fine settimana (sezione 1 sotto) erano la causa
 > dei mancati risultati di domenica e nei festivi. Fonti, metodo e verifiche
 > sono in [`data/SOURCES.md`](../../data/SOURCES.md). Le sezioni seguenti

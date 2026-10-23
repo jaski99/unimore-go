@@ -72,11 +72,35 @@ Le varianti di periodo della stessa corsa (ad es. RV 3907 «fino al 16/11» e
 «dal 17/11») sono righe separate con note diverse; il motore sceglie quella
 valida nel giorno richiesto.
 
-**Le tabelle del quadro 1/2 non usano simboli di giorno**: le limitazioni sono
-solo nelle note. Per questo ogni corsa ha `days` = tutti i giorni e il
-calendario reale viene da `calendar_note`. Il vecchio default «lun–ven» della
-Fase 1 era un errore di trascrizione: impediva le soluzioni di domenica e nei
-festivi (review B1/A1).
+**Simboli di giorno (correzione del round 3, 23/10/2026).** Nei quadri 1/2 i
+simboli di giorno non stanno nell'intestazione della colonna ma **dentro la
+colonna**, nel font `LogoFS`, subito a sinistra di un orario (il primo e di
+solito l'ultimo della corsa). Il round 2 li aveva ignorati: tutte le corse
+risultavano giornaliere e il ⚒ davanti a una partenza veniva scambiato per il
+marcatore «fermata nei soli periodi indicati». Glifi verificati a vista contro la
+legenda di pag. 6 del PDF:
+
+| Glifo `LogoFS` | Simbolo | Legenda (pag. 6) | `days` |
+|---|---|---|---|
+| `:` | ⚒ | Si effettua nei giorni lavorativi (dal lunedì al sabato) | lun–sab |
+| `7` | Ⓐ | Si effettua nei giorni lavorativi escluso il sabato | lun–ven |
+| `;` | † | Si effettua nei giorni festivi | dom |
+| `8` | Ⓑ | Si effettua tutti i giorni escluso il sabato | lun–ven, dom |
+| `9` | Ⓒ | Si effettua il sabato e nei giorni festivi | sab, dom |
+
+Le festività nazionali seguono il servizio domenicale (`engine/service_calendar.py`).
+Risultato: delle 402 corse, **30 hanno un simbolo di giorno** (19 ⚒, 6 †, 3 Ⓑ,
+1 Ⓐ, 1 Ⓒ; il campo `source` cita il simbolo); le altre **372 non hanno né
+simbolo né nota restrittiva**, quindi secondo il PDF circolano tutti i giorni (il
+servizio regionale cadenzato della linea). Per questo una domenica dà quasi gli
+stessi treni di un feriale: per esempio alle 12:44 da Reggio Emilia c'è R 3921 ⚒
+nei feriali e R 3953 † nei festivi (pag. 92), mentre R 17405 delle 07:33 (⚒,
+pag. 75) di domenica non c'è. Verifiche: `tests/test_trenitalia_pdf.py`,
+`tests/test_day_symbols_data.py`.
+
+/ *Day symbols are printed inside the column (LogoFS font) next to a time; up to
+v0.5 they were ignored. 30 of 402 runs are day-restricted; the other 372 run
+daily according to the PDF.*
 
 ## Sedi universitarie / Campuses — `data/locations.json`
 

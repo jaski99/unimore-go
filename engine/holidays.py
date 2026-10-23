@@ -1,7 +1,7 @@
 """Italian national public holidays.
 
-Used by calendar rules ("festivi", "lavorativi") and by planners to warn the
-user that the loaded timetable describes weekday service. Only national
+Used by calendar rules ("festivi", "lavorativi"), by the service calendar
+(holidays follow the Sunday service) and by planners to flag festive timetables. Only national
 holidays are modelled; local patron saints (San Geminiano in Modena on 31/01,
 San Prospero in Reggio Emilia on 24/11) do not change the regional timetable
 and are therefore not treated as holidays.
