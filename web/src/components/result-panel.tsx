@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { PlanResponse, PlannerName } from '@/lib/api/types';
 import type { PlanStatus } from '@/hooks/use-plan';
 import {
@@ -10,16 +11,21 @@ import {
   trainLabel,
   trainLeg,
 } from '@/lib/itinerary-summary';
+import { groupNotices, noticesOf } from '@/lib/notices';
 import { formatClock, formatDuration, formatShortDate } from '@/lib/time-format';
+import { HelpTip } from './help-tip';
 import { Icon } from './icons';
 import { ItineraryTimeline, TicketBadge } from './itinerary-timeline';
 import { NearbySolutions } from './nearby-solutions';
+import { AlertList, CalculationNote, InfoList, RealtimeBox } from './result-notices';
 
 export interface ResultContext {
   planner: PlannerName;
   date: string;
   time: string;
   campusName?: string;
+  /** Minimum margin chosen by the user (explains the "Anticipo" stat). */
+  marginMin?: number;
 }
 
 interface ResultPanelProps {
@@ -28,41 +34,58 @@ interface ResultPanelProps {
   error: string | null;
   onRetry: () => void;
   context?: ResultContext;
+  /** Buttons under the stats (calendar, share), only for a found itinerary. */
+  actions?: ReactNode;
+  /** Extra content at the end of the card (e.g. "Calcola il ritorno"). */
+  footer?: ReactNode;
+  /** Heading level offset for a nested panel (the return under the outbound). */
+  nested?: boolean;
 }
 
-/** Warnings that deserve an alert box instead of the small notes list. */
-const isCritical = (warning: string) =>
-  warning.startsWith('Attenzione') || warning.includes('festivo') || warning.includes('domenica');
-
-export function ResultPanel({ status, result, error, onRetry, context }: ResultPanelProps) {
-  if (status === 'idle') return <EmptyPrompt />;
+export function ResultPanel({
+  status,
+  result,
+  error,
+  onRetry,
+  context,
+  actions,
+  footer,
+  nested = false,
+}: ResultPanelProps) {
+  if (status === 'idle') return nested ? null : <EmptyPrompt />;
   if (status === 'loading') return <LoadingSkeleton />;
   if (status === 'error')
     return <ErrorState message={error ?? 'Si è verificato un errore.'} onRetry={onRetry} />;
 
   const planner: PlannerName = result?.planner ?? context?.planner ?? 'arrive_by';
-  const warnings = result?.warnings ?? [];
-  const critical = warnings.filter(isCritical);
-  const notes = warnings.filter((warning) => !isCritical(warning));
+  const groups = groupNotices(noticesOf(result));
   const itinerary = result?.itineraries[0];
+  const titleId = nested ? 'return-result-title' : 'result-title';
 
   if (!itinerary)
     return (
       <EmptyResult
         planner={planner}
-        critical={critical}
-        notes={notes}
         result={result}
         requestDate={context?.date}
+        groups={groups}
+        titleId={titleId}
+        footer={footer}
+        nested={nested}
       />
     );
 
   const train = trainLeg(itinerary);
   const wait = stationWaitMinutes(itinerary);
   const isReturn = planner === 'depart_after';
+  const Title = nested ? 'h3' : 'h2';
 
   return (
-    <section className="result-card" aria-live="polite" aria-labelledby="result-title">
+    <section
+      className={`result-card ${nested ? 'result-card-nested' : ''}`}
+      aria-live="polite"
+      aria-labelledby={titleId}
+    >
       <div className="result-banner">
         <p className="result-eyebrow">
           {isReturn ? 'Ritorno' : 'Andata'}
@@ -70,9 +93,9 @@ export function ResultPanel({ status, result, error, onRetry, context }: ResultP
             ? ` · ${formatShortDate(context.date)} · lezione ${isReturn ? 'fino alle' : 'alle'} ${context.time}`
             : ''}
         </p>
-        <h2 id="result-title" className="result-title">
+        <Title id={titleId} className="result-title">
           {leaveVerb(planner)} <span>{formatClock(itinerary.leave_at)}</span>
-        </h2>
+        </Title>
         <p className="mt-1 text-sm text-white">
           {train
             ? `${trainLabel(train)} alle ${formatClock(train.depart)} da ${train.from}${wait ? ` · ${wait} min in stazione` : ''}`
@@ -90,34 +113,55 @@ export function ResultPanel({ status, result, error, onRetry, context }: ResultP
           </p>
         )}
       </div>
-      <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 dark:divide-slate-700 dark:border-slate-700">
-        <div className="p-4">
-          <p className="stat-label">{isReturn ? 'A casa alle' : 'Arrivo in sede'}</p>
-          <p className="mt-1 text-xl font-bold text-ink dark:text-white">
-            {formatClock(itinerary.arrive_at)}
-          </p>
+      <dl className="result-stats">
+        <div>
+          <dt className="stat-label">{isReturn ? 'Arrivo' : 'Arrivo in sede'}</dt>
+          <dd className="stat-value">{formatClock(itinerary.arrive_at)}</dd>
         </div>
-        <div className="p-4">
-          <p className="stat-label">{isReturn ? 'Tempo libero' : 'Anticipo'}</p>
-          <p className="mt-1 text-xl font-bold text-pine dark:text-emerald-300">
+        <div>
+          <dt className="stat-label">
+            {isReturn ? 'Tempo dopo la lezione' : 'Anticipo'}
+            <HelpTip label={isReturn ? 'Tempo dopo la lezione' : 'Anticipo'} align="end">
+              {isReturn
+                ? 'Minuti tra la fine della lezione e l’uscita dalla sede per prendere questo treno.'
+                : `Minuti tra l’arrivo in sede e l’inizio della lezione. Comprende l’anticipo minimo che hai scelto${context?.marginMin !== undefined ? ` (${context.marginMin} min)` : ''}.`}
+            </HelpTip>
+          </dt>
+          <dd className="stat-value text-pine dark:text-emerald-300">
             {formatDuration(itinerary.slack_min)}
-          </p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+          </dd>
+          <dd className="text-xs text-slate-600 dark:text-slate-400">
             {slackCaption(planner, itinerary.slack_min)}
-          </p>
+          </dd>
         </div>
-      </div>
-      <div className="p-5 sm:p-6">
-        {critical.map((warning) => (
-          <p className="alert-box mb-4" role="alert" key={warning}>
-            <Icon name="alert" className="h-5 w-5 shrink-0" />
-            <span>{warning}</span>
-          </p>
-        ))}
-        <h3 className="mb-4 text-base font-bold text-ink dark:text-white">Il tuo percorso</h3>
-        <ItineraryTimeline itinerary={itinerary} />
+        {itinerary.duration_min !== undefined && (
+          <div>
+            <dt className="stat-label">Porta a porta</dt>
+            <dd className="stat-value">{formatDuration(itinerary.duration_min)}</dd>
+          </div>
+        )}
+        {itinerary.changes !== undefined && (
+          <div>
+            <dt className="stat-label">Cambi</dt>
+            <dd className="stat-value">
+              {itinerary.changes === 0 ? 'Nessuno' : itinerary.changes}
+            </dd>
+            {train && itinerary.changes === 0 && (
+              <dd className="text-xs text-slate-600 dark:text-slate-400">treno diretto</dd>
+            )}
+          </div>
+        )}
+      </dl>
+      <div className="space-y-4 p-5 sm:p-6">
+        {actions}
+        <CalculationNote calculation={result?.calculation} />
+        <AlertList notices={groups.alerts} />
+        <div>
+          <h3 className="mb-4 text-base font-bold text-ink dark:text-white">Il tuo percorso</h3>
+          <ItineraryTimeline itinerary={itinerary} />
+        </div>
         {result!.itineraries.length > 1 && (
-          <div className="mt-2 space-y-2">
+          <div className="space-y-2">
             <h3 className="text-sm font-bold text-ink dark:text-white">Alternative</h3>
             {result!.itineraries.slice(1, 3).map((option, index) => {
               const optionTrain = trainLeg(option);
@@ -131,6 +175,9 @@ export function ResultPanel({ status, result, error, onRetry, context }: ResultP
                     <span className="block text-sm text-slate-700 dark:text-slate-300">
                       arrivo {formatClock(option.arrive_at)} ·{' '}
                       {describeSlack(planner, option.slack_min)}
+                      {option.duration_min !== undefined
+                        ? ` · ${formatDuration(option.duration_min)}`
+                        : ''}
                       {needsDifferentTicket(option) ? ' · biglietto diverso' : ''}
                       {hasCalendarNotes(option) ? ' · calendario da verificare' : ''}
                     </span>
@@ -143,22 +190,11 @@ export function ResultPanel({ status, result, error, onRetry, context }: ResultP
             })}
           </div>
         )}
-        {notes.length > 0 && <WarningList warnings={notes} />}
+        <InfoList notices={groups.infos} />
+        {train && <RealtimeBox train={train} notice={groups.realtime} />}
+        {footer}
       </div>
     </section>
-  );
-}
-
-function WarningList({ warnings }: { warnings: string[] }) {
-  return (
-    <div className="warning-note mt-4" role="note">
-      <span className="warning-mark">i</span>
-      <ul className="space-y-1">
-        {warnings.map((warning) => (
-          <li key={warning}>{warning}</li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -172,7 +208,8 @@ function EmptyPrompt() {
         Il tuo tragitto, senza corse
       </h2>
       <p className="mt-2 max-w-sm text-sm leading-6 text-slate-700 dark:text-slate-400">
-        Inserisci sede e orario della lezione: ti diciamo quando uscire.
+        Scegli sede e orario della lezione, poi premi <strong>Calcola</strong>: ti diciamo quando
+        uscire.
       </p>
     </div>
   );
@@ -208,48 +245,50 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 
 function EmptyResult({
   planner,
-  critical,
-  notes,
   result,
   requestDate,
+  groups,
+  titleId,
+  footer,
+  nested,
 }: {
+  nested: boolean;
   planner: PlannerName;
-  critical: string[];
-  notes: string[];
   result: PlanResponse | null;
   requestDate?: string;
+  groups: ReturnType<typeof groupNotices>;
+  titleId: string;
+  footer?: ReactNode;
 }) {
-  const headline = notes.find((warning) => warning.startsWith('Nessun treno utile'));
-  const others = notes.filter((warning) => warning !== headline);
   return (
-    <section className="result-placeholder" aria-live="polite" aria-labelledby="empty-title">
+    <section className="result-placeholder" aria-live="polite" aria-labelledby={titleId}>
       <div className="placeholder-art placeholder-art-muted">
         <Icon name="train" className="h-8 w-8" />
       </div>
-      <h2 id="empty-title" className="mt-4 text-lg font-bold text-ink dark:text-white">
-        Nessun treno utile
-      </h2>
+      {nested ? (
+        <h3 id={titleId} className="mt-4 text-lg font-bold text-ink dark:text-white">
+          Nessun treno utile per il ritorno
+        </h3>
+      ) : (
+        <h2 id={titleId} className="mt-4 text-lg font-bold text-ink dark:text-white">
+          Nessun treno utile
+        </h2>
+      )}
       <p className="mt-2 max-w-md text-sm leading-6 text-slate-700 dark:text-slate-300">
-        {headline ??
+        {groups.noService?.message ??
           'Non c’è un treno utile per questo orario. Prova un altro orario o un altro giorno.'}
       </p>
-      <div className="w-full max-w-md">
-        {critical.map((warning) => (
-          <p className="alert-box mt-4 text-left" role="alert" key={warning}>
-            <Icon name="alert" className="h-5 w-5 shrink-0" />
-            <span>{warning}</span>
-          </p>
-        ))}
+      <div className="w-full max-w-md space-y-4 text-left">
+        <CalculationNote calculation={result?.calculation} />
+        <AlertList notices={groups.alerts} />
         <NearbySolutions
           nearby={result?.nearby ?? []}
           planner={planner}
           requestDate={requestDate}
         />
-        {others.length > 0 && (
-          <div className="text-left">
-            <WarningList warnings={others} />
-          </div>
-        )}
+        <InfoList notices={groups.infos} />
+        <RealtimeBox notice={groups.realtime} />
+        {footer}
       </div>
     </section>
   );

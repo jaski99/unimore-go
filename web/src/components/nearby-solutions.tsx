@@ -17,11 +17,12 @@ export function NearbySolutions({
   if (!nearby.length) return null;
   return (
     <div className="mt-5 space-y-3 text-left">
-      {nearby.map(({ kind, itinerary }) => {
+      {nearby.map(({ kind, itinerary, label }, index) => {
         const train = trainLeg(itinerary);
         const otherDay = itinerary.date && itinerary.date !== requestDate;
         return (
-          <details className="nearby-card" key={kind}>
+          // Two solutions can share a kind (e.g. two "next" days): key by position.
+          <details className="nearby-card" key={`${index}-${kind}`}>
             <summary>
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
                 {titles[kind]}
@@ -36,6 +37,11 @@ export function NearbySolutions({
                 {/* Slack across different days is meaningless ("33 h prima"). */}
                 {otherDay ? '' : ` · ${describeSlack(planner, itinerary.slack_min)}`}
               </span>
+              {label && (
+                <span className="mt-1 block text-xs text-slate-700 dark:text-slate-300">
+                  {label}
+                </span>
+              )}
             </summary>
             <div className="mt-4">
               <ItineraryTimeline itinerary={itinerary} />
