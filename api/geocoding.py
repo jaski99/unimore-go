@@ -8,8 +8,10 @@ to the Modena / Reggio Emilia area. Data © OpenStreetMap contributors, ODbL.
 
 from __future__ import annotations
 
+import re
 import threading
 import time
+import unicodedata
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -22,6 +24,8 @@ USER_AGENT = "UnimoreGo/0.4 (portfolio project; https://github.com/Jaski99/unimo
 VIEWBOX = "10.30,44.90,11.20,44.45"
 MIN_INTERVAL_S = 1.0
 CACHE_SIZE = 256
+# Candidates fetched in the single request, then re-ranked locally.
+FETCH_LIMIT = 15
 
 
 class GeocodingError(RuntimeError):
@@ -41,6 +45,58 @@ class Geocoder(ABC):
         """Return places matching ``query`` (best first)."""
 
 
+class PlaceRanker(ABC):
+    """Reorder geocoding candidates for a query (best first)."""
+
+    @abstractmethod
+    def rank(self, query: str, places: list[Place]) -> list[Place]:
+        """Return ``places`` reordered; never drop or add places."""
+
+
+STREET_TYPES = frozenset(
+    "via viale piazza piazzale corso largo strada stradello vicolo borgo contrada "
+    "galleria localita frazione".split()
+)
+_IGNORED_PARTS = re.compile(r"^(emilia-romagna|italia|\d{5})$")
+
+
+def _fold(text: str) -> str:
+    """Lowercase without accents ("Località" -> "localita")."""
+    decomposed = unicodedata.normalize("NFKD", text.lower())
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+
+
+def _words(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9']+", _fold(text)))
+
+
+class StreetTokenRanker(PlaceRanker):
+    """Prefer results whose road name contains the words the user typed.
+
+    Nominatim may rank "10, Via Pietro Fanfani" above "10, Via Emilia Ospizio,
+    Porta San Pietro" for "Via Emilia San Pietro 10". Each query word (street
+    types and numbers excluded) scores 2 if it is in the road part of the label
+    and 1 if it appears elsewhere (district, city); region, country and postcode
+    are ignored. Ties keep Nominatim's order.
+    """
+
+    def rank(self, query: str, places: list[Place]) -> list[Place]:
+        tokens = {t for t in _words(query) if t not in STREET_TYPES and not t.isdigit()}
+        if not tokens:
+            return list(places)
+        scored = [(-self._score(tokens, place.label), i, place) for i, place in enumerate(places)]
+        return [place for _score, _i, place in sorted(scored)]
+
+    @staticmethod
+    def _score(tokens: set[str], label: str) -> int:
+        parts = [p.strip() for p in label.split(",")]
+        parts = [p for p in parts if p and not _IGNORED_PARTS.match(_fold(p))]
+        road = next((p for p in parts if _fold(p).split(" ", 1)[0] in STREET_TYPES), "")
+        road_words = _words(road)
+        other_words = set().union(*(_words(p) for p in parts if p != road)) if parts else set()
+        return sum(2 if t in road_words else 1 if t in other_words else 0 for t in tokens)
+
+
 class NominatimGeocoder(Geocoder):
     """Nominatim client with LRU cache and 1 req/s throttle."""
 
@@ -49,7 +105,9 @@ class NominatimGeocoder(Geocoder):
         client: httpx.Client | None = None,
         clock=time.monotonic,
         sleep=time.sleep,
+        ranker: PlaceRanker | None = None,
     ) -> None:
+        self.ranker = ranker or StreetTokenRanker()
         self.client = client or httpx.Client(timeout=8.0, headers={"User-Agent": USER_AGENT})
         self._clock = clock
         self._sleep = sleep
@@ -64,7 +122,8 @@ class NominatimGeocoder(Geocoder):
                 self._cache.move_to_end(key)
                 return self._cache[key]
             self._throttle()
-            places = self._fetch(query, limit)
+            candidates = self._fetch(query, max(limit, FETCH_LIMIT))
+            places = self.ranker.rank(query, candidates)[:limit]
             self._cache[key] = places
             if len(self._cache) > CACHE_SIZE:
                 self._cache.popitem(last=False)

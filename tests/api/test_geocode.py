@@ -7,7 +7,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.deps import get_geocoder
-from api.geocoding import USER_AGENT, Geocoder, GeocodingError, NominatimGeocoder, Place
+from api.geocoding import (
+    USER_AGENT,
+    Geocoder,
+    GeocodingError,
+    NominatimGeocoder,
+    Place,
+    StreetTokenRanker,
+)
 from api.main import app
 
 client = TestClient(app)
@@ -125,3 +132,64 @@ def test_nominatim_errors(response: httpx.Response) -> None:
 
 def test_default_geocoder_provider() -> None:
     assert isinstance(get_geocoder(), NominatimGeocoder)
+
+
+# --- result ranking (review A4) ---------------------------------------------------
+
+# Real Nominatim labels for "Via Emilia San Pietro 10" (2026-10-23), in its order.
+NOMINATIM_ORDER = [
+    "10, Via Pietro Fanfani, Madonnina, San Faustino-Madonnina-Quattroville, Modena, "
+    "Emilia-Romagna, 41123, Italia",
+    "10, Via Pietro Metastasio, Ponte Alto, San Pancrazio, San Faustino-Madonnina-Quattroville, "
+    "Lesignana, Modena, Emilia-Romagna, 41123, Italia",
+    "Questura/RPC, 10, Via Dante Alighieri, San Giacomo città, Reggio Emilia, Emilia-Romagna, "
+    "42121, Italia",
+    "10, Via Emilia Ospizio, Porta San Pietro, San Pietro esterna, Reggio Emilia, "
+    "Emilia-Romagna, 42121, Italia",
+    "10, Viale dei Mille, San Pietro esterna, Reggio Emilia, Emilia-Romagna, 42121, Italia",
+]
+
+
+def places(labels: list[str]) -> list[Place]:
+    return [Place(label, 44.69, 10.64) for label in labels]
+
+
+def test_ranker_prefers_the_typed_road_name() -> None:
+    ranked = StreetTokenRanker().rank("Via Emilia San Pietro 10", places(NOMINATIM_ORDER))
+    assert ranked[0].label.startswith("10, Via Emilia Ospizio")
+    assert ranked[-1].label.startswith("Questura/RPC")  # only "San" and "Emilia" elsewhere
+    assert sorted(p.label for p in ranked) == sorted(NOMINATIM_ORDER)
+
+
+def test_ranker_keeps_order_on_ties_and_without_words() -> None:
+    labels = ["Via Roma 1, Modena", "Via Roma 1, Reggio Emilia"]
+    assert [p.label for p in StreetTokenRanker().rank("via roma 1", places(labels))] == labels
+    assert [p.label for p in StreetTokenRanker().rank("10", places(labels))] == labels
+
+
+def test_ranker_ignores_accents_and_region() -> None:
+    labels = ["Via Roma, Città, Modena", "Località Città, Rubiera"]
+    ranked = StreetTokenRanker().rank("località citta", places(labels))
+    assert ranked[0].label == "Località Città, Rubiera"  # "citta" in the road name
+    # "Emilia-Romagna" is ignored, "Reggio Emilia" (city) counts.
+    labels = ["Via Roma, Modena, Emilia-Romagna", "Via Garibaldi, Reggio Emilia"]
+    ranked = StreetTokenRanker().rank("Via Emilia", places(labels))
+    assert ranked[0].label == "Via Garibaldi, Reggio Emilia"
+
+
+def test_nominatim_fetches_more_candidates_and_reranks() -> None:
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(request.url.params)
+        return httpx.Response(
+            200,
+            json=[
+                {"display_name": label, "lat": "44.69", "lon": "10.64"} for label in NOMINATIM_ORDER
+            ],
+        )
+
+    geocoder = NominatimGeocoder(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    result = geocoder.search("Via Emilia San Pietro 10", limit=2)
+    assert seen["limit"] == "15"
+    assert len(result) == 2 and result[0].label.startswith("10, Via Emilia Ospizio")
