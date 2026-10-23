@@ -23,6 +23,10 @@ MAX_RESULTS = 3
 # delay is small; otherwise the same lesson time on another working day is
 # more useful (no "22:43 train" for a 09:00 lesson).
 MAX_LATE_MIN = 60
+# A train arriving at the campus more than this before the lesson is not a
+# sensible main answer (e.g. the 00:53 night train for a 05:30 lesson): it is
+# offered as a labelled alternative instead.
+MAX_EARLY_MIN = 120
 
 
 class ArriveByPlanner(JourneyPlanner):
@@ -38,23 +42,34 @@ class ArriveByPlanner(JourneyPlanner):
         deadline = journey.target_min - request.margin_minutes - journey.campus_leg_minutes
         calculation = self.calculation(journey, deadline)
         runs = self._runs(journey, ctx, journey.day)
-        useful = [r for r in runs if run_minutes(r)[1] <= deadline]
-        chosen = sorted(useful, key=lambda r: run_minutes(r)[0], reverse=True)[:MAX_RESULTS]
+        useful = sorted(
+            (r for r in runs if run_minutes(r)[1] <= deadline),
+            key=lambda r: run_minutes(r)[0],
+            reverse=True,
+        )
+        earliest = deadline - MAX_EARLY_MIN
+        chosen = [r for r in useful if run_minutes(r)[1] >= earliest][:MAX_RESULTS]
         itineraries = tuple(self.itinerary(journey, ctx, r, journey.day) for r in chosen)
 
         notices = list(journey.notices)
         nearby: tuple[NearbySolution, ...] = ()
         if not itineraries:
+            window = (
+                f"tra le {clock(earliest)} e le {clock(deadline)}"
+                if useful
+                else f"entro le {clock(deadline)}"
+            )
             notices.append(
                 notice(
                     NO_SERVICE,
                     f"Nessun treno da {journey.home.station.name} arriva a "
-                    f"{journey.campus_station.name} entro le {clock(deadline)} di "
+                    f"{journey.campus_station.name} {window} di "
                     f"{format_it_weekday_date(journey.day)}. {calculation.summary}"
                     f"{category_hint(request)}",
                 )
             )
-            nearby = self._nearby(journey, ctx, runs, deadline)
+            too_early = useful[0] if useful else None
+            nearby = self._nearby(journey, ctx, runs, deadline, too_early)
         return PlanResult(self.name, itineraries, ctx.compose(notices), nearby, calculation)
 
     @staticmethod
@@ -120,12 +135,28 @@ class ArriveByPlanner(JourneyPlanner):
         return assemble(legs, journey.target_min - arrival, day)
 
     def _nearby(
-        self, journey: Journey, ctx: PlanningContext, runs: list[TrainRun], deadline: int
+        self,
+        journey: Journey,
+        ctx: PlanningContext,
+        runs: list[TrainRun],
+        deadline: int,
+        too_early: TrainRun | None = None,
     ) -> tuple[NearbySolution, ...]:
         found: list[NearbySolution] = []
-        previous = self._same_time_on_working_day(journey, ctx, deadline, -1)
-        if previous:
-            found.append(previous)
+        if too_early is not None:
+            itinerary = self.itinerary(journey, ctx, too_early, journey.day)
+            found.append(
+                NearbySolution(
+                    "previous",
+                    itinerary,
+                    f"Ultimo treno utile del giorno: arrivi in sede {itinerary.slack_min} min "
+                    "prima dell'inizio della lezione.",
+                )
+            )
+        else:
+            previous = self._same_time_on_working_day(journey, ctx, deadline, -1)
+            if previous:
+                found.append(previous)
         late = [r for r in runs if run_minutes(r)[1] > deadline]
         if late:
             itinerary = self.itinerary(journey, ctx, late[0], journey.day)

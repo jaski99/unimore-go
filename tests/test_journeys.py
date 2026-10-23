@@ -407,3 +407,26 @@ def test_planner_without_trains_has_no_validity() -> None:
     assert empty.validity is None
     result = empty.plan(req())
     assert result.itineraries == () and result.nearby == ()
+
+
+def test_train_hours_before_the_lesson_is_an_alternative_not_a_result(planner: Planner) -> None:
+    # R 17400 00:53 Modena -> Reggio Emilia runs on 26/10 (nota 6, page 13); for a
+    # 05:30 lesson it would mean leaving at 00:48, which is not a sensible answer.
+    result = planner.plan(
+        req(
+            target_time="05:30",
+            destination_campus_id="palazzo_dossetti",
+            origin_station_id="modena_fs",
+            first_mile_mode="walk",
+            last_mile_mode="walk",
+            margin_minutes=10,
+            train_categories=REGIONAL_ONLY,
+        )
+    )
+    assert result.itineraries == ()
+    (no_service,) = [n for n in result.notices if n.code == "no_service"]
+    assert "tra le 03:01 e le 05:01 di lunedì 26/10/2026" in no_service.message
+    previous, following = result.nearby
+    assert (previous.kind, previous.itinerary.leave_at) == ("previous", "00:48")
+    assert previous.label.startswith("Ultimo treno utile del giorno: arrivi in sede 242 min")
+    assert following.kind == "next" and following.itinerary.slack_min == -26

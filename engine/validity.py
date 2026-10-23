@@ -51,13 +51,14 @@ class TimetableValidity:
         window = f"valido dal {format_it_date(self.valid_from)} al {format_it_date(self.valid_to)}"
         if day > self.valid_to:
             return (
-                f"Il {format_it_weekday_date(day)} è dopo la fine di validità dell'orario caricato "
+                f"{format_it_weekday_date(day).capitalize()} è dopo la fine di validità "
+                "dell'orario caricato "
                 f"({window}): non ci sono dati sui treni per questa data. Controlla il nuovo "
                 "orario Trenitalia; qui sotto trovi la soluzione più vicina nel periodo coperto."
             )
         if day < self.valid_from:
             return (
-                f"Il {format_it_weekday_date(day)} è prima dell'inizio di validità dell'orario "
-                f"caricato ({window}): non ci sono dati sui treni per questa data."
+                f"{format_it_weekday_date(day).capitalize()} è prima dell'inizio di validità "
+                f"dell'orario caricato ({window}): non ci sono dati sui treni per questa data."
             )
         return None
