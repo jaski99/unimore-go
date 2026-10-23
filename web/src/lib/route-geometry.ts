@@ -69,6 +69,13 @@ export function buildRoute(
   const campusStation =
     stations.find((station) => station.city === campus?.city) ??
     nearestStation(stations, campusPoint.position)!;
+  if (campusStation.id === homeStation.id) {
+    // Same city: never draw a train (also guards against a stale itinerary).
+    return {
+      points: [start, campusPoint],
+      segments: [{ from: start.position, to: campusPoint.position, kind: 'active' }],
+    };
+  }
   const points = [home, stationPoint(homeStation), stationPoint(campusStation), campusPoint].filter(
     isPoint,
   );

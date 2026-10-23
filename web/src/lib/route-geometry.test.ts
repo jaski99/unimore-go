@@ -38,4 +38,12 @@ describe('route geometry', () => {
     expect(pending.segments).toEqual([]);
     expect(buildRoute(base, stations, undefined, undefined).segments).toEqual([]);
   });
+
+  it('non disegna mai un treno tra la stessa stazione (stessa città)', () => {
+    const route = buildRoute({ ...base, stationId: 'modena_fs' }, stations, dief, withTrain);
+    expect(route.points.map((point) => point.label)).toEqual(['Modena FS', dief.name]);
+    expect(route.segments.map((segment) => segment.kind)).toEqual(['active']);
+    const keys = route.points.map((point) => `${point.kind}-${point.label}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
 });

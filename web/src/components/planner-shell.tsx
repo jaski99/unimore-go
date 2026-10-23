@@ -118,8 +118,11 @@ export function PlannerShell() {
     [update],
   );
 
+  // While loading, `result` still belongs to the previous request: never mix them.
   const resultIsCurrent =
-    !!lastRequest && JSON.stringify(lastRequest) === JSON.stringify(buildPlanRequest(values));
+    status === 'success' &&
+    !!lastRequest &&
+    JSON.stringify(lastRequest) === JSON.stringify(buildPlanRequest(values));
   const route = useMemo(
     () =>
       buildRoute(
