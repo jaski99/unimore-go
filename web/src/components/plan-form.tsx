@@ -336,19 +336,23 @@ export function PlanForm({
       {error && values.originKind === 'home' && (
         <p className="text-sm text-slate-700 dark:text-slate-300">{error}</p>
       )}
-      <button className="primary-button w-full" type="submit" disabled={loading || !!error}>
-        {loading ? (
-          <>
-            <span className="loading-dot" />
-            Calcolo in corso…
-          </>
-        ) : (
-          <>
-            {isReturn ? 'Calcola quando partire' : 'Calcola quando uscire'}
-            <Icon name="arrow" className="h-5 w-5" />
-          </>
-        )}
-      </button>
+      {/* Narrow screens: the button sticks to the bottom while the form is in
+          view, so Calcola is always one tap away (round 3, point 11). */}
+      <div className="submit-bar">
+        <button className="primary-button w-full" type="submit" disabled={loading || !!error}>
+          {loading ? (
+            <>
+              <span className="loading-dot" />
+              Calcolo in corso…
+            </>
+          ) : (
+            <>
+              {isReturn ? 'Calcola quando partire' : 'Calcola quando uscire'}
+              <Icon name="arrow" className="h-5 w-5" />
+            </>
+          )}
+        </button>
+      </div>
     </form>
   );
 }

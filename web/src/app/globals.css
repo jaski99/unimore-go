@@ -221,6 +221,9 @@ select:focus-visible {
 .primary-button {
   @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-pine px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pine/20 transition hover:bg-[#0d5d4d] disabled:cursor-wait disabled:opacity-70 dark:bg-emerald-600 dark:hover:bg-emerald-500;
 }
+.submit-bar {
+  @apply sticky bottom-0 z-10 -mx-5 -mb-5 rounded-b-[1.5rem] bg-white/95 px-5 pt-3 pb-5 backdrop-blur dark:bg-slate-900/95 sm:-mx-7 sm:-mb-7 sm:px-7 sm:pb-7 lg:static lg:m-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none;
+}
 .secondary-button {
   @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-pine/30 bg-white px-4 py-2.5 text-sm font-semibold text-pine transition hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-950;
 }

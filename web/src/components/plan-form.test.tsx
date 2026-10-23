@@ -130,6 +130,14 @@ describe('PlanForm', () => {
     expect(onValues).toHaveBeenLastCalledWith(expect.objectContaining({ date: '2026-10-26' }));
   });
 
+  it('il pulsante Calcola sta in una barra fissa in basso su schermi stretti (punto 11)', () => {
+    render(<Harness />);
+    const button = screen.getByRole('button', { name: /Calcola quando uscire/ });
+    // Layout is checked in the browser (scripts/e2e_ui.py, mobile).
+    expect(button.parentElement).toHaveClass('submit-bar');
+    expect(button.closest('form')).toContainElement(button.parentElement);
+  });
+
   it('orario a 24 ore con ore e minuti separati', async () => {
     const user = userEvent.setup();
     const onValues = vi.fn();
