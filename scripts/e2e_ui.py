@@ -272,6 +272,29 @@ def calculate(page: Page, verb: str = "Esci") -> str:
     return heading.inner_text().split()[-1]
 
 
+def map_labels(page: Page) -> list[str]:
+    """Permanent marker labels currently on the map (sorted)."""
+    page.locator("#map").scroll_into_view_if_needed()
+    page.wait_for_selector(".leaflet-tooltip.map-label", timeout=15000)
+    page.wait_for_timeout(800)
+    return sorted(page.locator(".leaflet-tooltip.map-label").all_inner_texts())
+
+
+def labels_overlap(page: Page) -> bool:
+    boxes = [tip.bounding_box() for tip in page.locator(".leaflet-tooltip.map-label").all()]
+    boxes = [box for box in boxes if box]
+    for index, a in enumerate(boxes):
+        for b in boxes[index + 1 :]:
+            if (
+                a["x"] < b["x"] + b["width"]
+                and b["x"] < a["x"] + a["width"]
+                and a["y"] < b["y"] + b["height"]
+                and b["y"] < a["y"] + a["height"]
+            ):
+                return True
+    return False
+
+
 def plan_requests(page: Page) -> list[dict]:
     seen: list[dict] = []
     page.on(
@@ -377,6 +400,21 @@ def flow_return_trip_and_ics(browser: Browser, url: str) -> dict[str, bool]:
             "heading", level=2, name="Esci alle 07:39"
         ).is_visible(),
     }
+    # Round 3, B1: the map draws the return, and follows the Andata/Ritorno switch.
+    checks["map shows the return"] = map_labels(page) == [
+        "Sede · DIEF",
+        "Stazione arrivo · Reggio Emilia FS",
+        "Stazione partenza · Modena FS",
+    ]
+    switch = page.get_by_role("group", name="Percorso sulla mappa")
+    switch.get_by_role("button", name="Andata").click()
+    checks["switch to outbound"] = map_labels(page) == [
+        "Sede · DIEF",
+        "Stazione arrivo · Modena FS",
+        "Stazione partenza · Reggio Emilia FS",
+    ]
+    switch.get_by_role("button", name="Ritorno").click()
+    checks["switch back to return"] = "Stazione partenza · Modena FS" in map_labels(page)
     with page.expect_download() as download_info:
         page.locator("#result .result-actions").first.get_by_role(
             "button", name="Aggiungi al calendario"
@@ -421,11 +459,8 @@ def flow_combobox_map_notices(browser: Browser, url: str) -> dict[str, bool]:
 
     page.locator("#lesson-date").fill("2026-10-26")
     calculate(page)
-    page.locator("#map").scroll_into_view_if_needed()
-    page.wait_for_selector(".leaflet-tooltip.map-label", timeout=15000)
-    page.wait_for_timeout(800)
-    labels = page.locator(".leaflet-tooltip.map-label").all_inner_texts()
-    checks["map labels"] = sorted(labels) == [
+    labels = map_labels(page)
+    checks["map labels"] = labels == [
         "Sede · DIEF",
         "Stazione arrivo · Modena FS",
         "Stazione partenza · Reggio Emilia FS",
@@ -437,6 +472,10 @@ def flow_combobox_map_notices(browser: Browser, url: str) -> dict[str, bool]:
         and box["x"] + box["width"] <= map_box["x"] + map_box["width"]
         for box in (tip.bounding_box() for tip in page.locator(".leaflet-tooltip.map-label").all())
     )
+    # Round 3, B5: legend only for what is drawn; labels never cover each other.
+    legend = page.get_by_role("list", name="Legenda della mappa").inner_text()
+    checks["legend without Casa (from station)"] = "Casa" not in legend and "Sede" in legend
+    checks["map labels do not overlap"] = not labels_overlap(page)
     checks["train solid + walk/bike dashed"] = (
         page.locator('path[stroke="#126e5b"][stroke-width="5"]:not([stroke-dasharray])').count()
         == 1
@@ -465,8 +504,62 @@ def flow_combobox_map_notices(browser: Browser, url: str) -> dict[str, bool]:
     )
     alerts = page.locator("#result [role=alert]").all_inner_texts()
     checks["20/12: one merged alert"] = len(alerts) == 1 and "validità" in alerts[0]
-    checks["20/12: Saturday 12/12 proposed"] = (
-        "sab 12 dic" in page.locator("#result").inner_text().lower()
+    result_text = page.locator("#result").inner_text()
+    checks["20/12: Saturday 12/12 proposed"] = "sab 12 dic 2026" in result_text.lower()
+    # Round 3, B2: no calculation box without a result for that date.
+    checks["20/12: no calculation box"] = (
+        page.locator("#result [role=note]", has_text="Come abbiamo calcolato").count() == 0
+        and "entro le" not in result_text
+    )
+    checks["no console errors"] = not errors
+    context.close()
+    return checks
+
+
+def flow_round3_texts(browser: Browser, url: str) -> dict[str, bool]:
+    """Round 3: B3 formula once, B4 one late text, point 9 festive note, B6 origin name."""
+    context, page, errors = new_page(browser)
+    base = url.rstrip("/")
+
+    def open_link(query: str, heading: re.Pattern[str] | str) -> str:
+        page.goto(f"{base}/?{query}", wait_until="networkidle")
+        expect(page.get_by_role("heading", level=2, name=heading)).to_be_visible(timeout=15000)
+        return page.locator("#result").inner_text()
+
+    sunday_dawn = open_link(
+        "sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-25&ora=06%3A00&mezzo=piedi&verso=andata",
+        "Nessun treno utile",
+    )
+    checks = {
+        "Sun 06:00: formula once": sunday_dawn.count("lezione alle 06:00 − 10 min di anticipo")
+        == 1,
+        "Sun 06:00: no calculation box": page.locator(
+            "#result [role=note]", has_text="Come abbiamo calcolato"
+        ).count()
+        == 0,
+        "Sun 06:00: coherent late text": "arrivi in sede 4 min prima dell’inizio"
+        in sunday_dawn.replace("'", "’")
+        and "meno dei 10 min di anticipo che hai scelto" in sunday_dawn
+        and "ritardo" not in sunday_dawn,
+    }
+    sunday = open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-10-25&ora=08%3A30&mezzo=bici&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    checks["Sun 25/10 with result: festive note"] = (
+        "orario festivo, servizio ridotto" in sunday and "Verifica su Trenitalia" in sunday
+    )
+    monday = open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-10-26&ora=08%3A30&mezzo=bici&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    checks["Mon 26/10: no festive note"] = "orario festivo" not in monday
+    same_city = open_link(
+        "sede=economia_biagi&stazione=modena_fs&data=2026-10-26&ora=09%3A00&mezzo=piedi&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    checks["same city names the station"] = (
+        "Stazione di Modena FS e sede" in same_city and "Casa e sede" not in same_city
     )
     checks["no console errors"] = not errors
     context.close()
@@ -478,6 +571,7 @@ FLOWS: list[Callable[[Browser, str], dict[str, bool]]] = [
     flow_shared_link_b1,
     flow_return_trip_and_ics,
     flow_combobox_map_notices,
+    flow_round3_texts,
 ]
 
 # ---------------------------------------------------------------- mobile
@@ -513,6 +607,14 @@ def mobile_check(
     checks["no h-scroll with form help"] = no_horizontal_scroll(page)
     page.keyboard.press("Escape")
     button = page.get_by_role("button", name="Calcola quando uscire")
+    # Point 11: with the form in view, Calcola is on screen without scrolling to its end.
+    page.evaluate("window.scrollTo(0, 0)")
+    page.locator("#plan-form").scroll_into_view_if_needed()
+    page.wait_for_timeout(300)
+    box = button.bounding_box()
+    checks["Calcola sticky on screen"] = (
+        bool(box) and 0 <= box["y"] and (box["y"] + box["height"] <= height)
+    )
     with page.expect_response(lambda r: r.url.endswith("/api/plan")):
         button.tap()
     heading = page.get_by_role("heading", level=2, name=re.compile(r"^Esci alle"))
@@ -523,6 +625,7 @@ def mobile_check(
     result_box = page.locator("#result").bounding_box()
     map_box = page.locator("#map").bounding_box()
     checks["result scrolled into view"] = 0 <= head_box["y"] < height * 0.5
+    checks["focus on result title"] = page.evaluate("document.activeElement?.id") == "result-title"
     checks["result right under the form"] = (
         0 <= result_box["y"] - (form_box["y"] + form_box["height"]) <= 40
     )
