@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import fixtures from '@/lib/api/mock-fixtures.json';
@@ -86,5 +86,28 @@ describe('CampusSearch', () => {
     await user.click(toggle);
     await user.click(toggle);
     expect(input).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('al focus (tastiera o tocco) seleziona tutto il testo, anche dopo il rendering (punto 10)', async () => {
+    const user = userEvent.setup();
+    const { input } = setup();
+    const label = `${dief.name} · ${dief.city}`;
+    await user.tab();
+    expect(input).toHaveFocus();
+    await waitFor(() => {
+      expect((input as HTMLInputElement).selectionStart).toBe(0);
+      expect((input as HTMLInputElement).selectionEnd).toBe(label.length);
+    });
+  });
+
+  it('il nome completo della sede scelta resta leggibile sotto il campo, senza troncamenti', () => {
+    const { input } = setup();
+    const full = document.getElementById('campus-selected');
+    expect(full).toHaveTextContent(`Sede scelta: ${dief.name} · ${dief.city}`);
+    expect(full).toBeVisible();
+    expect(input).toHaveAttribute('title', `${dief.name} · ${dief.city}`);
+    expect(input).toHaveAccessibleDescription(
+      expect.stringContaining(`Sede scelta: ${dief.name} · ${dief.city}`),
+    );
   });
 });

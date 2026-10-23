@@ -45,6 +45,21 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
       ?.scrollIntoView?.({ block: 'nearest' });
   }, [active]);
 
+  /**
+   * Select the whole label so that typing replaces it. `select()` inside the
+   * focus handler is undone by iOS Safari and by the caret placement of the
+   * tap, so the selection is (re)applied with setSelectionRange after the
+   * frame, only while the field still shows the chosen label.
+   */
+  function selectAll(element: HTMLInputElement) {
+    element.select();
+    const label = element.value;
+    requestAnimationFrame(() => {
+      if (document.activeElement === element && element.value === label)
+        element.setSelectionRange(0, label.length);
+    });
+  }
+
   function openList() {
     setOpen(true);
     const index = filtered.findIndex((campus) => campus.id === selectedId);
@@ -76,19 +91,20 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
           aria-controls="campus-options"
           aria-expanded={open}
           aria-activedescendant={active ? `campus-option-${active.id}` : undefined}
-          aria-describedby="campus-search-hint"
+          aria-describedby={selected ? 'campus-selected campus-search-hint' : 'campus-search-hint'}
           autoComplete="off"
+          title={selected ? labelOf(selected) : undefined}
           value={query ?? (selected ? labelOf(selected) : '')}
           placeholder="Cerca una sede…"
           onFocus={(event) => {
-            event.currentTarget.select();
+            selectAll(event.currentTarget);
             openList();
           }}
           onMouseDown={(event) => {
             focusedByPointer.current = document.activeElement !== event.currentTarget;
           }}
           onClick={(event) => {
-            if (focusedByPointer.current) event.currentTarget.select();
+            if (focusedByPointer.current) selectAll(event.currentTarget);
             focusedByPointer.current = false;
             if (!open) openList();
           }}
@@ -137,6 +153,12 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
           <Icon name="chevron" className={`h-5 w-5 transition ${open ? 'rotate-180' : ''}`} />
         </button>
       </div>
+      {selected && (
+        // The input cuts long names: the full one stays readable here (point 10).
+        <p id="campus-selected" className="field-hint break-words">
+          Sede scelta: {labelOf(selected)}
+        </p>
+      )}
       <p id="campus-search-hint" className="sr-only">
         Scrivi per filtrare, frecce per scegliere, Invio per confermare.
       </p>
