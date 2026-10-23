@@ -5,7 +5,7 @@ import type { PlanRequest, PlanResponse } from '@/lib/api/types';
 import { usePlan } from './use-plan';
 
 const request: PlanRequest = {
-  origin: { station_id: 'reggio-emilia-fs' },
+  origin: { station_id: 'reggio_fs' },
   campus_id: 'dief',
   arrive_by: '2026-10-26T08:30:00+01:00',
   mode: 'bike',
@@ -30,6 +30,7 @@ describe('usePlan', () => {
       await result.current.submit(request);
     });
     expect(result.current.status).toBe('empty');
+    expect(result.current.lastRequest).toEqual(request);
     expect(result.current.result).toEqual(plan);
     await act(async () => {
       result.current.retry();

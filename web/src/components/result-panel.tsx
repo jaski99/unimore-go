@@ -1,6 +1,6 @@
 import type { PlanResponse } from '@/lib/api/types';
 import type { PlanStatus } from '@/hooks/use-plan';
-import { formatDate, formatTime } from '@/lib/time-format';
+import { formatClock, formatDate } from '@/lib/time-format';
 import { Icon } from './icons';
 import { ItineraryTimeline } from './itinerary-timeline';
 
@@ -9,9 +9,11 @@ interface ResultPanelProps {
   result: PlanResponse | null;
   error: string | null;
   onRetry: () => void;
+  /** ISO date-time of the lesson, used to show the travel day. */
+  lessonDateTime?: string;
 }
 
-export function ResultPanel({ status, result, error, onRetry }: ResultPanelProps) {
+export function ResultPanel({ status, result, error, onRetry, lessonDateTime }: ResultPanelProps) {
   if (status === 'idle') return <EmptyPrompt />;
   if (status === 'loading') return <LoadingSkeleton />;
   if (status === 'error')
@@ -27,7 +29,7 @@ export function ResultPanel({ status, result, error, onRetry }: ResultPanelProps
           <div>
             <p className="result-eyebrow">Il tuo orario</p>
             <h2 className="result-title">
-              Esci alle <span>{formatTime(itinerary.leave_at)}</span>
+              Esci alle <span>{formatClock(itinerary.leave_at)}</span>
             </h2>
             <p className="mt-1 text-sm text-emerald-50/90">per arrivare a lezione con calma</p>
           </div>
@@ -42,9 +44,9 @@ export function ResultPanel({ status, result, error, onRetry }: ResultPanelProps
             Arrivo previsto
           </p>
           <p className="mt-1 text-xl font-bold text-ink dark:text-white">
-            {formatTime(itinerary.arrive_at)}
+            {formatClock(itinerary.arrive_at)}
           </p>
-          <p className="text-xs text-slate-500">{formatDate(itinerary.arrive_at)}</p>
+          {lessonDateTime && <p className="text-xs text-slate-500">{formatDate(lessonDateTime)}</p>}
         </div>
         <div className="p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Anticipo</p>
@@ -69,7 +71,7 @@ export function ResultPanel({ status, result, error, onRetry }: ResultPanelProps
           >
             {index > 0 && (
               <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Alternativa {index + 1} · esci alle {formatTime(option.leave_at)}
+                Alternativa {index + 1} · esci alle {formatClock(option.leave_at)}
               </p>
             )}
             <ItineraryTimeline itinerary={option} />

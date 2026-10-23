@@ -5,16 +5,16 @@ import { ResultPanel } from './result-panel';
 const result = {
   itineraries: [
     {
-      leave_at: '2026-10-26T07:34:00+01:00',
-      arrive_at: '2026-10-26T08:18:00+01:00',
+      leave_at: '07:34',
+      arrive_at: '08:18',
       slack_min: 12,
       legs: [
         {
           type: 'bike' as const,
           from: 'Casa',
           to: 'Stazione',
-          depart: '2026-10-26T07:34:00+01:00',
-          arrive: '2026-10-26T07:48:00+01:00',
+          depart: '07:34',
+          arrive: '07:48',
           minutes: 14,
         },
       ],
@@ -25,11 +25,20 @@ const result = {
 
 describe('ResultPanel', () => {
   it('mostra il grande orario d’uscita, l’arrivo, il margine e l’avviso', () => {
-    render(<ResultPanel status="success" result={result} error={null} onRetry={vi.fn()} />);
+    render(
+      <ResultPanel
+        status="success"
+        result={result}
+        error={null}
+        onRetry={vi.fn()}
+        lessonDateTime="2026-10-26T08:30:00+01:00"
+      />,
+    );
     expect(screen.getByRole('heading', { name: 'Esci alle 07:34' })).toBeInTheDocument();
     expect(screen.getByText('08:18')).toBeInTheDocument();
     expect(screen.getByText('12 min')).toBeInTheDocument();
     expect(screen.getByText('Orari dimostrativi.')).toBeInTheDocument();
+    expect(screen.getByText(/lunedì 26 ottobre/)).toBeInTheDocument();
   });
 
   it('espone il retry nello stato di errore e il vuoto senza itinerari', () => {
