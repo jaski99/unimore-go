@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unimore-go"
-version = "0.1.0"
+version = "0.2.0"
 description = "Commuter door-to-door itinerary planner for UNIMORE students along the Modena <-> Reggio Emilia railway axis."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -14,6 +14,9 @@ authors = [
 ]
 dependencies = [
     "pydantic>=2.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "httpx>=0.27.0",
 ]
 
 [project.optional-dependencies]
@@ -23,8 +26,11 @@ dev = [
     "ruff>=0.4.0",
 ]
 
+[project.scripts]
+unimore-api = "uvicorn api.main:app --reload"
+
 [tool.setuptools.packages.find]
-include = ["engine*"]
+include = ["engine*", "api*"]
 
 [tool.ruff]
 target-version = "py311"
@@ -41,6 +47,7 @@ select = [
 ]
 ignore = [
     "E501", # line too long (handled by formatter)
+    "B008", # do not perform function calls in argument defaults (standard for FastAPI Depends)
 ]
 
 [tool.pytest.ini_options]
@@ -49,7 +56,7 @@ pythonpath = ["."]
 addopts = "-v --strict-markers"
 
 [tool.coverage.run]
-source = ["engine"]
+source = ["engine", "api"]
 omit = ["tests/*", "tools/*"]
 
 [tool.coverage.report]
