@@ -92,7 +92,7 @@ describe('PlanForm', () => {
 
   it('avvisa quando la data supera la validità dell’orario', () => {
     render(<Harness initial={{ date: '2026-12-14' }} />);
-    expect(screen.getByRole('alert')).toHaveTextContent('vale fino al 12/12/2026');
+    expect(screen.getByRole('alert')).toHaveTextContent('vale fino a sab 12 dic 2026');
   });
 
   it('da casa chiede indirizzo o minuti; il pulsante resta disattivato finché mancano', async () => {
@@ -121,11 +121,11 @@ describe('PlanForm', () => {
     const onValues = vi.fn();
     render(<Harness onValues={onValues} initial={{ date: '2026-10-26' }} />);
     const readout = screen.getByText('Oggi').closest('p')!;
-    expect(readout).toHaveTextContent('Oggilunedì 26 ottobre 2026');
+    expect(readout).toHaveTextContent('Oggilun 26 ott 2026');
     expect(screen.getByLabelText('Giorno')).toHaveAccessibleDescription(/Oggi/);
     fireEvent.change(screen.getByLabelText('Giorno'), { target: { value: '2026-10-30' } });
     expect(screen.queryByText('Oggi')).not.toBeInTheDocument();
-    expect(screen.getByText('venerdì 30 ottobre 2026')).toBeInTheDocument();
+    expect(screen.getByText('ven 30 ott 2026')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Torna a oggi' }));
     expect(onValues).toHaveBeenLastCalledWith(expect.objectContaining({ date: '2026-10-26' }));
   });
@@ -143,7 +143,7 @@ describe('PlanForm', () => {
   it('dichiara le stazioni coperte e la validità dell’orario (C1)', () => {
     render(<Harness />);
     expect(screen.getByText(/Stazioni coperte:/)).toHaveTextContent(
-      'Stazioni coperte: Modena FS · Rubiera · Reggio Emilia FS · orario Trenitalia 17/10–12/12/2026.',
+      'Stazioni coperte: Modena FS · Rubiera · Reggio Emilia FS · orario Trenitalia dal sab 17 ott 2026 al sab 12 dic 2026.',
     );
   });
 

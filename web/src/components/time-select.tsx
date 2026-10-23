@@ -18,17 +18,24 @@ interface TimeSelectProps {
   value: string;
   onChange: (value: string) => void;
   step?: number;
+  /** Optional hint under the selects, announced as the group description. */
+  description?: string;
 }
 
 /**
  * 24-hour time picker made of two native selects (hours, minutes): native
  * <input type="time"> may show AM/PM depending on the device locale.
  */
-export function TimeSelect({ id, label, value, onChange, step = 5 }: TimeSelectProps) {
+export function TimeSelect({ id, label, value, onChange, step = 5, description }: TimeSelectProps) {
   const labelId = useId();
+  const descriptionId = useId();
   const [hour = '08', minute = '00'] = value.split(':');
   return (
-    <div role="group" aria-labelledby={labelId}>
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      aria-describedby={description ? descriptionId : undefined}
+    >
       <span id={labelId} className="field-label">
         {label}
       </span>
@@ -62,6 +69,11 @@ export function TimeSelect({ id, label, value, onChange, step = 5 }: TimeSelectP
           ))}
         </select>
       </div>
+      {description && (
+        <p id={descriptionId} className="field-hint">
+          {description}
+        </p>
+      )}
     </div>
   );
 }

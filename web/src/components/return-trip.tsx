@@ -7,6 +7,8 @@ import { TimeSelect } from './time-select';
 interface ReturnTripProps {
   /** Lesson end "HH:MM". */
   endTime: string;
+  /** Says the end time is only a proposal, until the user picks one (review B7). */
+  endTimeHint?: string;
   onEndTimeChange: (time: string) => void;
   onCalculate: () => void;
   loading: boolean;
@@ -17,6 +19,7 @@ interface ReturnTripProps {
 /** "Calcola il ritorno" with the outbound settings: only the lesson end changes. */
 export function ReturnTrip({
   endTime,
+  endTimeHint,
   onEndTimeChange,
   onCalculate,
   loading,
@@ -36,6 +39,7 @@ export function ReturnTrip({
           label="Fine lezione"
           value={endTime}
           onChange={onEndTimeChange}
+          description={endTimeHint}
         />
         <button
           type="button"

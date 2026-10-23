@@ -98,14 +98,21 @@ export function weekdayOf(date: string): number {
   return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 }
 
-/** "lun 26 ott" style short date for a YYYY-MM-DD string. */
+const SHORT_DATE = new Intl.DateTimeFormat('it-IT', {
+  timeZone: 'UTC',
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+/**
+ * The one date format of the UI, "lun 26 ott 2026", for a YYYY-MM-DD string.
+ * The API writes the same text (engine/validity.py format_it_day), so dates
+ * in notices and in the interface read alike.
+ */
 export function formatShortDate(date: string): string {
-  return new Intl.DateTimeFormat('it-IT', {
-    timeZone: 'UTC',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  }).format(new Date(`${date}T12:00:00Z`));
+  return SHORT_DATE.format(new Date(`${date}T12:00:00Z`));
 }
 
 /** "45 min", "1 h", "2 h 05 min" */
@@ -115,17 +122,6 @@ export function formatDuration(minutes: number): string {
   const rest = total % 60;
   if (!hours) return `${rest} min`;
   return rest ? `${hours} h ${String(rest).padStart(2, '0')} min` : `${hours} h`;
-}
-
-/** "venerdì 23 ottobre 2026" for a YYYY-MM-DD string. */
-export function formatLongDate(date: string): string {
-  return new Intl.DateTimeFormat('it-IT', {
-    timeZone: 'UTC',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(`${date}T12:00:00Z`));
 }
 
 /** True when the YYYY-MM-DD date is today in Europe/Rome. */

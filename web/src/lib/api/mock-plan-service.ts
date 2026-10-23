@@ -17,7 +17,7 @@ import type {
  * Only the recorded demo request yields itineraries.
  */
 export const MOCK_ONLY_DEMO_WARNING =
-  'Modalità mock: è disponibile solo l’esempio registrato Reggio Emilia FS → DIEF, lunedì 26/10/2026 alle 08:30 in bici (solo regionali, 5 min in stazione). Avvia l’API per gli altri casi.';
+  'Modalità mock: è disponibile solo l’esempio registrato Reggio Emilia FS → DIEF, lun 26 ott 2026 alle 08:30 in bici (solo regionali, 5 min in stazione). Avvia l’API per gli altri casi.';
 
 const demoRequest = fixtures.demo.request as PlanRequest;
 

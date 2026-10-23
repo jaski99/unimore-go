@@ -7,7 +7,7 @@ import {
   validatePlannerValues,
   type PlannerValues,
 } from '@/lib/plan-request';
-import { formatLongDate } from '@/lib/time-format';
+import { formatShortDate } from '@/lib/time-format';
 import { CampusSearch } from './campus-search';
 import { HelpTip } from './help-tip';
 import { HomeLocationField } from './home-location-field';
@@ -53,7 +53,6 @@ export function PlanForm({
   const afterValidity = !!validTo && !!values.date && values.date > validTo;
   const showStation = values.originKind === 'station' || !values.home;
   const isToday = values.date === today;
-  const shortDate = (date: string) => date.split('-').reverse().slice(0, 2).join('/');
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,7 +122,7 @@ export function PlanForm({
         {values.date ? (
           <>
             {isToday && <span className="today-badge">Oggi</span>}
-            <span className="first-letter:uppercase">{formatLongDate(values.date)}</span>
+            <span className="first-letter:uppercase">{formatShortDate(values.date)}</span>
             {!isToday && (
               <button
                 type="button"
@@ -142,8 +141,8 @@ export function PlanForm({
         <p id="validity-alert" role="alert" className="alert-box">
           <Icon name="alert" className="h-5 w-5 shrink-0" />
           <span>
-            L’orario caricato vale fino al {validTo!.split('-').reverse().join('/')}: per questa
-            data non ci sono treni affidabili.
+            L’orario caricato vale fino a {formatShortDate(validTo!)}: per questa data non ci sono
+            treni affidabili.
           </span>
         </p>
       )}
@@ -226,7 +225,7 @@ export function PlanForm({
             <p id="coverage-note" className="field-hint">
               Stazioni coperte: {stations.map((station) => station.name).join(' · ')}
               {validFrom && validTo
-                ? ` · orario Trenitalia ${shortDate(validFrom)}–${validTo.split('-').reverse().join('/')}`
+                ? ` · orario Trenitalia dal ${formatShortDate(validFrom)} al ${formatShortDate(validTo)}`
                 : ''}
               . Le altre stazioni non hanno ancora un orario verificato.
             </p>

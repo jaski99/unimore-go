@@ -34,8 +34,9 @@ export function NearbySolutions({
               </span>
               <span className="block text-sm text-slate-700 dark:text-slate-300">
                 arrivo {formatClock(itinerary.arrive_at)}
-                {/* Slack across different days is meaningless ("33 h prima"). */}
-                {otherDay ? '' : ` · ${describeSlack(planner, itinerary.slack_min)}`}
+                {/* Slack across different days is meaningless ("33 h prima"); a label
+                    already states it in one coherent sentence (review B4). */}
+                {otherDay || label ? '' : ` · ${describeSlack(planner, itinerary.slack_min)}`}
               </span>
               {label && (
                 <span className="mt-1 block text-xs text-slate-700 dark:text-slate-300">

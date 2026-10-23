@@ -103,7 +103,7 @@ export interface Itinerary {
 export interface NearbySolution {
   kind: 'previous' | 'next';
   itinerary: Itinerary;
-  /** Italian explanation, e.g. "Stessa ora di lezione, lunedì 26/10/2026 …" (v0.5). */
+  /** Italian explanation, e.g. "Stessa ora di lezione, lun 26 ott 2026 …" (v0.6). */
   label?: string;
 }
 

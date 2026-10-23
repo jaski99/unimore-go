@@ -1,17 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import {
-  formatClock,
-  formatDate,
-  formatTime,
-  getNextDateForWeekday,
-  toRomeIso,
-} from './time-format';
+import { formatClock, formatTime, getNextDateForWeekday, toRomeIso } from './time-format';
 
 describe('formattazione Europe/Rome', () => {
   it('visualizza correttamente gli orari ricevuti in ISO con offset', () => {
     expect(formatTime('2026-10-26T06:34:00Z')).toBe('07:34');
     expect(formatTime('2026-07-01T05:34:00Z')).toBe('07:34');
-    expect(formatDate('2026-10-26T07:30:00Z')).toContain('lunedì');
   });
 
   it('mostra così com’è l’orario HH:MM dell’API e converte gli ISO', () => {
@@ -44,7 +37,7 @@ describe('date di calendario Europe/Rome', () => {
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
     expect(weekdayOf('2026-10-26')).toBe(1);
     expect(weekdayOf('2026-11-01')).toBe(0);
-    expect(formatShortDate('2026-10-26')).toBe('lun 26 ott');
+    expect(formatShortDate('2026-10-26')).toBe('lun 26 ott 2026');
   });
 
   it('formatta le durate in minuti e ore', async () => {
@@ -56,11 +49,21 @@ describe('date di calendario Europe/Rome', () => {
   });
 });
 
-describe('data lunga, oggi e orari limitati', () => {
-  it('scrive la data per esteso in italiano', async () => {
-    const { formatLongDate } = await import('./time-format');
-    expect(formatLongDate('2026-10-23')).toBe('venerdì 23 ottobre 2026');
-    expect(formatLongDate('2026-12-08')).toBe('martedì 8 dicembre 2026');
+describe('date italiane, oggi e orari limitati', () => {
+  it('un solo formato "lun 26 ott 2026" via Intl it-IT, uguale a quello dell’API (A3)', async () => {
+    const { formatShortDate } = await import('./time-format');
+    // Same strings as engine/validity.py format_it_day (tests/test_validity.py).
+    const cases: Record<string, string> = {
+      '2026-10-26': 'lun 26 ott 2026',
+      '2026-10-25': 'dom 25 ott 2026',
+      '2026-12-08': 'mar 8 dic 2026',
+      '2026-11-01': 'dom 1 nov 2026',
+      '2026-06-03': 'mer 3 giu 2026',
+      '2026-09-14': 'lun 14 set 2026',
+      '2026-07-01': 'mer 1 lug 2026',
+      '2027-01-05': 'mar 5 gen 2027',
+    };
+    for (const [date, text] of Object.entries(cases)) expect(formatShortDate(date)).toBe(text);
   });
 
   it('riconosce oggi nel fuso di Roma (anche a cavallo della mezzanotte UTC)', async () => {

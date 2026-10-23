@@ -33,4 +33,19 @@ describe('ReturnTrip', () => {
     expect(screen.getByRole('button', { name: 'Calcolo…' })).toBeDisabled();
     expect(screen.getByText('risultato')).toBeInTheDocument();
   });
+
+  it('una fine lezione proposta è dichiarata e descrive il campo (B7)', () => {
+    render(
+      <ReturnTrip
+        endTime="10:30"
+        endTimeHint="Proposta: inizio lezione + 2 ore (10:30). Modificala con l’orario reale di fine lezione."
+        onEndTimeChange={vi.fn()}
+        onCalculate={vi.fn()}
+        loading={false}
+      />,
+    );
+    expect(screen.getByRole('group', { name: 'Fine lezione' })).toHaveAccessibleDescription(
+      /^Proposta: inizio lezione \+ 2 ore/,
+    );
+  });
 });

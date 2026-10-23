@@ -37,7 +37,7 @@ describe('ResultPanel', () => {
     expect(
       screen.getByText(/RV 3907 alle 07:44 da Reggio Emilia · 5 min in stazione/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/lun 26 ott · lezione alle 08:30/i)).toBeInTheDocument();
+    expect(screen.getByText(/lun 26 ott 2026 · lezione alle 08:30/i)).toBeInTheDocument();
     expect(screen.getByText('08:18')).toBeInTheDocument();
     expect(screen.getByText('12 min')).toBeInTheDocument();
     expect(screen.getByText('prima dell’inizio')).toBeInTheDocument();
@@ -77,13 +77,20 @@ describe('ResultPanel', () => {
     expect(screen.getByText(/Comprende l’anticipo minimo che hai scelto \(10 min\)/)).toBeVisible();
   });
 
-  it('il ritorno usa "Parti alle"; annidato sotto l’andata usa un h3', () => {
+  it('il ritorno usa "Parti alle"; annidato sotto l’andata usa un h3', async () => {
+    const user = userEvent.setup();
     const response: PlanResponse = { ...demo, planner: 'depart_after' };
     const { rerender } = render(
       <ResultPanel status="success" result={response} error={null} onRetry={vi.fn()} />,
     );
     expect(screen.getByRole('heading', { level: 2, name: 'Parti alle 07:39' })).toBeInTheDocument();
-    expect(screen.getByText('Tempo dopo la lezione')).toBeInTheDocument();
+    // B8: a self-explaining name instead of "Tempo dopo la lezione", plus a tooltip.
+    expect(screen.queryByText('Tempo dopo la lezione')).not.toBeInTheDocument();
+    expect(screen.getByText('Tempo per uscire dall’aula')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Che cos’è: Tempo per uscire dall’aula' }));
+    expect(
+      screen.getByText(/tempo per uscire dall’aula e raggiungere l’uscita, più l’eventuale attesa/),
+    ).toBeVisible();
     rerender(
       <ResultPanel status="success" result={response} error={null} onRetry={vi.fn()} nested />,
     );
@@ -222,9 +229,10 @@ describe('ResultPanel', () => {
       screen.getByText(/nessun treno arriva a Modena FS tra le 06:31 e le 08:31/),
     ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByRole('note', { name: /Come abbiamo calcolato/ })).toHaveTextContent(
-      'lezione alle 09:00 − 10 min di anticipo − 19 min a piedi',
-    );
+    // B2/B3: no result for the date, so no calculation box: the formula is
+    // explained once, inside the no-service notice (from the API).
+    expect(screen.queryByRole('note', { name: /Come abbiamo calcolato/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/arrivo a Modena FS entro le 08:31/)).not.toBeInTheDocument();
     expect(screen.getByText(/Primo giorno feriale con treni: lunedì 26\/10/)).toBeInTheDocument();
     expect(screen.getAllByText(/Soluzione successiva/)).toHaveLength(2);
   });
@@ -244,5 +252,81 @@ describe('ResultPanel', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Riprova' }));
     expect(retry).toHaveBeenCalledOnce();
+  });
+});
+
+describe('ResultPanel: round 3', () => {
+  const outOfValidity: PlanResponse = {
+    planner: 'arrive_by',
+    itineraries: [],
+    calculation: {
+      station: 'Reggio Emilia FS',
+      time: '08:31',
+      summary: 'Calcolo: … = arrivo in stazione entro le 08:31.',
+    },
+    nearby: [
+      {
+        kind: 'previous',
+        itinerary: { ...demo.itineraries[0], date: '2026-12-12' },
+        label: 'Stessa ora di lezione, sab 12 dic 2026 (giorno feriale precedente).',
+      },
+    ],
+    notices: [
+      {
+        code: 'out_of_validity',
+        level: 'warning',
+        message:
+          'Dom 20 dic 2026 è dopo la fine di validità dell’orario caricato (valido dal sab 17 ott 2026 al sab 12 dic 2026).',
+      },
+    ],
+    warnings: [],
+  };
+
+  it('fuori validità (20/12): solo l’avviso unico e la soluzione vicina, nessun riquadro di calcolo (B2)', () => {
+    render(
+      <ResultPanel
+        status="empty"
+        result={outOfValidity}
+        error={null}
+        onRetry={vi.fn()}
+        context={{ ...context, date: '2026-12-20' }}
+      />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('dopo la fine di validità');
+    expect(screen.queryByText(/entro le 08:31/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('note', { name: /Come abbiamo calcolato/ })).not.toBeInTheDocument();
+    // No generic "prova un altro orario" next to the precise notice.
+    expect(screen.queryByText(/Prova un altro orario/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Soluzione precedente · sab 12 dic 2026/)).toBeInTheDocument();
+  });
+
+  it('primo treno dopo: un solo testo coerente, senza "4 min prima" ripetuto (B4)', () => {
+    const late: PlanResponse = {
+      planner: 'arrive_by',
+      itineraries: [],
+      nearby: [
+        {
+          kind: 'next',
+          itinerary: { ...demo.itineraries[0], date: '2026-10-25', slack_min: 4 },
+          label:
+            'Primo treno dopo: arrivi in sede 4 min prima dell’inizio della lezione, meno dei 10 min di anticipo che hai scelto.',
+        },
+      ],
+      notices: [],
+      warnings: [],
+    };
+    render(
+      <ResultPanel
+        status="empty"
+        result={late}
+        error={null}
+        onRetry={vi.fn()}
+        context={{ ...context, date: '2026-10-25' }}
+      />,
+    );
+    const card = screen.getByText(/Soluzione successiva/).closest('details')!;
+    expect(within(card).getByText(/^arrivo 08:18$/)).toBeInTheDocument();
+    expect(within(card).getAllByText(/4 min prima/)).toHaveLength(1);
+    expect(card).not.toHaveTextContent(/ritardo/);
   });
 });

@@ -19,6 +19,9 @@ import { ItineraryTimeline, TicketBadge } from './itinerary-timeline';
 import { NearbySolutions } from './nearby-solutions';
 import { AlertList, CalculationNote, InfoList, RealtimeBox } from './result-notices';
 
+/** Review B8: says what the minutes are for, instead of "Tempo dopo la lezione". */
+const RETURN_SLACK_LABEL = 'Tempo per uscire dall’aula';
+
 export interface ResultContext {
   planner: PlannerName;
   date: string;
@@ -55,7 +58,13 @@ export function ResultPanel({
   if (status === 'idle') return nested ? null : <EmptyPrompt />;
   if (status === 'loading') return <LoadingSkeleton />;
   if (status === 'error')
-    return <ErrorState message={error ?? 'Si è verificato un errore.'} onRetry={onRetry} />;
+    return (
+      <ErrorState
+        message={error ?? 'Si è verificato un errore.'}
+        onRetry={onRetry}
+        titleId={nested ? 'return-result-title' : 'result-title'}
+      />
+    );
 
   const planner: PlannerName = result?.planner ?? context?.planner ?? 'arrive_by';
   const groups = groupNotices(noticesOf(result));
@@ -93,7 +102,7 @@ export function ResultPanel({
             ? ` · ${formatShortDate(context.date)} · lezione ${isReturn ? 'fino alle' : 'alle'} ${context.time}`
             : ''}
         </p>
-        <Title id={titleId} className="result-title">
+        <Title id={titleId} className="result-title" tabIndex={-1}>
           {leaveVerb(planner)} <span>{formatClock(itinerary.leave_at)}</span>
         </Title>
         <p className="mt-1 text-sm text-white">
@@ -120,10 +129,10 @@ export function ResultPanel({
         </div>
         <div>
           <dt className="stat-label">
-            {isReturn ? 'Tempo dopo la lezione' : 'Anticipo'}
-            <HelpTip label={isReturn ? 'Tempo dopo la lezione' : 'Anticipo'} align="end">
+            {isReturn ? RETURN_SLACK_LABEL : 'Anticipo'}
+            <HelpTip label={isReturn ? RETURN_SLACK_LABEL : 'Anticipo'} align="end">
               {isReturn
-                ? 'Minuti tra la fine della lezione e l’uscita dalla sede per prendere questo treno.'
+                ? 'Minuti tra la fine della lezione e il momento in cui devi lasciare la sede per questo treno: tempo per uscire dall’aula e raggiungere l’uscita, più l’eventuale attesa prima di partire.'
                 : `Minuti tra l’arrivo in sede e l’inizio della lezione. Comprende l’anticipo minimo che hai scelto${context?.marginMin !== undefined ? ` (${context.marginMin} min)` : ''}.`}
             </HelpTip>
           </dt>
@@ -228,11 +237,19 @@ function LoadingSkeleton() {
   );
 }
 
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+function ErrorState({
+  message,
+  onRetry,
+  titleId,
+}: {
+  message: string;
+  onRetry: () => void;
+  titleId: string;
+}) {
   return (
     <div className="result-placeholder" role="alert">
       <div className="error-icon">!</div>
-      <h2 className="mt-4 text-lg font-bold text-ink dark:text-white">
+      <h2 id={titleId} tabIndex={-1} className="mt-4 text-lg font-bold text-ink dark:text-white">
         Non siamo riusciti a calcolare il percorso
       </h2>
       <p className="mt-2 text-sm text-slate-700 dark:text-slate-400">{message}</p>
@@ -266,20 +283,24 @@ function EmptyResult({
         <Icon name="train" className="h-8 w-8" />
       </div>
       {nested ? (
-        <h3 id={titleId} className="mt-4 text-lg font-bold text-ink dark:text-white">
+        <h3 id={titleId} tabIndex={-1} className="mt-4 text-lg font-bold text-ink dark:text-white">
           Nessun treno utile per il ritorno
         </h3>
       ) : (
-        <h2 id={titleId} className="mt-4 text-lg font-bold text-ink dark:text-white">
+        <h2 id={titleId} tabIndex={-1} className="mt-4 text-lg font-bold text-ink dark:text-white">
           Nessun treno utile
         </h2>
       )}
-      <p className="mt-2 max-w-md text-sm leading-6 text-slate-700 dark:text-slate-300">
-        {groups.noService?.message ??
-          'Non c’è un treno utile per questo orario. Prova un altro orario o un altro giorno.'}
-      </p>
+      {/* One explanation only: the API notice (which already contains the
+          calculation), or the alert (e.g. out of validity), or a generic line.
+          No calculation box without a result for the date (review B2/B3). */}
+      {(groups.noService || !groups.alerts.length) && (
+        <p className="mt-2 max-w-md text-sm leading-6 text-slate-700 dark:text-slate-300">
+          {groups.noService?.message ??
+            'Non c’è un treno utile per questo orario. Prova un altro orario o un altro giorno.'}
+        </p>
+      )}
       <div className="w-full max-w-md space-y-4 text-left">
-        <CalculationNote calculation={result?.calculation} />
         <AlertList notices={groups.alerts} />
         <NearbySolutions
           nearby={result?.nearby ?? []}
