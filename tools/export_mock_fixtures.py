@@ -24,13 +24,16 @@ from api.settings import Settings  # noqa: E402
 OUTPUT = ROOT / "web" / "src" / "lib" / "api" / "mock-fixtures.json"
 
 # The single demo case covered by the mock: Reggio Emilia FS -> DIEF,
-# Monday 26/10/2026, lesson at 08:30, bike, 10 min margin.
+# Monday 26/10/2026, lesson at 08:30, bike, 10 min margin, UI defaults
+# (5 min in station, regional trains only).
 DEMO_REQUEST = {
     "origin": {"station_id": "reggio_fs"},
     "campus_id": "dief",
     "arrive_by": "2026-10-26T08:30:00+01:00",
     "mode": "bike",
     "margin_min": 10,
+    "station_buffer_min": 5,
+    "train_categories": ["regional"],
 }
 
 

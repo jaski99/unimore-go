@@ -17,7 +17,7 @@ TIME_REGEX = re.compile(r"^\d{2}:\d{2}$")
 def _validate_leg_contract(leg: dict[str, Any]) -> None:
     """Ensure leg strictly adheres to the API specification."""
     assert "type" in leg
-    assert leg["type"] in {"walk", "bike", "train"}
+    assert leg["type"] in {"walk", "bike", "train", "wait"}
     assert "from" in leg
     assert isinstance(leg["from"], str)
     assert "to" in leg
@@ -28,7 +28,8 @@ def _validate_leg_contract(leg: dict[str, Any]) -> None:
     assert TIME_REGEX.match(leg["arrive"])
     assert "minutes" in leg
     assert isinstance(leg["minutes"], int)
-    assert leg["minutes"] >= 0
+    assert leg["minutes"] > 0  # zero-minute legs are never emitted
+    assert isinstance(leg["notes"], list)
 
     if leg["type"] == "train":
         assert leg["train"] is not None
@@ -39,6 +40,9 @@ def _validate_leg_contract(leg: dict[str, Any]) -> None:
         assert isinstance(train["category"], str)
         assert "operator" in train
         assert isinstance(train["operator"], str)
+        assert train["code"] in {"R", "RV", "IC", "ICN", "FR"}
+        assert train["category_group"] in {"regional", "intercity", "high_speed"}
+        assert isinstance(train["different_ticket"], bool)
     else:
         assert leg["train"] is None
 
@@ -52,6 +56,7 @@ def _validate_itinerary_contract(it: dict[str, Any]) -> None:
     assert "slack_min" in it
     assert isinstance(it["slack_min"], int)
     assert it["slack_min"] >= 0
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", it["date"])
     assert "legs" in it
     assert isinstance(it["legs"], list)
     assert len(it["legs"]) >= 1
@@ -83,6 +88,8 @@ def test_contract_plan_response() -> None:
     assert isinstance(data["warnings"], list)
     for w in data["warnings"]:
         assert isinstance(w, str)
+    assert data["planner"] == "arrive_by"
+    assert data["nearby"] == []
 
 
 def test_contract_error_404_unknown_campus() -> None:

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from api.deps import get_planner
 from api.main import app
-from engine.models import Itinerary, Leg, PlanRequest
+from engine.models import Itinerary, Leg, PlanRequest, PlanResult
 
 client = TestClient(app)
 
@@ -36,10 +36,13 @@ def test_plan_intercity_station_origin_bike() -> None:
 
     # Inspect first itinerary
     first = itineraries[0]
-    assert first["leave_at"] == "07:34"
+    # 07:44 RV 3907 - 5 min station buffer - 10 min home->station
+    assert first["leave_at"] == "07:29"
     assert first["arrive_at"] == "08:18"
     assert first["slack_min"] >= 10
-    assert len(first["legs"]) == 3
+    assert first["date"] == "2026-10-26"
+    assert [leg["type"] for leg in first["legs"]] == ["bike", "wait", "train", "bike"]
+    assert first["legs"][1]["minutes"] == 5
 
     # Leg 1: bike home -> reggio_fs
     leg1 = first["legs"][0]
@@ -47,17 +50,20 @@ def test_plan_intercity_station_origin_bike() -> None:
     assert leg1["to"] == "Reggio Emilia FS"
     assert leg1["minutes"] == 10
 
-    # Leg 2: train reggio_fs -> modena_fs
-    leg2 = first["legs"][1]
+    # Leg 3: train reggio_fs -> modena_fs
+    leg2 = first["legs"][2]
     assert leg2["type"] == "train"
     assert leg2["from"] == "Reggio Emilia"
     assert leg2["to"] == "Modena"
     assert leg2["train"] is not None
     assert leg2["train"]["number"] == "3907"
     assert leg2["train"]["category"] == "Regionale Veloce"
+    assert leg2["train"]["code"] == "RV"
+    assert leg2["train"]["different_ticket"] is False
+    assert "pag. 75" in leg2["train"]["source"]
 
-    # Leg 3: bike modena_fs -> DIEF
-    leg3 = first["legs"][2]
+    # Leg 4: bike modena_fs -> DIEF
+    leg3 = first["legs"][3]
     assert leg3["type"] == "bike"
     assert leg3["from"] == "Modena FS"
     assert "DIEF" in leg3["to"] or "Ingegneria" in leg3["to"]
@@ -81,9 +87,7 @@ def test_plan_intercity_walk_mode() -> None:
     data = response.json()
     assert len(data["itineraries"]) >= 1
     first = data["itineraries"][0]
-    assert first["legs"][0]["type"] == "walk"
-    assert first["legs"][1]["type"] == "train"
-    assert first["legs"][2]["type"] == "walk"
+    assert [leg["type"] for leg in first["legs"]] == ["walk", "wait", "train", "walk"]
 
 
 def test_plan_coords_origin_missing_home_to_station() -> None:
@@ -102,8 +106,8 @@ def test_plan_coords_origin_missing_home_to_station() -> None:
 
     # Warning must explain the estimated hypothesis
     warnings = data["warnings"]
-    assert any("Stima primo tratto casa->stazione" in w for w in warnings)
-    assert any("bicicletta" in w for w in warnings)
+    assert any("Tempo casa → Reggio Emilia FS stimato" in w for w in warnings)
+    assert any("in bici" in w for w in warnings)
 
 
 def test_plan_coords_origin_with_home_to_station_override() -> None:
@@ -212,14 +216,17 @@ def test_plan_no_trains_available_warning() -> None:
     data = response.json()
     assert len(data["itineraries"]) == 0
     warnings = data["warnings"]
-    assert any("Nessun treno disponibile" in w for w in warnings)
+    assert any("Nessun treno utile" in w for w in warnings)
+    kinds = [n["kind"] for n in data["nearby"]]
+    assert kinds == ["previous", "next"]
+    assert data["nearby"][0]["itinerary"]["date"] == "2026-10-25"
 
 
 def test_plan_dependency_override() -> None:
     """Demonstrate FastAPI dependency injection substitution in test environment."""
 
     class MockPlanner:
-        def arrive_by(self, req: PlanRequest) -> list[Itinerary]:
+        def plan(self, req: PlanRequest, planner: str = "arrive_by") -> PlanResult:
             mock_leg = Leg(
                 leg_type="walk",
                 origin="Mock Origin",
@@ -228,15 +235,14 @@ def test_plan_dependency_override() -> None:
                 arrive="08:20",
                 minutes=20,
             )
-            return [
-                Itinerary(
-                    leave_at="08:00",
-                    legs=(mock_leg,),
-                    arrive_at="08:20",
-                    slack_min=10,
-                    warnings=("Mock warning",),
-                )
-            ]
+            itinerary = Itinerary(
+                leave_at="08:00",
+                legs=(mock_leg,),
+                arrive_at="08:20",
+                slack_min=10,
+                warnings=("Mock warning",),
+            )
+            return PlanResult(planner, (itinerary,))
 
     app.dependency_overrides[get_planner] = lambda: MockPlanner()  # type: ignore[assignment]
     try:

@@ -13,5 +13,6 @@ def test_health_endpoint() -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
+    assert data["data_valid_from"] == "2026-10-17"
     assert data["data_valid_to"] == "2026-12-12"
-    assert data["version"] == "0.3.0"
+    assert data["version"] == "0.4.0"

@@ -1,4 +1,4 @@
-"""FastAPI dependency injection providers for repositories and planner.
+"""FastAPI dependency injection providers for repositories, planner and services.
 
 Adheres to Dependency Inversion (SOLID): routers depend exclusively on these
 providers, enabling effortless mock injection in unit and contract tests.
@@ -19,6 +19,7 @@ from engine.repositories import (
     SegmentRepository,
     TrainRepository,
 )
+from engine.validity import TimetableValidity
 
 
 @lru_cache
@@ -39,14 +40,26 @@ def get_segment_repository() -> SegmentRepository:
     return JsonSegmentRepository()
 
 
+@lru_cache
+def _build_planner(
+    train_repo: TrainRepository,
+    location_repo: LocationRepository,
+    segment_repo: SegmentRepository,
+) -> Planner:
+    return Planner(train_repo=train_repo, location_repo=location_repo, segment_repo=segment_repo)
+
+
 def get_planner(
     train_repo: TrainRepository = Depends(get_train_repository),
     location_repo: LocationRepository = Depends(get_location_repository),
     segment_repo: SegmentRepository = Depends(get_segment_repository),
 ) -> Planner:
-    """Provide Planner instance wired with injected repositories."""
-    return Planner(
-        train_repo=train_repo,
-        location_repo=location_repo,
-        segment_repo=segment_repo,
-    )
+    """Provide a Planner wired with injected repositories (cached per repository set)."""
+    return _build_planner(train_repo, location_repo, segment_repo)
+
+
+def get_validity(
+    train_repo: TrainRepository = Depends(get_train_repository),
+) -> TimetableValidity:
+    """Timetable validity window derived from the loaded train data."""
+    return TimetableValidity.from_trains(train_repo.all_trains())

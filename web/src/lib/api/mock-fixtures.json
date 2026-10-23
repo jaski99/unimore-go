@@ -2,8 +2,9 @@
   "generated_by": "tools/export_mock_fixtures.py",
   "health": {
     "status": "ok",
+    "data_valid_from": "2026-10-17",
     "data_valid_to": "2026-12-12",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "campuses": [
     {
@@ -66,23 +67,29 @@
       "campus_id": "dief",
       "arrive_by": "2026-10-26T08:30:00+01:00",
       "mode": "bike",
-      "margin_min": 10
+      "margin_min": 10,
+      "station_buffer_min": 5,
+      "train_categories": [
+        "regional"
+      ]
     },
     "response": {
+      "planner": "arrive_by",
       "itineraries": [
         {
-          "leave_at": "07:44",
+          "leave_at": "07:39",
           "arrive_at": "08:18",
           "slack_min": 12,
           "legs": [
             {
-              "type": "bike",
-              "from": "Punto di partenza",
+              "type": "wait",
+              "from": "Reggio Emilia FS",
               "to": "Reggio Emilia FS",
-              "depart": "07:44",
+              "depart": "07:39",
               "arrive": "07:44",
-              "minutes": 0,
-              "train": null
+              "minutes": 5,
+              "train": null,
+              "notes": []
             },
             {
               "type": "train",
@@ -94,8 +101,13 @@
               "train": {
                 "number": "3907",
                 "category": "Regionale Veloce",
-                "operator": "Trenitalia Tper"
-              }
+                "operator": "Trenitalia Tper",
+                "code": "RV",
+                "category_group": "regional",
+                "different_ticket": false,
+                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8 e 35)"
+              },
+              "notes": []
             },
             {
               "type": "bike",
@@ -104,23 +116,26 @@
               "depart": "07:56",
               "arrive": "08:18",
               "minutes": 22,
-              "train": null
+              "train": null,
+              "notes": []
             }
-          ]
+          ],
+          "date": "2026-10-26"
         },
         {
-          "leave_at": "07:33",
+          "leave_at": "07:28",
           "arrive_at": "08:09",
           "slack_min": 21,
           "legs": [
             {
-              "type": "bike",
-              "from": "Punto di partenza",
+              "type": "wait",
+              "from": "Reggio Emilia FS",
               "to": "Reggio Emilia FS",
-              "depart": "07:33",
+              "depart": "07:28",
               "arrive": "07:33",
-              "minutes": 0,
-              "train": null
+              "minutes": 5,
+              "train": null,
+              "notes": []
             },
             {
               "type": "train",
@@ -132,8 +147,13 @@
               "train": {
                 "number": "17405",
                 "category": "Regionale",
-                "operator": "Trenitalia Tper"
-              }
+                "operator": "Trenitalia Tper",
+                "code": "R",
+                "category_group": "regional",
+                "different_ticket": false,
+                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; nota 8)"
+              },
+              "notes": []
             },
             {
               "type": "bike",
@@ -142,50 +162,63 @@
               "depart": "07:47",
               "arrive": "08:09",
               "minutes": 22,
-              "train": null
+              "train": null,
+              "notes": []
             }
-          ]
+          ],
+          "date": "2026-10-26"
         },
         {
-          "leave_at": "07:23",
-          "arrive_at": "08:02",
-          "slack_min": 28,
+          "leave_at": "06:59",
+          "arrive_at": "07:42",
+          "slack_min": 48,
           "legs": [
             {
-              "type": "bike",
-              "from": "Punto di partenza",
+              "type": "wait",
+              "from": "Reggio Emilia FS",
               "to": "Reggio Emilia FS",
-              "depart": "07:23",
-              "arrive": "07:23",
-              "minutes": 0,
-              "train": null
+              "depart": "06:59",
+              "arrive": "07:04",
+              "minutes": 5,
+              "train": null,
+              "notes": []
             },
             {
               "type": "train",
               "from": "Reggio Emilia",
               "to": "Modena",
-              "depart": "07:23",
-              "arrive": "07:40",
-              "minutes": 17,
+              "depart": "07:04",
+              "arrive": "07:20",
+              "minutes": 16,
               "train": {
-                "number": "9303",
-                "category": "Frecciarossa",
-                "operator": "Trenitalia"
-              }
+                "number": "2451",
+                "category": "Regionale Veloce",
+                "operator": "Trenitalia Tper",
+                "code": "RV",
+                "category_group": "regional",
+                "different_ticket": false,
+                "source": "Regionale_Emilia.pdf, pag. 73 (pagina stampata 61; nota 8)"
+              },
+              "notes": []
             },
             {
               "type": "bike",
               "from": "Modena FS",
               "to": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
-              "depart": "07:40",
-              "arrive": "08:02",
+              "depart": "07:20",
+              "arrive": "07:42",
               "minutes": 22,
-              "train": null
+              "train": null,
+              "notes": []
             }
-          ]
+          ],
+          "date": "2026-10-26"
         }
       ],
-      "warnings": ["Orari pianificati da bollettino ufficiale Trenitalia (non in tempo reale)."]
+      "nearby": [],
+      "warnings": [
+        "Orari pianificati da bollettino ufficiale Trenitalia (non in tempo reale)."
+      ]
     }
   }
 }

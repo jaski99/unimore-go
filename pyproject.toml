@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unimore-go"
-version = "0.3.0"
+version = "0.4.0"
 description = "Commuter door-to-door itinerary planner for UNIMORE students along the Modena <-> Reggio Emilia railway axis."
 readme = "README.md"
 requires-python = ">=3.11"

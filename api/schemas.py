@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+TrainCategoryGroup = Literal["regional", "intercity", "high_speed"]
 
 
 class ErrorResponse(BaseModel):
@@ -26,12 +28,17 @@ class HealthResponse(BaseModel):
     """Health check endpoint response."""
 
     status: str = Field("ok", description="Stato del servizio", examples=["ok"])
+    data_valid_from: str = Field(
+        ...,
+        description="Data di inizio validità dell'orario caricato (derivata dai dati)",
+        examples=["2026-10-17"],
+    )
     data_valid_to: str = Field(
         ...,
         description="Data di scadenza dell'orario ferroviario ufficiale caricato",
         examples=["2026-12-12"],
     )
-    version: str = Field(..., description="Versione del motore e dell'API", examples=["0.3.0"])
+    version: str = Field(..., description="Versione del motore e dell'API", examples=["0.4.0"])
 
 
 class CampusItem(BaseModel):
@@ -86,10 +93,21 @@ class PlanRequestSchema(BaseModel):
     campus_id: str = Field(
         ..., description="Identificativo campus di destinazione", examples=["dief"]
     )
-    arrive_by: str = Field(
-        ...,
-        description="Data e ora inizio lezione in formato ISO 8601 (Europe/Rome)",
-        examples=["2026-10-26T08:30:00+02:00"],
+    arrive_by: str | None = Field(
+        None,
+        description=(
+            "Andata: data e ora di inizio lezione, ISO 8601 (Europe/Rome). "
+            "Indicare esattamente uno tra arrive_by e depart_after."
+        ),
+        examples=["2026-10-26T08:30:00+01:00"],
+    )
+    depart_after: str | None = Field(
+        None,
+        description=(
+            "Ritorno: data e ora di fine lezione, ISO 8601 (Europe/Rome). Restituisce le prime "
+            "soluzioni dalla sede verso la stazione di casa."
+        ),
+        examples=["2026-10-26T13:00:00+01:00"],
     )
     mode: Literal["walk", "bike"] = Field(
         "walk",
@@ -109,6 +127,39 @@ class PlanRequestSchema(BaseModel):
         description="Tempo casa->stazione fornito dall'utente in minuti (opzionale)",
         examples=[10],
     )
+    station_buffer_min: int = Field(
+        5,
+        ge=1,
+        le=30,
+        description=(
+            "Minuti in stazione prima della partenza (biglietto, binario). Sempre almeno 1, "
+            "così l'orario di uscita non coincide mai con la partenza del treno."
+        ),
+        examples=[5],
+    )
+    train_categories: list[TrainCategoryGroup] | None = Field(
+        None,
+        min_length=1,
+        description=(
+            "Gruppi di treni ammessi: regional (R/RV), intercity (IC/ICN), high_speed (FR). "
+            "Se omesso valgono tutte le categorie (compatibilità con v0.3)."
+        ),
+        examples=[["regional"]],
+    )
+
+    @model_validator(mode="after")
+    def _exactly_one_time(self) -> PlanRequestSchema:
+        if (self.arrive_by is None) == (self.depart_after is None):
+            raise ValueError("indicare esattamente uno tra arrive_by e depart_after")
+        return self
+
+    @property
+    def planner_name(self) -> str:
+        return "arrive_by" if self.arrive_by is not None else "depart_after"
+
+    @property
+    def target(self) -> str:
+        return self.arrive_by if self.arrive_by is not None else self.depart_after  # type: ignore[return-value]
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -119,6 +170,8 @@ class PlanRequestSchema(BaseModel):
                 "mode": "bike",
                 "margin_min": 10,
                 "home_to_station_min": 10,
+                "station_buffer_min": 5,
+                "train_categories": ["regional"],
             }
         }
     )
@@ -132,6 +185,20 @@ class TrainInfoSchema(BaseModel):
     operator: str = Field(
         ..., description="Impresa ferroviaria operatrice", examples=["Trenitalia Tper"]
     )
+    code: str = Field("", description="Sigla categoria (R, RV, IC, ICN, FR)", examples=["RV"])
+    category_group: TrainCategoryGroup = Field(
+        "regional", description="Gruppo di categoria per il filtro", examples=["regional"]
+    )
+    different_ticket: bool = Field(
+        False,
+        description="True se serve un biglietto diverso dal regionale o un supplemento (IC/FR)",
+        examples=[False],
+    )
+    source: str = Field(
+        "",
+        description="Pagina del PDF Trenitalia da cui è tratta la corsa",
+        examples=["Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8 e 35)"],
+    )
 
 
 class LegSchema(BaseModel):
@@ -139,10 +206,10 @@ class LegSchema(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    leg_type: Literal["walk", "bike", "train"] = Field(
+    leg_type: Literal["walk", "bike", "train", "wait"] = Field(
         ...,
         alias="type",
-        description="Tipologia di trasporto (walk, bike, train)",
+        description="Tipologia del tratto (walk, bike, train, wait = tempo in stazione)",
         examples=["train"],
     )
     from_location: str = Field(
@@ -161,6 +228,10 @@ class LegSchema(BaseModel):
             {"number": "3907", "category": "Regionale Veloce", "operator": "Trenitalia Tper"}
         ],
     )
+    notes: list[str] = Field(
+        default_factory=list,
+        description="Avvisi specifici del tratto (es. nota di calendario non interpretata)",
+    )
 
 
 class ItinerarySchema(BaseModel):
@@ -174,17 +245,39 @@ class ItinerarySchema(BaseModel):
     )
     slack_min: int = Field(
         ...,
-        description="Margine di anticipo effettivo prima dell'inizio lezione (minuti)",
+        description=(
+            "Andata: anticipo sull'inizio lezione (negativo = ritardo). "
+            "Ritorno: minuti liberi tra fine lezione e uscita dalla sede"
+        ),
         examples=[12],
     )
     legs: list[LegSchema] = Field(..., description="Tratti sequenziali del viaggio")
+    date: str = Field("", description="Data del viaggio (YYYY-MM-DD)", examples=["2026-10-26"])
+
+
+class NearbySchema(BaseModel):
+    """Closest solution outside the requested window."""
+
+    kind: Literal["previous", "next"] = Field(..., description="Soluzione precedente o successiva")
+    itinerary: ItinerarySchema
 
 
 class PlanResponseSchema(BaseModel):
     """Trip planning result."""
 
+    planner: Literal["arrive_by", "depart_after"] = Field(
+        "arrive_by", description="Pianificatore usato: andata (arrive_by) o ritorno (depart_after)"
+    )
     itineraries: list[ItinerarySchema] = Field(
-        ..., description="Migliori itinerari ordinati per leave_at decrescente (max 3)"
+        ...,
+        description=(
+            "Migliori itinerari (max 3): per arrive_by ordinati per uscita più tardiva, per "
+            "depart_after per partenza più vicina alla fine della lezione"
+        ),
+    )
+    nearby: list[NearbySchema] = Field(
+        default_factory=list,
+        description="Se non c'è un treno utile: soluzione precedente e/o successiva (anche altri giorni)",
     )
     warnings: list[str] = Field(
         default_factory=list,
@@ -194,3 +287,4 @@ class PlanResponseSchema(BaseModel):
             "Stima primo tratto casa->stazione: 10 minuti in bicicletta basata su distanza stradale stimata (~2.1 km).",
         ],
     )
+
