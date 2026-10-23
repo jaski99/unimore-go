@@ -1,18 +1,25 @@
-import type { Campus, Itinerary, Station } from '@/lib/api/types';
+import type { Campus, Itinerary, Leg, Station } from '@/lib/api/types';
 import type { PlannerValues } from '@/lib/plan-request';
 
 export type LatLon = [number, number];
 
+/** What a map marker stands for; drives its icon and its permanent label. */
+export type PointRole = 'home' | 'from_station' | 'to_station' | 'campus';
+
 export interface RoutePoint {
   position: LatLon;
+  role: PointRole;
+  /** Visible label, e.g. "Stazione partenza · Reggio Emilia FS". */
   label: string;
-  kind: 'home' | 'station' | 'campus';
 }
+
+/** Train segments are drawn solid, walk/bike dashed. */
+export type SegmentKind = 'train' | 'active';
 
 export interface RouteSegment {
   from: LatLon;
   to: LatLon;
-  kind: 'active' | 'train';
+  kind: SegmentKind;
 }
 
 export interface Route {
@@ -20,7 +27,21 @@ export interface Route {
   segments: RouteSegment[];
 }
 
+export const ROLE_LABELS: Record<PointRole, string> = {
+  home: 'Casa',
+  from_station: 'Stazione partenza',
+  to_station: 'Stazione arrivo',
+  campus: 'Sede',
+};
+
 const squared = (a: LatLon, b: LatLon) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+const fold = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/\s+fs$/, '')
+    .trim();
 
 export function nearestStation(stations: Station[], position: LatLon): Station | undefined {
   return [...stations].sort(
@@ -28,10 +49,25 @@ export function nearestStation(stations: Station[], position: LatLon): Station |
   )[0];
 }
 
+/** Train legs name the stop by city ("Reggio Emilia"); walk legs by station ("Modena FS"). */
+export function stationForStop(stations: Station[], stop: string): Station | undefined {
+  const key = fold(stop);
+  return stations.find((station) => fold(station.city) === key || fold(station.name) === key);
+}
+
+const at = (place: { lat: number; lon: number }): LatLon => [place.lat, place.lon];
+
+function point(role: PointRole, position: LatLon, name?: string): RoutePoint {
+  return { role, position, label: name ? `${ROLE_LABELS[role]} · ${name}` : ROLE_LABELS[role] };
+}
+
 /**
- * Straight-line sketch of the trip for the map: home (if known) -> station ->
- * train -> campus station -> campus, or a direct line for same-city trips.
- * No street routing is implied; the API computes the real durations.
+ * Straight-line sketch of the trip for the map. With a train itinerary:
+ * [home] → departure station → (train) → arrival station → campus, mirrored
+ * for the return trip. The stations come from the itinerary's own train legs,
+ * so Rubiera and multi-train trips are drawn correctly. Without a train, a
+ * single walk/bike line; without a result, only the endpoints.
+ * No street routing is implied: the API computes the real durations.
  */
 export function buildRoute(
   values: PlannerValues,
@@ -39,66 +75,50 @@ export function buildRoute(
   campus: Campus | undefined,
   itinerary: Itinerary | undefined,
 ): Route {
-  const home: RoutePoint | null =
-    values.originKind === 'home' && values.home
-      ? { position: [values.home.lat, values.home.lon], label: 'Casa', kind: 'home' }
-      : null;
-  const homeStation = home
-    ? nearestStation(stations, home.position)
-    : stations.find((station) => station.id === values.stationId);
-  const stationPoint = (station: Station): RoutePoint => ({
-    position: [station.lat, station.lon],
-    label: station.name,
-    kind: 'station',
-  });
-  const start = home ?? (homeStation ? stationPoint(homeStation) : null);
-  const campusPoint: RoutePoint | null = campus
-    ? { position: [campus.lat, campus.lon], label: campus.name, kind: 'campus' }
-    : null;
+  const isReturn = values.direction === 'return';
+  const home = values.originKind === 'home' && values.home ? at(values.home) : undefined;
+  const chosenStation =
+    values.originKind === 'station'
+      ? stations.find((station) => station.id === values.stationId)
+      : undefined;
+  const campusAt = campus ? at(campus) : undefined;
+  const campusPoint = campusAt && point('campus', campusAt, campus!.name);
 
-  if (!campusPoint || !start) return { points: [start, campusPoint].filter(isPoint), segments: [] };
+  const trains = itinerary?.legs.filter((leg): leg is Leg => leg.type === 'train') ?? [];
+  const boarding = trains[0] && stationForStop(stations, trains[0].from);
+  const alighting = trains.at(-1) && stationForStop(stations, trains.at(-1)!.to);
 
-  const usesTrain = itinerary?.legs.some((leg) => leg.type === 'train');
-  if (!usesTrain || !homeStation) {
-    const segments: RouteSegment[] = itinerary
-      ? [{ from: start.position, to: campusPoint.position, kind: 'active' }]
-      : [];
-    return { points: [start, campusPoint], segments };
+  if (campusPoint && boarding && alighting && boarding.id !== alighting.id) {
+    const fromStation = point('from_station', at(boarding), boarding.name);
+    const toStation = point('to_station', at(alighting), alighting.name);
+    const homePoint = home && point('home', home);
+    const start = isReturn ? campusPoint : homePoint;
+    const end = isReturn ? homePoint : campusPoint;
+    const points = [start, fromStation, toStation, end].filter(isPoint);
+    const segments: RouteSegment[] = [
+      ...(start ? [segment(start, fromStation, 'active')] : []),
+      segment(fromStation, toStation, 'train'),
+      ...(end ? [segment(toStation, end, 'active')] : []),
+    ];
+    return { points, segments };
   }
 
-  const campusStation =
-    stations.find((station) => station.city === campus?.city) ??
-    nearestStation(stations, campusPoint.position)!;
-  if (campusStation.id === homeStation.id) {
-    // Same city: never draw a train (also guards against a stale itinerary).
-    return {
-      points: [start, campusPoint],
-      segments: [{ from: start.position, to: campusPoint.position, kind: 'active' }],
-    };
-  }
-  const points = [home, stationPoint(homeStation), stationPoint(campusStation), campusPoint].filter(
-    isPoint,
-  );
-  const segments: RouteSegment[] = [
-    ...(home
-      ? [
-          {
-            from: home.position,
-            to: [homeStation.lat, homeStation.lon] as LatLon,
-            kind: 'active' as const,
-          },
-        ]
-      : []),
-    {
-      from: [homeStation.lat, homeStation.lon],
-      to: [campusStation.lat, campusStation.lon],
-      kind: 'train',
-    },
-    { from: [campusStation.lat, campusStation.lon], to: campusPoint.position, kind: 'active' },
-  ];
-  return { points, segments };
+  // No train (same city, pending result or stale itinerary): endpoints only,
+  // joined by one walk/bike line once there is a result.
+  const own = home
+    ? point('home', home)
+    : chosenStation &&
+      point(isReturn ? 'to_station' : 'from_station', at(chosenStation), chosenStation.name);
+  const ordered = (isReturn ? [campusPoint, own] : [own, campusPoint]).filter(isPoint);
+  const segments =
+    itinerary && ordered.length === 2 ? [segment(ordered[0], ordered[1], 'active')] : [];
+  return { points: ordered, segments };
 }
 
-function isPoint(point: RoutePoint | null): point is RoutePoint {
-  return point !== null;
+function segment(from: RoutePoint, to: RoutePoint, kind: SegmentKind): RouteSegment {
+  return { from: from.position, to: to.position, kind };
+}
+
+function isPoint(value: RoutePoint | undefined): value is RoutePoint {
+  return value !== undefined;
 }

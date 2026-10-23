@@ -11,9 +11,15 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { LatLon, Route } from '@/lib/route-geometry';
+import type { LatLon, PointRole, Route } from '@/lib/route-geometry';
 
-const COLORS = { home: '#0284c7', station: '#126e5b', campus: '#ea580c' } as const;
+/** Marker colours; keep in sync with the legend in map-panel.tsx. */
+export const ROLE_COLORS: Record<PointRole, string> = {
+  home: '#0284c7',
+  from_station: '#126e5b',
+  to_station: '#6d28d9',
+  campus: '#ea580c',
+};
 
 interface MapInnerProps {
   route: Route;
@@ -49,17 +55,20 @@ export function MapInner({ route, picking, onPick }: MapInnerProps) {
       ))}
       {route.points.map((point) => (
         <CircleMarker
-          key={`${point.kind}-${point.label}`}
+          key={point.role}
           center={point.position}
-          radius={point.kind === 'station' ? 7 : 9}
+          radius={point.role === 'home' || point.role === 'campus' ? 9 : 7}
           pathOptions={{
             color: '#ffffff',
             weight: 2,
-            fillColor: COLORS[point.kind],
+            fillColor: ROLE_COLORS[point.role],
             fillOpacity: 1,
           }}
         >
-          <Tooltip>{point.label}</Tooltip>
+          {/* Permanent labels: the markers are readable without hovering (touch). */}
+          <Tooltip permanent direction="top" offset={[0, -8]} className="map-label">
+            {point.label}
+          </Tooltip>
         </CircleMarker>
       ))}
       <FitAndResize positions={positions} />
@@ -73,7 +82,7 @@ function FitAndResize({ positions }: { positions: LatLon[] }) {
   useEffect(() => {
     // The container may get its final size after mount (lazy load, layout shifts).
     map.invalidateSize();
-    if (positions.length > 1) map.fitBounds(positions, { padding: [30, 30] });
+    if (positions.length > 1) map.fitBounds(positions, { padding: [44, 44], maxZoom: 15 });
     else if (positions.length === 1) map.setView(positions[0], 14);
   }, [map, positions]);
   useEffect(() => {

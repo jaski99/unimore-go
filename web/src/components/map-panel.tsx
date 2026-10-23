@@ -9,6 +9,35 @@ const MapInner = dynamic(() => import('./map-inner').then((module) => module.Map
   loading: () => <MapPlaceholder text="Caricamento mappa…" />,
 });
 
+const MARKERS = [
+  { role: 'home', label: 'Casa', className: 'bg-sky-600' },
+  { role: 'from_station', label: 'Stazione partenza', className: 'bg-pine' },
+  { role: 'to_station', label: 'Stazione arrivo', className: 'bg-violet-700' },
+  { role: 'campus', label: 'Sede', className: 'bg-orange-500' },
+] as const;
+
+/** Legend for marker colours (see ROLE_COLORS in map-inner.tsx) and line styles. */
+export function MapLegend() {
+  return (
+    <ul
+      aria-label="Legenda della mappa"
+      className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300"
+    >
+      {MARKERS.map((marker) => (
+        <li key={marker.role} className="map-legend">
+          <i className={marker.className} /> {marker.label}
+        </li>
+      ))}
+      <li className="map-legend">
+        <b className="map-line map-line-train" aria-hidden="true" /> Treno
+      </li>
+      <li className="map-legend">
+        <b className="map-line map-line-active" aria-hidden="true" /> A piedi / in bici
+      </li>
+    </ul>
+  );
+}
+
 function MapPlaceholder({ text }: { text: string }) {
   return (
     <div className="map-loading" role="status">
@@ -61,26 +90,18 @@ export function MapPanel({ route, picking, onPick }: MapPanelProps) {
 
   return (
     <section id="map" className="map-card" aria-labelledby="map-heading">
-      <div className="flex items-center justify-between gap-3 px-5 py-4">
+      <div className="px-5 pt-4 pb-2">
         <div>
           <h2 id="map-heading" className="font-bold text-ink dark:text-white">
             Il percorso
           </h2>
           <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-            Linea indicativa: treno continuo, tratti a piedi/bici tratteggiati
+            Linea indicativa in linea d’aria: non è il percorso stradale
           </p>
         </div>
-        <ul className="flex shrink-0 flex-col gap-1 text-[11px] text-slate-700 dark:text-slate-300">
-          <li className="map-legend">
-            <i className="bg-sky-600" /> Casa
-          </li>
-          <li className="map-legend">
-            <i className="bg-pine" /> Stazione
-          </li>
-          <li className="map-legend">
-            <i className="bg-orange-500" /> Sede
-          </li>
-        </ul>
+      </div>
+      <div className="px-5 pb-3">
+        <MapLegend />
       </div>
       {picking && (
         <p className="mx-5 mb-3 rounded-xl bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-900 dark:bg-sky-950 dark:text-sky-100">
