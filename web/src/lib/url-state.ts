@@ -1,4 +1,5 @@
 import type { PlannerValues } from '@/lib/plan-request';
+import { proposeLessonEnd } from '@/lib/return-trip';
 
 /**
  * Search state in the URL query (shareable, works with Back/Forward/Reload):
@@ -7,12 +8,19 @@ import type { PlannerValues } from '@/lib/plan-request';
  *
  * The home position is never written to the link (privacy): a search from home
  * says only `partenza=casa`, and the recipient's own saved home is used.
- * `ritorno` is the lesson end of the "Calcola il ritorno" view.
+ *
+ * `ritorno` is always a lesson end (HH:MM) and `ora` always a lesson start:
+ * - `verso=andata&ora=09:00&ritorno=13:00`: outbound plus the return view;
+ * - `verso=ritorno&ritorno=13:00`: a return search (written without `ora`);
+ * - `verso=ritorno&ora=09:00` without `ritorno`: the lesson end is proposed
+ *   (start + 2 h, round 4 point 5) and the search runs straight away.
  */
 export interface UrlSearch {
   patch: Partial<PlannerValues>;
   /** Lesson end for the return view (HH:MM), when present. */
   returnTime?: string;
+  /** Set when a return search uses a proposed lesson end (start + 2 h). */
+  proposal?: { lessonStart: string; lessonEnd: string };
 }
 
 const ID = /^[a-z0-9_]{1,40}$/;
@@ -35,11 +43,13 @@ export function serializeSearch(values: PlannerValues, returnTime?: string): str
   if (values.originKind === 'station') params.set('stazione', values.stationId);
   else params.set('partenza', 'casa');
   params.set('data', values.date);
-  params.set('ora', values.time);
+  const isReturn = values.direction === 'return';
+  // In the return direction the form time is the lesson end.
+  if (!isReturn) params.set('ora', values.time);
   params.set('mezzo', values.mode === 'walk' ? 'piedi' : 'bici');
-  params.set('verso', values.direction === 'return' ? 'ritorno' : 'andata');
-  if (returnTime && values.direction === 'outbound' && TIME.test(returnTime))
-    params.set('ritorno', returnTime);
+  params.set('verso', isReturn ? 'ritorno' : 'andata');
+  if (isReturn) params.set('ritorno', values.time);
+  else if (returnTime && TIME.test(returnTime)) params.set('ritorno', returnTime);
   return params.toString();
 }
 
@@ -64,11 +74,18 @@ export function parseSearch(search: string): UrlSearch {
   const direction = params.get('verso');
   if (direction && direction in DIRECTIONS)
     patch.direction = DIRECTIONS[direction as keyof typeof DIRECTIONS];
-  const returnTime = params.get('ritorno');
-  return {
-    patch,
-    ...(returnTime && TIME.test(returnTime) && patch.direction !== 'return' ? { returnTime } : {}),
-  };
+  const ritorno = params.get('ritorno');
+  const lessonEnd = ritorno && TIME.test(ritorno) ? ritorno : undefined;
+  if (patch.direction === 'return') {
+    if (lessonEnd) return { patch: { ...patch, time: lessonEnd } };
+    if (!patch.time) return { patch };
+    const proposed = proposeLessonEnd(patch.time);
+    return {
+      patch: { ...patch, time: proposed },
+      proposal: { lessonStart: patch.time, lessonEnd: proposed },
+    };
+  }
+  return { patch, ...(lessonEnd ? { returnTime: lessonEnd } : {}) };
 }
 
 /** True when the link carries a full search (campus, date and time): plan it on open. */

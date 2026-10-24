@@ -48,10 +48,33 @@ describe('serializeSearch / parseSearch', () => {
     expect(parsed.home).toBeUndefined();
   });
 
-  it('il ritorno come direzione principale non porta il parametro ritorno', () => {
-    const query = serializeSearch({ ...values, direction: 'return' }, '13:00');
-    expect(query).toContain('verso=ritorno');
-    expect(query).not.toContain('ritorno=13');
+  it('il ritorno come direzione principale scrive la fine lezione in ritorno, senza ora', () => {
+    const query = serializeSearch({ ...values, direction: 'return', time: '13:00' }, '15:00');
+    expect(query).toBe(
+      'sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-25&mezzo=piedi&verso=ritorno&ritorno=13%3A00',
+    );
+    const search = parseSearch(query);
+    expect(search.patch.time).toBe('13:00');
+    expect(search.patch.direction).toBe('return');
+    expect(search.proposal).toBeUndefined();
+    expect(search.returnTime).toBeUndefined();
+    expect(isCompleteSearch(search)).toBe(true);
+  });
+
+  it('verso=ritorno senza ritorno: fine lezione proposta (inizio + 2 ore), ricerca completa', () => {
+    const search = parseSearch(
+      'sede=dief&stazione=reggio_fs&data=2026-10-26&ora=09:00&mezzo=bici&verso=ritorno',
+    );
+    expect(search.patch.time).toBe('11:00');
+    expect(search.patch.direction).toBe('return');
+    expect(search.proposal).toEqual({ lessonStart: '09:00', lessonEnd: '11:00' });
+    expect(isCompleteSearch(search)).toBe(true);
+  });
+
+  it('verso=ritorno senza ora né ritorno resta incompleto', () => {
+    const search = parseSearch('sede=dief&stazione=reggio_fs&data=2026-10-26&verso=ritorno');
+    expect(search.proposal).toBeUndefined();
+    expect(isCompleteSearch(search)).toBe(false);
   });
 
   it('ignora i parametri non validi uno per uno', () => {
