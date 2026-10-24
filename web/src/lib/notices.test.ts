@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlanResponse } from '@/lib/api/types';
-import { groupNotices, noticesOf } from './notices';
+import { groupNotices, isOutOfValidity, noticesOf } from './notices';
 
 const base: PlanResponse = { itineraries: [], warnings: [] };
 
@@ -45,5 +45,17 @@ describe('groupNotices', () => {
     expect(groups.alerts.map((n) => n.message)).toEqual(['Lontano']);
     expect(groups.infos.map((n) => n.message)).toEqual(['Festivo']);
     expect(groups.realtime?.message).toBe('Non in tempo reale');
+  });
+});
+
+describe('isOutOfValidity (round 5, punto 1)', () => {
+  it('legge il codice out_of_validity, anche nelle risposte v0.4', () => {
+    const notice = { code: 'out_of_validity', level: 'warning' as const, message: 'Fuori' };
+    expect(isOutOfValidity({ ...base, notices: [notice] })).toBe(true);
+    expect(isOutOfValidity({ ...base, warnings: ['Data fuori dal periodo di validità'] })).toBe(
+      true,
+    );
+    expect(isOutOfValidity({ ...base, notices: [{ ...notice, code: 'same_city' }] })).toBe(false);
+    expect(isOutOfValidity(null)).toBe(false);
   });
 });

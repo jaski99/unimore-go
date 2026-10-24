@@ -237,7 +237,9 @@ export function PlannerShell() {
         : undefined,
     [planned],
   );
-  const hasReturnView = !!returnValues && back.status !== 'idle';
+  // Round 4 point 3, round 5 point 1: one rule for the box, the result and the map.
+  const showReturn = shouldOfferReturn(planned?.values.direction, outbound.status, outbound.result);
+  const hasReturnView = showReturn && !!returnValues && back.status !== 'idle';
   const showReturnOnMap = hasReturnView && mapView === 'return';
   const returnIsCurrent =
     !!returnValues &&
@@ -292,8 +294,6 @@ export function PlannerShell() {
   };
   const mainItinerary = outbound.result?.itineraries[0];
   const returnItinerary = back.result?.itineraries[0];
-  // Round 4, point 3: only under a valid outbound answer.
-  const showReturn = shouldOfferReturn(planned?.values.direction, outbound.status, outbound.result);
 
   return (
     <main className="min-h-screen bg-canvas text-ink dark:bg-slate-950 dark:text-slate-100">

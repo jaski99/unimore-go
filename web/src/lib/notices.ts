@@ -15,6 +15,14 @@ function legacyNotice(message: string): Notice {
   return { code: 'generic', level: 'info', message };
 }
 
+/**
+ * The date is outside the loaded timetable (code `out_of_validity`). Also set
+ * on same-city walks, which the API still returns without any train.
+ */
+export function isOutOfValidity(result: PlanResponse | null | undefined): boolean {
+  return noticesOf(result).some((notice) => notice.code === 'out_of_validity');
+}
+
 export interface NoticeGroups {
   /** "Nessun treno …" (shown as the headline of an empty result). */
   noService?: Notice;

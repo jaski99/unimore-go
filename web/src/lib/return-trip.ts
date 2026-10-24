@@ -1,5 +1,6 @@
 import type { PlanResponse } from '@/lib/api/types';
 import type { PlanStatus } from '@/hooks/use-plan';
+import { isOutOfValidity } from '@/lib/notices';
 import { addMinutesClamped } from '@/lib/time-format';
 
 /** Default lesson length used to propose the lesson end (review B7). */
@@ -16,14 +17,23 @@ export function proposalText(lessonEnd: string): string {
 }
 
 /**
- * "E per tornare?" belongs to a valid outbound answer only: a found
- * itinerary for an outbound search (round 4, point 3). No useful train, an
- * error or a date out of the timetable never offer the return.
+ * The single rule for a valid outbound answer (round 4, point 3; round 5,
+ * point 1): an itinerary was found and the date is covered by the timetable.
+ * A same-city walk out of the validity window is not valid: the API returns
+ * the walk, but no train data exist for that day.
+ */
+export function isValidOutbound(result: PlanResponse | null | undefined): boolean {
+  return !!result?.itineraries.length && !isOutOfValidity(result);
+}
+
+/**
+ * "E per tornare?" (the box, the return result and the return map) belongs to
+ * a valid outbound answer of an outbound search only.
  */
 export function shouldOfferReturn(
   direction: 'outbound' | 'return' | undefined,
   status: PlanStatus,
   result: PlanResponse | null,
 ): boolean {
-  return direction === 'outbound' && status === 'success' && !!result?.itineraries.length;
+  return direction === 'outbound' && status === 'success' && isValidOutbound(result);
 }

@@ -419,3 +419,44 @@ describe('prefillMessage', () => {
     );
   });
 });
+
+describe('PlannerShell: round 5', () => {
+  // Same city out of the timetable (repro of point 1): the API still returns the
+  // direct walk, together with the out_of_validity notice.
+  const walkOnly = { ...demo.itineraries[0], legs: [demo.itineraries[0].legs[2]] };
+  const sameCityOutOfRange = {
+    ...demo,
+    itineraries: [walkOnly],
+    calculation: null,
+    notices: [
+      { code: 'out_of_validity', level: 'warning' as const, message: 'Data fuori dall’orario.' },
+      { code: 'same_city', level: 'info' as const, message: 'Stessa città: a piedi.' },
+    ],
+  };
+
+  it('stessa città fuori validità: niente "E per tornare?" (punto 1)', async () => {
+    service.createPlan.mockResolvedValue(sameCityOutOfRange);
+    window.history.replaceState(
+      null,
+      '',
+      '/?sede=dief&stazione=modena_fs&data=2026-12-20&ora=08%3A30&mezzo=piedi&verso=andata',
+    );
+    render(<PlannerShell />);
+    expect(await screen.findByText('Data fuori dall’orario.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'E per tornare?' })).not.toBeInTheDocument();
+  });
+
+  it('link con ritorno= fuori validità: niente vista ritorno, nemmeno sulla mappa (punto 1)', async () => {
+    service.createPlan.mockResolvedValue(sameCityOutOfRange);
+    window.history.replaceState(
+      null,
+      '',
+      '/?sede=dief&stazione=modena_fs&data=2026-12-20&ora=08%3A30&mezzo=piedi&verso=andata&ritorno=13%3A00',
+    );
+    render(<PlannerShell />);
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledTimes(2));
+    expect(await screen.findAllByText('Data fuori dall’orario.')).toHaveLength(1);
+    expect(screen.queryByRole('region', { name: 'E per tornare?' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mappa ritorno' })).not.toBeInTheDocument();
+  });
+});

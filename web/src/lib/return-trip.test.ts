@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlanResponse } from '@/lib/api/types';
-import { proposalText, proposeLessonEnd, shouldOfferReturn } from './return-trip';
+import { isValidOutbound, proposalText, proposeLessonEnd, shouldOfferReturn } from './return-trip';
 
 const found = { itineraries: [{}], warnings: [] } as unknown as PlanResponse;
 const none: PlanResponse = { itineraries: [], warnings: [] };
@@ -22,5 +22,25 @@ describe('return trip rules', () => {
     expect(shouldOfferReturn('outbound', 'loading', found)).toBe(false);
     expect(shouldOfferReturn('return', 'success', found)).toBe(false);
     expect(shouldOfferReturn(undefined, 'success', found)).toBe(false);
+  });
+
+  it('un solo criterio: itinerario trovato e data coperta dall’orario (round 5, punto 1)', () => {
+    const outOfRange = {
+      itineraries: [{}],
+      warnings: [],
+      notices: [{ code: 'out_of_validity', level: 'warning', message: 'Fuori validità' }],
+    } as unknown as PlanResponse;
+    // Same city on foot: the API returns the walk even out of the timetable.
+    expect(isValidOutbound(outOfRange)).toBe(false);
+    expect(shouldOfferReturn('outbound', 'success', outOfRange)).toBe(false);
+    expect(isValidOutbound(found)).toBe(true);
+    expect(isValidOutbound(none)).toBe(false);
+    expect(isValidOutbound(null)).toBe(false);
+    // v0.4 responses (warnings only) are read by their wording.
+    const legacy = {
+      itineraries: [{}],
+      warnings: ['Dom 20 dic 2026 è dopo la fine di validità dell’orario caricato.'],
+    } as unknown as PlanResponse;
+    expect(isValidOutbound(legacy)).toBe(false);
   });
 });
