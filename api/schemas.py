@@ -38,7 +38,7 @@ class HealthResponse(BaseModel):
         description="Data di scadenza dell'orario ferroviario ufficiale caricato",
         examples=["2026-12-12"],
     )
-    version: str = Field(..., description="Versione del motore e dell'API", examples=["0.7.0"])
+    version: str = Field(..., description="Versione del motore e dell'API", examples=["0.7.1"])
 
 
 class CampusItem(BaseModel):
