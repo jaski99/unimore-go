@@ -550,14 +550,17 @@ def flow_round3_texts(browser: Browser, url: str) -> dict[str, bool]:
         "sede=dief&stazione=reggio_fs&data=2026-10-25&ora=08%3A30&mezzo=bici&verso=andata",
         re.compile(r"^Esci alle"),
     )
+    # Round 5, point 4: the short notice is visible, the long text is under "Dettagli".
     checks["Sun 25/10 with result: festive note"] = (
-        "orario festivo, servizio ridotto" in sunday and "Verifica su Trenitalia" in sunday
+        "Festivo, servizio ridotto" in sunday and "verifica" in sunday
     )
     monday = open_link(
         "sede=dief&stazione=reggio_fs&data=2026-10-26&ora=08%3A30&mezzo=bici&verso=andata",
         re.compile(r"^Esci alle"),
     )
-    checks["Mon 26/10: no festive note"] = "orario festivo" not in monday
+    checks["Mon 26/10: no festive note"] = (
+        "orario festivo" not in monday and "servizio ridotto" not in monday
+    )
     same_city = open_link(
         "sede=economia_biagi&stazione=modena_fs&data=2026-10-26&ora=09%3A00&mezzo=piedi&verso=andata",
         re.compile(r"^Esci alle"),
@@ -604,8 +607,9 @@ def flow_round4(browser: Browser, url: str) -> dict[str, bool]:
         "sede=dief&stazione=modena_fs&data=2026-10-26&ora=09%3A00&mezzo=piedi&verso=andata",
         re.compile(r"^Esci alle"),
     )
+    # Round 5, point 3: "In bici circa X min" + the chosen walk, highlighted.
     checks["bike suggestion shown"] = bool(
-        re.search(r"In bici circa \d+ min \(a piedi 53 min\)", text)
+        re.search(r"In bici circa \d+ min", text) and "A piedi 53 min" in text
     )
     with page.expect_response(lambda r: r.url.endswith("/api/plan")):
         page.get_by_role("button", name="Usa la bici").click()
@@ -632,9 +636,10 @@ def flow_round4(browser: Browser, url: str) -> dict[str, bool]:
         "sede=dief&stazione=reggio_fs&data=2026-10-25&ora=08%3A30&mezzo=bici&verso=andata",
         re.compile(r"^Esci alle"),
     )
-    banner = page.locator(".result-banner").inner_text()
-    checks["Sunday: festive label by the train"] = (
-        "Circolazione nei festivi da verificare" in banner
+    # Round 5, point 4: a short chip by the train (the full wording is its tooltip).
+    chip = page.locator("#result .timeline .festive-chip, #result .festive-chip").first
+    checks["Sunday: festive label by the train"] = chip.count() == 1 and (
+        "festivi da verificare" in (chip.get_attribute("title") or "")
     )
     checks["Sunday: return box offered"] = return_box.count() == 1
     open_link(
@@ -665,6 +670,130 @@ def flow_round4(browser: Browser, url: str) -> dict[str, bool]:
     return checks
 
 
+def flow_round5(browser: Browser, url: str) -> dict[str, bool]:
+    """Round 5: return rule out of validity, bike callout, one festive notice, header."""
+    base = url.rstrip("/")
+    checks: dict[str, bool] = {}
+    context, page, errors = new_page(browser, viewport={"width": 390, "height": 844})
+    return_box = page.get_by_role("region", name="E per tornare?")
+
+    def open_link(query: str, heading: re.Pattern[str] | str) -> None:
+        page.goto(f"{base}/?{query}", wait_until="networkidle")
+        expect(page.get_by_role("heading", level=2, name=heading)).to_be_visible(timeout=15000)
+
+    # Point 1: the brief's repro, same city on foot out of the timetable.
+    repro = "sede=dief&stazione=modena_fs&data=2026-12-20&ora=08%3A30&mezzo=piedi&verso=andata"
+    open_link(repro, re.compile(r"^Esci alle"))
+    result_text = page.locator("#result").inner_text()
+    checks["same city 20/12: validity alert"] = "dopo la fine di validità" in result_text
+    checks["same city 20/12: no return box"] = return_box.count() == 0
+    open_link(f"{repro}&ritorno=13%3A00", re.compile(r"^Esci alle"))
+    page.wait_for_timeout(800)
+    checks["same city 20/12 + ritorno=: no return box"] = return_box.count() == 0
+    checks["same city 20/12 + ritorno=: no return map"] = (
+        page.get_by_role("group", name="Percorso sulla mappa").count() == 0
+    )
+    # Point 3: bike callout inside the result banner, visible with the title.
+    open_link(repro.replace("2026-12-20", "2026-10-26"), re.compile(r"^Esci alle"))
+    callout = page.get_by_role("group", name="Suggerimento: bici")
+    checks["bike callout in the banner"] = (
+        page.locator(".result-banner").get_by_role("group", name="Suggerimento: bici").count() == 1
+    )
+    checks["bike callout text"] = callout.count() == 1 and "In bici circa" in callout.inner_text()
+    use_bike = page.get_by_role("button", name="Usa la bici")
+    title_box = page.locator("#result-title").bounding_box()
+    button_box = use_bike.bounding_box() if use_bike.count() == 1 else None
+    checks["Usa la bici near the title"] = bool(
+        title_box and button_box and 0 < button_box["y"] - title_box["y"] < 360
+    )
+    checks["Usa la bici: touch size"] = bool(button_box and button_box["height"] >= 44)
+    checks["chosen mode unchanged"] = (
+        page.get_by_role("button", name="A piedi").get_attribute("aria-pressed") == "true"
+    )
+    # Point 4: Sunday, one short notice on top, chips on the runs, details on demand.
+    open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-10-25&ora=08%3A30&mezzo=bici&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    notice = page.locator("#result .festive-notice")
+    visible_text = page.locator("#result").inner_text()
+    checks["one festive notice"] = notice.count() == 1
+    # At most two rendered lines on a 390 px phone.
+    checks["festive notice: short headline"] = notice.count() == 1 and page.evaluate(
+        """() => { const p = document.querySelector('#result .festive-notice p');
+          const style = getComputedStyle(p);
+          return p.getBoundingClientRect().height <= 2.2 * parseFloat(style.lineHeight); }"""
+    )
+    # Visible text only: the full wording stays for screen readers (.sr-only).
+    checks["full wording not repeated on runs"] = (
+        page.evaluate(
+            """() => [...document.querySelectorAll('#result *')].filter((element) =>
+              [...element.childNodes].some((node) => node.nodeType === 3
+                && node.textContent.includes('Circolazione nei festivi da verificare'))
+              && !element.closest('.sr-only') && element.getClientRects().length > 0).length"""
+        )
+        == 0
+    )
+    checks["chips on the runs"] = page.locator("#result .festive-chip").count() >= 1
+    checks["long text hidden until Dettagli"] = "Valgono solo le corse" not in visible_text
+    details = notice.get_by_text("Dettagli")
+    if details.count() == 1:
+        details.click()
+    checks["Dettagli opens the long text"] = (
+        notice.count() == 1 and "Valgono solo le corse" in notice.inner_text()
+    )
+    checks["no console errors"] = not errors
+    context.close()
+
+    # Point 5: header, no "Connessione…" flash on a normal start, no layout shift.
+    # Sampled on every painted frame (requestAnimationFrame): what the user can see.
+    watch = """() => {
+      window.__pill = [];
+      const start = performance.now();
+      const frame = () => {
+        const pill = document.querySelector('header .status-pill');
+        if (pill) {
+          const shown = getComputedStyle(pill).visibility !== 'hidden';
+          const height = document.querySelector('header').getBoundingClientRect().height;
+          window.__pill.push({ text: pill.textContent, shown, height });
+        }
+        if (performance.now() - start < 2500) requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    }"""
+    context, page, _ = new_page(browser, viewport={"width": 390, "height": 844})
+    page.add_init_script(f"({watch})()")
+    page.goto(base, wait_until="networkidle")
+    page.wait_for_timeout(2600)
+    states = page.evaluate("window.__pill")
+    shown = [state["text"] for state in states if state["shown"]]
+    checks["header: never shows Connessione… on a fast start"] = all(
+        "Connessione" not in text for text in shown
+    )
+    checks["header: ends on API collegata"] = bool(shown) and shown[-1].endswith("API collegata")
+    checks["header: height constant"] = len({round(state["height"]) for state in states}) == 1
+    context.close()
+    # Slow health check: the state appears after the delay.
+    context, page, _ = new_page(browser, viewport={"width": 390, "height": 844})
+
+    page.add_init_script(
+        """(() => {
+          const original = window.fetch.bind(window);
+          window.fetch = (input, init) => String(input).includes('/api/health')
+            ? new Promise((done) => setTimeout(done, 1500)).then(() => original(input, init))
+            : original(input, init);
+        })()"""
+    )
+    page.goto(base)
+    page.wait_for_timeout(1000)
+    pill = page.locator("header .status-pill")
+    checks["header: slow API shows Connessione… after 500 ms"] = (
+        "Connessione" in pill.inner_text() and pill.is_visible()
+    )
+    context.close()
+    return checks
+
+
 FLOWS: list[Callable[[Browser, str], dict[str, bool]]] = [
     flow_on_demand_and_history,
     flow_shared_link_b1,
@@ -672,7 +801,69 @@ FLOWS: list[Callable[[Browser, str], dict[str, bool]]] = [
     flow_combobox_map_notices,
     flow_round3_texts,
     flow_round4,
+    flow_round5,
 ]
+
+# ------------------------------------------------------------- map labels
+
+# Round 5, point 2: narrow maps (390-500 px screens), labels inside the map.
+MAP_LABEL_WIDTHS = [390, 412, 460, 500]
+MAP_LABEL_CASES = [
+    (
+        "reggio-dief",
+        "sede=dief&stazione=reggio_fs&data=2026-10-26&ora=08%3A30&mezzo=bici&verso=andata",
+    ),
+    (
+        "rubiera-dief",
+        "sede=dief&stazione=rubiera&data=2026-10-26&ora=08%3A30&mezzo=bici&verso=andata",
+    ),
+    (
+        "reggio-dief-ritorno",
+        "sede=dief&stazione=reggio_fs&data=2026-10-26&mezzo=bici&verso=ritorno&ritorno=13%3A00",
+    ),
+]
+LABEL_BOXES_JS = """() => {
+  const r = (e) => e.getBoundingClientRect();
+  const ov = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+  const map = r(document.querySelector('.leaflet-container'));
+  const labels = [...document.querySelectorAll('.leaflet-tooltip.map-label')].map(r);
+  const controls = [...document.querySelectorAll('.leaflet-control')].map(r);
+  const outside = labels.filter((b) => b.left < map.left - 0.5 || b.right > map.right + 0.5
+    || b.top < map.top - 0.5 || b.bottom > map.bottom + 0.5).length;
+  let overlaps = 0;
+  labels.forEach((a, i) => labels.forEach((b, j) => { if (i < j && ov(a, b)) overlaps++; }));
+  labels.forEach((a) => controls.forEach((c) => { if (ov(a, c)) overlaps++; }));
+  return { labels: labels.length, outside, overlaps };
+}"""
+
+
+def map_label_check(browser: Browser, url: str, shots_dir: str | None) -> dict[str, bool]:
+    checks: dict[str, bool] = {}
+    base = url.rstrip("/")
+    for width in MAP_LABEL_WIDTHS:
+        context, page, _ = new_page(
+            browser, viewport={"width": width, "height": 844}, device_scale_factor=2
+        )
+        for name, query in MAP_LABEL_CASES:
+            page.goto(f"{base}/?{query}", wait_until="networkidle")
+            page.wait_for_selector("#result-title", timeout=15000)
+            page.locator(".planner-map").scroll_into_view_if_needed()
+            page.wait_for_selector(".leaflet-tooltip.map-label", timeout=15000)
+            page.locator(".leaflet-container").first.scroll_into_view_if_needed()
+            page.wait_for_timeout(1500)
+            boxes = page.evaluate(LABEL_BOXES_JS)
+            checks[f"{width}px {name}: labels inside the map"] = (
+                boxes["labels"] >= 1 and boxes["outside"] == 0
+            )
+            checks[f"{width}px {name}: no overlap (labels, controls)"] = boxes["overlaps"] == 0
+            if shots_dir and width in (390, 412):
+                Path(shots_dir).mkdir(parents=True, exist_ok=True)
+                page.locator(".leaflet-container").first.screenshot(
+                    path=f"{shots_dir}/map-{width}_{name}.png"
+                )
+        context.close()
+    return checks
+
 
 # ---------------------------------------------------------------- mobile
 
@@ -929,7 +1120,10 @@ def main() -> int:
     parser.add_argument("web_url", nargs="?", default="http://localhost:3000")
     parser.add_argument("--screenshot", default=None)
     parser.add_argument("--shots-dir", default=None, help="mobile device screenshots")
-    parser.add_argument("--only", choices=["cases", "flows", "mobile", "axe"], default=None)
+    parser.add_argument(
+        "--only", choices=["cases", "flows", "mobile", "maplabels", "axe"], default=None
+    )
+    parser.add_argument("--map-shots-dir", default=None, help="narrow-map label screenshots")
     args = parser.parse_args()
     url = args.web_url
 
@@ -955,6 +1149,10 @@ def main() -> int:
             ] + [
                 report(name, device_check(browser, url, pw.devices[name], name, args.shots_dir))
                 for name in DEVICES
+            ]
+        if want("maplabels"):
+            totals["maplabels"] = [
+                report("map labels 390-500 px", map_label_check(browser, url, args.map_shots_dir))
             ]
         if want("axe"):
             totals["axe"] = [report("axe-core", axe_states(browser, url))]
