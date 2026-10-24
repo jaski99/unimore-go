@@ -17,18 +17,19 @@ describe('festiveSummary (round 5, punto 4)', () => {
   it('domenica con corse non verificate: una riga + dettagli (avviso API e significato del badge)', () => {
     const summary = festiveSummary([festiveDay], [run(true), run(true), run(true)]);
     expect(summary).toEqual({
-      headline:
-        'Giorno festivo, servizio ridotto: le corse «Festivo?» vanno verificate su Trenitalia.',
+      headline: 'Festivo, servizio ridotto: verifica le corse «Festivo?».',
       details: [festiveDay.message, FESTIVE_BADGE_HELP],
     });
-    expect(summary!.headline.length).toBeLessThan(100); // one or two lines on a phone
+    expect(summary!.headline.length).toBeLessThanOrEqual(60); // two lines at 390 px
   });
 
   it('festivo con corse confermate dal PDF: niente richiamo al badge', () => {
-    expect(festiveSummary([festiveDay], [run(false)])).toEqual({
-      headline: 'Giorno festivo, servizio ridotto: verifica su Trenitalia prima di partire.',
+    const summary = festiveSummary([festiveDay], [run(false)]);
+    expect(summary).toEqual({
+      headline: 'Festivo, servizio ridotto: verifica su Trenitalia.',
       details: [festiveDay.message],
     });
+    expect(summary!.headline.length).toBeLessThanOrEqual(60);
   });
 
   it('giorno feriale: nessun avviso', () => {

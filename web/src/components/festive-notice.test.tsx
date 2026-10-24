@@ -5,7 +5,7 @@ import { FESTIVE_BADGE_HELP } from '@/lib/festive-summary';
 import { FestiveChip, FestiveNotice } from './festive-notice';
 
 const summary = {
-  headline: 'Giorno festivo, servizio ridotto: le corse «Festivo?» vanno verificate su Trenitalia.',
+  headline: 'Festivo, servizio ridotto: verifica le corse «Festivo?».',
   details: ['Dom 25 ott 2026: orario festivo, servizio ridotto. Testo lungo.', FESTIVE_BADGE_HELP],
 };
 

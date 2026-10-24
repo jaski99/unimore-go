@@ -24,8 +24,8 @@ export function festiveSummary(notices: Notice[], itineraries: Itinerary[]): Fes
   const unverified = itineraries.some(hasUnverifiedFestive);
   if (!notice && !unverified) return null;
   const headline = unverified
-    ? `Giorno festivo, servizio ridotto: le corse «${FESTIVE_SHORT_LABEL}» vanno verificate su Trenitalia.`
-    : 'Giorno festivo, servizio ridotto: verifica su Trenitalia prima di partire.';
+    ? `Festivo, servizio ridotto: verifica le corse «${FESTIVE_SHORT_LABEL}».`
+    : 'Festivo, servizio ridotto: verifica su Trenitalia.';
   const details = [notice?.message, unverified ? FESTIVE_BADGE_HELP : undefined].filter(
     (text): text is string => !!text,
   );

@@ -372,7 +372,7 @@ describe('ResultPanel: round 3', () => {
     const notices = document.querySelectorAll('.festive-notice');
     expect(notices).toHaveLength(1);
     expect(notices[0]).toHaveTextContent(
-      'Giorno festivo, servizio ridotto: le corse «Festivo?» vanno verificate su Trenitalia.',
+      'Festivo, servizio ridotto: verifica le corse «Festivo?».',
     );
     expect(notices[0].parentElement!.firstElementChild).toBe(notices[0]);
     // The long API text lives only under "Dettagli" (no second notice below).
