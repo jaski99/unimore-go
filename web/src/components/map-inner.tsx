@@ -11,8 +11,14 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import { layoutLabels, tooltipOffset, type LabelPlacement } from '@/lib/label-layout';
-import type { LatLon, PointRole, Route, RoutePoint } from '@/lib/route-geometry';
+import { layoutLabels, tooltipOffset, type Box, type LabelPlacement } from '@/lib/label-layout';
+import {
+  mapLabel,
+  type LatLon,
+  type PointRole,
+  type Route,
+  type RoutePoint,
+} from '@/lib/route-geometry';
 
 /** Marker colours; keep in sync with the legend in map-panel.tsx. */
 export const ROLE_COLORS: Record<PointRole, string> = {
@@ -78,7 +84,22 @@ function labelSize(text: string): { width: number; height: number } {
     textWidth = measureContext.measureText(text).width;
   }
   // padding 6+6, border 1+1, max-width 220 (ellipsis); line 11 x 1.3 + padding 2+2 + border.
-  return { width: Math.min(220, Math.ceil(textWidth) + 14), height: 20 };
+  // +8 %: phone system fonts render wider than the measured fallback (round 5, point 2).
+  return { width: Math.min(220, Math.ceil(textWidth * 1.08) + 14), height: 20 };
+}
+
+/** Leaflet controls (zoom buttons, attribution) in container pixels: labels keep off them. */
+function controlBoxes(container: HTMLElement): Box[] {
+  const origin = container.getBoundingClientRect();
+  return [...container.querySelectorAll<HTMLElement>('.leaflet-control')].map((control) => {
+    const rect = control.getBoundingClientRect();
+    return {
+      left: rect.left - origin.left,
+      top: rect.top - origin.top,
+      right: rect.right - origin.left,
+      bottom: rect.bottom - origin.top,
+    };
+  });
 }
 
 /**
@@ -89,9 +110,11 @@ function labelSize(text: string): { width: number; height: number } {
 function RouteMarkers({ points }: { points: RoutePoint[] }) {
   const map = useMap();
   const [placements, setPlacements] = useState<LabelPlacement[] | null>(null);
+  const [mapWidth, setMapWidth] = useState(() => map.getSize().x);
   const relayout = useCallback(() => {
     const size = map.getSize();
     if (!size.x || !size.y) return;
+    setMapWidth(size.x);
     const anchors = points.map((point) => {
       const pixel = map.latLngToContainerPoint(point.position);
       return {
@@ -99,10 +122,11 @@ function RouteMarkers({ points }: { points: RoutePoint[] }) {
         y: pixel.y,
         radius: markerRadius(point),
         preferred: point.labelSide,
-        ...labelSize(point.label),
+        ...labelSize(mapLabel(point, size.x)),
       };
     });
-    setPlacements(layoutLabels(anchors, { width: size.x, height: size.y }));
+    const blocked = controlBoxes(map.getContainer());
+    setPlacements(layoutLabels(anchors, { width: size.x, height: size.y, blocked }));
   }, [map, points]);
   useEffect(() => {
     // After the frame: markers and fitBounds have settled.
@@ -117,11 +141,16 @@ function RouteMarkers({ points }: { points: RoutePoint[] }) {
     .map((point, index) => ({ point, index }))
     .sort((a, b) => markerRadius(b.point) - markerRadius(a.point));
   return paintOrder.map(({ point, index }) => {
-    const placement = placements?.[index] ?? { side: point.labelSide, permanent: true };
+    const placement: LabelPlacement = placements?.[index] ?? {
+      side: point.labelSide,
+      permanent: true,
+      shift: [0, 0],
+    };
+    const shifted = placement.shift[0] !== 0 || placement.shift[1] !== 0;
     return (
       <CircleMarker
         // Remount when the side changes: Leaflet reads tooltip options once.
-        key={`${point.role}-${placement.side}-${placement.permanent}`}
+        key={`${point.role}-${placement.side}-${placement.permanent}-${placement.shift.join(',')}`}
         center={point.position}
         radius={markerRadius(point)}
         pathOptions={{
@@ -136,10 +165,11 @@ function RouteMarkers({ points }: { points: RoutePoint[] }) {
         <Tooltip
           permanent={placement.permanent}
           direction={placement.side}
-          offset={tooltipOffset(placement.side)}
-          className="map-label"
+          offset={tooltipOffset(placement.side, placement.shift)}
+          // A label slid to stay inside the map hides its tip (it would point aside).
+          className={shifted ? 'map-label map-label--shifted' : 'map-label'}
         >
-          {point.label}
+          {mapLabel(point, mapWidth)}
         </Tooltip>
       </CircleMarker>
     );

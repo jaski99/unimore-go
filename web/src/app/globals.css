@@ -332,6 +332,10 @@ select:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Slid to stay inside the map (round 5, point 2): the tip would point aside. */
+.leaflet-tooltip.map-label--shifted::before {
+  display: none;
+}
 .next-class {
   @apply flex items-center justify-between gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 dark:border-emerald-900 dark:bg-emerald-950/50;
 }

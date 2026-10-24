@@ -5,6 +5,8 @@ import { defaultPlannerValues } from './plan-request';
 import {
   assignLabelSides,
   buildRoute,
+  COMPACT_MAP_WIDTH,
+  mapLabel,
   nearestStation,
   stationForStop,
   type RoutePoint,
@@ -38,6 +40,20 @@ describe('route geometry', () => {
       'Sede · DIEF',
     ]);
     expect(route.segments.map((segment) => segment.kind)).toEqual(['train', 'active']);
+  });
+
+  it('su mappe strette usa etichette brevi, sulle larghe quelle complete (round 5, punto 2)', () => {
+    const route = buildRoute({ ...base, originKind: 'home', home }, stations, dief, withTrain);
+    expect(route.points.map((point) => point.shortLabel)).toEqual([
+      'Casa',
+      'Partenza · Reggio Emilia FS',
+      'Arrivo · Modena FS',
+      'Sede · DIEF',
+    ]);
+    const [, from] = route.points;
+    expect(mapLabel(from, 356)).toBe('Partenza · Reggio Emilia FS');
+    expect(mapLabel(from, COMPACT_MAP_WIDTH - 1)).toBe('Partenza · Reggio Emilia FS');
+    expect(mapLabel(from, COMPACT_MAP_WIDTH)).toBe('Stazione partenza · Reggio Emilia FS');
   });
 
   it('da casa aggiunge Casa → stazione di partenza del treno', () => {
@@ -93,6 +109,7 @@ describe('route geometry', () => {
           role: 'from_station',
           position: [44.697309, 10.642577],
           label: 'Stazione partenza · Reggio Emilia FS',
+          shortLabel: 'Partenza · Reggio Emilia FS',
           labelSide: 'top',
         },
       ],
@@ -144,6 +161,7 @@ describe('etichette dei marker senza sovrapposizioni (B5)', () => {
     const at = (role: RoutePoint['role'], lat: number, lon: number): RoutePoint => ({
       role,
       label: role,
+      shortLabel: role,
       position: [lat, lon],
       labelSide: 'top',
     });

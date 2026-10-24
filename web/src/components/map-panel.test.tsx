@@ -17,16 +17,24 @@ const stationsOnly: Route = {
     {
       role: 'from_station',
       label: 'Stazione partenza · Reggio Emilia FS',
+      shortLabel: 'Partenza · Reggio Emilia FS',
       position: [44.69, 10.64],
       labelSide: 'top',
     },
     {
       role: 'to_station',
       label: 'Stazione arrivo · Modena FS',
+      shortLabel: 'Arrivo · Modena FS',
       position: [44.65, 10.93],
       labelSide: 'top',
     },
-    { role: 'campus', label: 'Sede · DIEF', position: [44.63, 10.94], labelSide: 'bottom' },
+    {
+      role: 'campus',
+      label: 'Sede · DIEF',
+      shortLabel: 'Sede · DIEF',
+      position: [44.63, 10.94],
+      labelSide: 'bottom',
+    },
   ],
   segments: [
     { from: [44.69, 10.64], to: [44.65, 10.93], kind: 'train' },
@@ -56,8 +64,20 @@ describe('MapLegend (B5)', () => {
       <MapLegend
         route={{
           points: [
-            { role: 'home', label: 'Casa', position: [44.7, 10.62], labelSide: 'top' },
-            { role: 'campus', label: 'Sede · DIEF', position: [44.63, 10.94], labelSide: 'bottom' },
+            {
+              role: 'home',
+              label: 'Casa',
+              shortLabel: 'Casa',
+              position: [44.7, 10.62],
+              labelSide: 'top',
+            },
+            {
+              role: 'campus',
+              label: 'Sede · DIEF',
+              shortLabel: 'Sede · DIEF',
+              position: [44.63, 10.94],
+              labelSide: 'bottom',
+            },
           ],
           segments: [],
         }}

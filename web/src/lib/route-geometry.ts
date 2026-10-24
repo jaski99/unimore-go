@@ -13,8 +13,10 @@ export type LabelSide = 'top' | 'bottom';
 export interface RoutePoint {
   position: LatLon;
   role: PointRole;
-  /** Visible label, e.g. "Stazione partenza · Reggio Emilia FS". */
+  /** Full label, e.g. "Stazione partenza · Reggio Emilia FS" (map summary, wide maps). */
   label: string;
+  /** Label for narrow maps, e.g. "Partenza · Reggio Emilia FS" (round 5, point 2). */
+  shortLabel: string;
   labelSide: LabelSide;
 }
 
@@ -38,6 +40,22 @@ export const ROLE_LABELS: Record<PointRole, string> = {
   to_station: 'Stazione arrivo',
   campus: 'Sede',
 };
+
+/** Shorter role names for maps narrower than `COMPACT_MAP_WIDTH` (the legend keeps the full ones). */
+export const SHORT_ROLE_LABELS: Record<PointRole, string> = {
+  home: 'Casa',
+  from_station: 'Partenza',
+  to_station: 'Arrivo',
+  campus: 'Sede',
+};
+
+/** Below this map width (pixels) the map shows `shortLabel`. */
+export const COMPACT_MAP_WIDTH = 480;
+
+/** The label to draw on a map of the given width. */
+export function mapLabel(point: RoutePoint, mapWidth: number): string {
+  return mapWidth < COMPACT_MAP_WIDTH ? point.shortLabel : point.label;
+}
 
 const squared = (a: LatLon, b: LatLon) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
 const fold = (value: string) =>
@@ -67,6 +85,7 @@ function point(role: PointRole, position: LatLon, name?: string): RoutePoint {
     role,
     position,
     label: name ? `${ROLE_LABELS[role]} · ${name}` : ROLE_LABELS[role],
+    shortLabel: name ? `${SHORT_ROLE_LABELS[role]} · ${name}` : SHORT_ROLE_LABELS[role],
     labelSide: 'top',
   };
 }
