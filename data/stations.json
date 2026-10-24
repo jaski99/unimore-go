@@ -1,0 +1,29 @@
+[
+  {
+    "id": "modena_fs",
+    "name": "Modena FS",
+    "city": "Modena",
+    "lat": 44.653998,
+    "lon": 10.930751,
+    "address": "Piazza Dante Alighieri, 41121 Modena",
+    "uic_code": "830005032"
+  },
+  {
+    "id": "rubiera",
+    "name": "Rubiera",
+    "city": "Rubiera",
+    "lat": 44.6561256,
+    "lon": 10.7801896,
+    "address": "Stazione di Rubiera, 42048 Rubiera (RE)",
+    "uic_code": "830005031"
+  },
+  {
+    "id": "reggio_fs",
+    "name": "Reggio Emilia FS",
+    "city": "Reggio Emilia",
+    "lat": 44.697309,
+    "lon": 10.642577,
+    "address": "Piazza Guglielmo Marconi, 42121 Reggio Emilia",
+    "uic_code": "830005023"
+  }
+]

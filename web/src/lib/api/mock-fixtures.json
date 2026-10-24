@@ -1,0 +1,253 @@
+{
+  "generated_by": "tools/export_mock_fixtures.py",
+  "health": {
+    "status": "ok",
+    "data_valid_from": "2026-10-17",
+    "data_valid_to": "2026-12-12",
+    "version": "0.7.1"
+  },
+  "campuses": [
+    {
+      "id": "dief",
+      "name": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+      "city": "Modena",
+      "lat": 44.6292268,
+      "lon": 10.9492319
+    },
+    {
+      "id": "palazzo_dossetti",
+      "name": "Dipartimento di Comunicazione ed Economia - Palazzo Dossetti",
+      "city": "Reggio Emilia",
+      "lat": 44.7023652,
+      "lon": 10.6286549
+    },
+    {
+      "id": "campus_san_lazzaro",
+      "name": "Campus San Lazzaro - Dipartimento di Scienze e Metodi dell'Ingegneria (DISMI, Padiglione Morselli)",
+      "city": "Reggio Emilia",
+      "lat": 44.68759,
+      "lon": 10.6672109
+    },
+    {
+      "id": "economia_biagi",
+      "name": "Dipartimento di Economia 'Marco Biagi' (Foro Boario)",
+      "city": "Modena",
+      "lat": 44.6500719,
+      "lon": 10.9230943
+    },
+    {
+      "id": "giurisprudenza",
+      "name": "Dipartimento di Giurisprudenza (Complesso San Geminiano)",
+      "city": "Modena",
+      "lat": 44.6433902,
+      "lon": 10.9259537
+    }
+  ],
+  "stations": [
+    {
+      "id": "modena_fs",
+      "name": "Modena FS",
+      "city": "Modena",
+      "lat": 44.653998,
+      "lon": 10.930751
+    },
+    {
+      "id": "rubiera",
+      "name": "Rubiera",
+      "city": "Rubiera",
+      "lat": 44.6561256,
+      "lon": 10.7801896
+    },
+    {
+      "id": "reggio_fs",
+      "name": "Reggio Emilia FS",
+      "city": "Reggio Emilia",
+      "lat": 44.697309,
+      "lon": 10.642577
+    }
+  ],
+  "demo": {
+    "request": {
+      "origin": {
+        "station_id": "reggio_fs"
+      },
+      "campus_id": "dief",
+      "arrive_by": "2026-10-26T08:30:00+01:00",
+      "mode": "bike",
+      "margin_min": 10,
+      "station_buffer_min": 5,
+      "train_categories": [
+        "regional"
+      ]
+    },
+    "response": {
+      "planner": "arrive_by",
+      "itineraries": [
+        {
+          "leave_at": "07:39",
+          "arrive_at": "08:18",
+          "slack_min": 12,
+          "legs": [
+            {
+              "type": "wait",
+              "from": "Reggio Emilia FS",
+              "to": "Reggio Emilia FS",
+              "depart": "07:39",
+              "arrive": "07:44",
+              "minutes": 5,
+              "train": null,
+              "notes": []
+            },
+            {
+              "type": "train",
+              "from": "Reggio Emilia",
+              "to": "Modena",
+              "depart": "07:44",
+              "arrive": "07:56",
+              "minutes": 12,
+              "train": {
+                "number": "3907",
+                "category": "Regionale Veloce",
+                "operator": "Trenitalia Tper",
+                "code": "RV",
+                "category_group": "regional",
+                "different_ticket": false,
+                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8, 35)",
+                "festive_unverified": false
+              },
+              "notes": []
+            },
+            {
+              "type": "bike",
+              "from": "Modena FS",
+              "to": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+              "depart": "07:56",
+              "arrive": "08:18",
+              "minutes": 22,
+              "train": null,
+              "notes": []
+            }
+          ],
+          "date": "2026-10-26",
+          "duration_min": 39,
+          "changes": 0
+        },
+        {
+          "leave_at": "07:28",
+          "arrive_at": "08:09",
+          "slack_min": 21,
+          "legs": [
+            {
+              "type": "wait",
+              "from": "Reggio Emilia FS",
+              "to": "Reggio Emilia FS",
+              "depart": "07:28",
+              "arrive": "07:33",
+              "minutes": 5,
+              "train": null,
+              "notes": []
+            },
+            {
+              "type": "train",
+              "from": "Reggio Emilia",
+              "to": "Modena",
+              "depart": "07:33",
+              "arrive": "07:47",
+              "minutes": 14,
+              "train": {
+                "number": "17405",
+                "category": "Regionale",
+                "operator": "Trenitalia Tper",
+                "code": "R",
+                "category_group": "regional",
+                "different_ticket": false,
+                "source": "Regionale_Emilia.pdf, pag. 75 (pagina stampata 63; note 8; simbolo ⚒)",
+                "festive_unverified": false
+              },
+              "notes": []
+            },
+            {
+              "type": "bike",
+              "from": "Modena FS",
+              "to": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+              "depart": "07:47",
+              "arrive": "08:09",
+              "minutes": 22,
+              "train": null,
+              "notes": []
+            }
+          ],
+          "date": "2026-10-26",
+          "duration_min": 41,
+          "changes": 0
+        },
+        {
+          "leave_at": "06:59",
+          "arrive_at": "07:42",
+          "slack_min": 48,
+          "legs": [
+            {
+              "type": "wait",
+              "from": "Reggio Emilia FS",
+              "to": "Reggio Emilia FS",
+              "depart": "06:59",
+              "arrive": "07:04",
+              "minutes": 5,
+              "train": null,
+              "notes": []
+            },
+            {
+              "type": "train",
+              "from": "Reggio Emilia",
+              "to": "Modena",
+              "depart": "07:04",
+              "arrive": "07:20",
+              "minutes": 16,
+              "train": {
+                "number": "2451",
+                "category": "Regionale Veloce",
+                "operator": "Trenitalia Tper",
+                "code": "RV",
+                "category_group": "regional",
+                "different_ticket": false,
+                "source": "Regionale_Emilia.pdf, pag. 73 (pagina stampata 61; note 8)",
+                "festive_unverified": false
+              },
+              "notes": []
+            },
+            {
+              "type": "bike",
+              "from": "Modena FS",
+              "to": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+              "depart": "07:20",
+              "arrive": "07:42",
+              "minutes": 22,
+              "train": null,
+              "notes": []
+            }
+          ],
+          "date": "2026-10-26",
+          "duration_min": 43,
+          "changes": 0
+        }
+      ],
+      "nearby": [],
+      "calculation": {
+        "station": "Modena FS",
+        "time": "07:58",
+        "summary": "Calcolo: lezione alle 08:30 − 10 min di anticipo − 22 min in bici dalla stazione alla sede = arrivo a Modena FS entro le 07:58."
+      },
+      "suggestion": null,
+      "notices": [
+        {
+          "code": "not_realtime",
+          "level": "info",
+          "message": "Orari pianificati da bollettino ufficiale Trenitalia (non in tempo reale)."
+        }
+      ],
+      "warnings": [
+        "Orari pianificati da bollettino ufficiale Trenitalia (non in tempo reale)."
+      ]
+    }
+  }
+}

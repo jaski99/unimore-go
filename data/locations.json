@@ -1,0 +1,52 @@
+[
+  {
+    "id": "dief",
+    "name": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+    "address": "Via Pietro Vivarelli 10, 41125 Modena",
+    "city": "Modena",
+    "lat": 44.6292268,
+    "lon": 10.9492319,
+    "reference_station": "Modena FS",
+    "source": "Nominatim OpenStreetMap (way 194635328, amenity=university, operatore: Università degli Studi di Modena e Reggio Emilia; verificato sul sedime dell'edificio didattico/laboratori in data 2026-10-23; licenza ODbL)"
+  },
+  {
+    "id": "palazzo_dossetti",
+    "name": "Dipartimento di Comunicazione ed Economia - Palazzo Dossetti",
+    "address": "Viale Antonio Allegri 9, 42121 Reggio Emilia",
+    "city": "Reggio Emilia",
+    "lat": 44.7023652,
+    "lon": 10.6286549,
+    "reference_station": "Reggio Emilia FS",
+    "source": "Nominatim OpenStreetMap (way 168135047, building=university, ex Caserma Zucchi; verificato sul corpo principale di Palazzo Dossetti in data 2026-10-23; licenza ODbL)"
+  },
+  {
+    "id": "campus_san_lazzaro",
+    "name": "Campus San Lazzaro - Dipartimento di Scienze e Metodi dell'Ingegneria (DISMI, Padiglione Morselli)",
+    "address": "Via Giovanni Amendola 2, 42122 Reggio Emilia",
+    "city": "Reggio Emilia",
+    "lat": 44.68759,
+    "lon": 10.6672109,
+    "reference_station": "Reggio Emilia FS",
+    "source": "Nominatim OpenStreetMap (way 167927475, Padiglione Morselli DISMI all'interno dell'area universitaria Campus San Lazzaro way 372676430; verificato sul fabbricato in data 2026-10-23; licenza ODbL)"
+  },
+  {
+    "id": "economia_biagi",
+    "name": "Dipartimento di Economia 'Marco Biagi' (Foro Boario)",
+    "address": "Via Jacopo Berengario 51, 41121 Modena",
+    "city": "Modena",
+    "lat": 44.6500719,
+    "lon": 10.9230943,
+    "reference_station": "Modena FS",
+    "source": "Nominatim OpenStreetMap (way 167305594, amenity=university, complesso storico Foro Boario; verificato sul sedime dell'edificio in data 2026-10-23; licenza ODbL)"
+  },
+  {
+    "id": "giurisprudenza",
+    "name": "Dipartimento di Giurisprudenza (Complesso San Geminiano)",
+    "address": "Via San Geminiano 3, 41121 Modena",
+    "city": "Modena",
+    "lat": 44.6433902,
+    "lon": 10.9259537,
+    "reference_station": "Modena FS",
+    "source": "Nominatim OpenStreetMap (way 646579380, amenity=university, ex Monastero di San Geminiano; verificato sul fabbricato universitario in data 2026-10-23; licenza ODbL)"
+  }
+]

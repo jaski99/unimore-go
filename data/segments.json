@@ -1,0 +1,456 @@
+[
+  {
+    "id": "modena_fs_to_dief",
+    "name": "Modena FS a DIEF (Dipartimento di Ingegneria 'Enzo Ferrari')",
+    "segment_type": "train_last_mile",
+    "origin": {
+      "id": "modena_fs",
+      "name": "Stazione di Modena FS",
+      "address": "Piazza Dante Alighieri, 41121 Modena",
+      "city": "Modena",
+      "lat": 44.653998,
+      "lon": 10.930751
+    },
+    "destination": {
+      "id": "dief",
+      "name": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+      "address": "Via Pietro Vivarelli 10, 41125 Modena",
+      "city": "Modena",
+      "lat": 44.629227,
+      "lon": 10.949232
+    },
+    "straight_line_distance_m": 3118.4,
+    "walking": {
+      "distance_m": 3925.6,
+      "duration_min": 52.4,
+      "duration_sec": 3145.9,
+      "calculated_speed_kmh": 4.49,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.930751,44.653998;10.949232,44.629227?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Percorso pedonale lungo Corso Vittorio Emanuele II, Piazzale Risorgimento, Viale Muratori, Via Vignolese e ingresso pedonale su Via Vivarelli."
+    },
+    "cycling": {
+      "distance_m": 5432.8,
+      "duration_min": 13.9,
+      "duration_sec": 836.1,
+      "calculated_speed_kmh": 23.39,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.930751,44.653998;10.949232,44.629227?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Itinerario ciclabile su itinerari ciclabili protetti / corsie riservate Modena Est - Morane - Vignolese. La durata reale in ambito urbano con semafori si attesta tra 15 e 18 minuti (velocit\u00e0 media reale 18-20 km/h)."
+    },
+    "osrm_demo_server_comparison": {
+      "distance_m": 4317.8,
+      "duration_min": 7.5,
+      "duration_sec": 448.1,
+      "calculated_speed_kmh": 34.69,
+      "is_reliable": false,
+      "service": "Project OSRM Demo Server (router.project-osrm.org)",
+      "api_endpoint": "http://router.project-osrm.org/route/v1/foot/10.930751,44.653998;10.949232,44.629227?overview=false",
+      "date": "2026-10-23",
+      "unreliability_reason": "Il server demo pubblico router.project-osrm.org esegue unicamente il profilo automobilistico (car/driving con velocit\u00e0 media ~35 km/h), anche invocando l'endpoint con il prefisso /foot o /bike. Non riflette tempi pedonali o ciclabili reali."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": true,
+      "realistic_for_daily_commute": false,
+      "assessment_notes": "Durata pedonale stimata: 52.4 min per 3.93 km. NON realistico per la mobilit\u00e0 studentesca pendolare quotidiana: 1h e 45min totali a piedi andata/ritorno ogni giorno, che si sommano al viaggio in treno. In assenza di TPL (bus SETA, escluso dal perimetro MVP), l'uso della bicicletta (14-18 min) o bici pieghevole a bordo treno \u00e8 indispensabile."
+    },
+    "walk_minutes": 53,
+    "bike_minutes": 22
+  },
+  {
+    "id": "reggio_fs_to_palazzo_dossetti",
+    "name": "Reggio Emilia FS a Palazzo Dossetti (Comunicazione ed Economia)",
+    "segment_type": "train_last_mile",
+    "origin": {
+      "id": "reggio_fs",
+      "name": "Stazione di Reggio Emilia FS",
+      "address": "Piazza Guglielmo Marconi, 42121 Reggio Emilia",
+      "city": "Reggio Emilia",
+      "lat": 44.697309,
+      "lon": 10.642577
+    },
+    "destination": {
+      "id": "palazzo_dossetti",
+      "name": "Dipartimento di Comunicazione ed Economia - Palazzo Dossetti",
+      "address": "Viale Antonio Allegri 9, 42121 Reggio Emilia",
+      "city": "Reggio Emilia",
+      "lat": 44.702365,
+      "lon": 10.628655
+    },
+    "straight_line_distance_m": 1235.7,
+    "walking": {
+      "distance_m": 1415.4,
+      "duration_min": 18.9,
+      "duration_sec": 1132.6,
+      "calculated_speed_kmh": 4.5,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.642577,44.697309;10.628655,44.702365?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Tragitto pedonale diretto attraverso Viale IV Novembre, Piazza del Monte / Piazza Martiri del 7 Luglio, Parco del Popolo e Viale Allegri. Totalmente pianeggiante, sicuro e pedonalizzato."
+    },
+    "cycling": {
+      "distance_m": 1597.5,
+      "duration_min": 5.9,
+      "duration_sec": 353.5,
+      "calculated_speed_kmh": 16.27,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.642577,44.697309;10.628655,44.702365?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Ciclabile urbana attraverso la circonvallazione interna / ZTL. Tempo di pedalata molto ridotto (~6 min), eccellente per studenti."
+    },
+    "osrm_demo_server_comparison": {
+      "distance_m": 2094.9,
+      "duration_min": 4.6,
+      "duration_sec": 275.3,
+      "calculated_speed_kmh": 27.39,
+      "is_reliable": false,
+      "service": "Project OSRM Demo Server (router.project-osrm.org)",
+      "api_endpoint": "http://router.project-osrm.org/route/v1/foot/10.642577,44.697309;10.628655,44.702365?overview=false",
+      "date": "2026-10-23",
+      "unreliability_reason": "Il server demo router.project-osrm.org esegue unicamente il profilo automobilistico (velocit\u00e0 ~27 km/h, vincolato ai sensi unici per auto), anche con prefisso /foot."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": false,
+      "realistic_for_daily_commute": true,
+      "assessment_notes": "Durata pedonale stimata: 18.9 min per 1.42 km. Assolutamente realistico e ottimale per la mobilit\u00e0 studentesca quotidiana (sotto la soglia di 20 minuti, attraverso il centro storico)."
+    },
+    "walk_minutes": 19,
+    "bike_minutes": 7
+  },
+  {
+    "id": "reggio_fs_to_campus_san_lazzaro",
+    "name": "Reggio Emilia FS a Campus San Lazzaro (DISMI - Pad. Morselli)",
+    "segment_type": "train_last_mile",
+    "origin": {
+      "id": "reggio_fs",
+      "name": "Stazione di Reggio Emilia FS",
+      "address": "Piazza Guglielmo Marconi, 42121 Reggio Emilia",
+      "city": "Reggio Emilia",
+      "lat": 44.697309,
+      "lon": 10.642577
+    },
+    "destination": {
+      "id": "campus_san_lazzaro",
+      "name": "Campus San Lazzaro - Padiglione Morselli (DISMI)",
+      "address": "Via Giovanni Amendola 2, 42122 Reggio Emilia",
+      "city": "Reggio Emilia",
+      "lat": 44.68759,
+      "lon": 10.667211
+    },
+    "straight_line_distance_m": 2227.0,
+    "walking": {
+      "distance_m": 2653.2,
+      "duration_min": 35.4,
+      "duration_sec": 2122.7,
+      "calculated_speed_kmh": 4.5,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.642577,44.697309;10.667211,44.68759?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Percorso pedonale lungo Via Emilia San Pietro / Via Emilia all'Ospizio, poi ingresso nel Campus San Lazzaro attraverso il parco fino al Padiglione Morselli."
+    },
+    "cycling": {
+      "distance_m": 2686.7,
+      "duration_min": 13.0,
+      "duration_sec": 780.1,
+      "calculated_speed_kmh": 12.4,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.642577,44.697309;10.667211,44.68759?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Pista ciclabile continua su Via Emilia all'Ospizio (ciclovia urbana est) fino ai viali interni del Campus. Tragitto ciclabile ideale (11-13 min)."
+    },
+    "osrm_demo_server_comparison": {
+      "distance_m": 2873.5,
+      "duration_min": 5.2,
+      "duration_sec": 309.4,
+      "calculated_speed_kmh": 33.43,
+      "is_reliable": false,
+      "service": "Project OSRM Demo Server (router.project-osrm.org)",
+      "api_endpoint": "http://router.project-osrm.org/route/v1/foot/10.642577,44.697309;10.667211,44.68759?overview=false",
+      "date": "2026-10-23",
+      "unreliability_reason": "Il server demo router.project-osrm.org esegue unicamente il profilo automobilistico (velocit\u00e0 ~33 km/h), anche con prefisso /foot."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": true,
+      "realistic_for_daily_commute": false,
+      "assessment_notes": "Durata pedonale stimata: 35.4 min per 2.65 km. Caso limite: supera i 30 minuti di cammino. Sebbene fattibile occasionalmente per una persona in buona salute, come routine pendolare giornaliera (70 min a/r a piedi + treno) risulta stancante. L'opzione bicicletta (13 min) \u00e8 nettamente preferibile."
+    },
+    "walk_minutes": 36,
+    "bike_minutes": 11
+  },
+  {
+    "id": "modena_centro_to_dief",
+    "name": "Modena Centro (Piazza Grande) a DIEF",
+    "segment_type": "intra_city",
+    "origin": {
+      "id": "modena_centro",
+      "name": "Modena Centro Storico (Piazza Grande)",
+      "address": "Piazza Grande 1, 41121 Modena",
+      "city": "Modena",
+      "lat": 44.646192,
+      "lon": 10.926072
+    },
+    "destination": {
+      "id": "dief",
+      "name": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+      "address": "Via Pietro Vivarelli 10, 41125 Modena",
+      "city": "Modena",
+      "lat": 44.629227,
+      "lon": 10.949232
+    },
+    "straight_line_distance_m": 2629.9,
+    "walking": {
+      "distance_m": 3289.8,
+      "duration_min": 44.0,
+      "duration_sec": 2640.0,
+      "calculated_speed_kmh": 4.49,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.926072,44.646192;10.949232,44.629227?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Percorso da Piazza Grande lungo Corso Duomo / Via Emilia Centro, Largo Garibaldi, Viale Muratori, Via Vignolese fino al DIEF."
+    },
+    "cycling": {
+      "distance_m": 4507.7,
+      "duration_min": 13.3,
+      "duration_sec": 798.7,
+      "calculated_speed_kmh": 20.32,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.926072,44.646192;10.949232,44.629227?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Itinerario ciclabile da centro storico lungo rete ciclabile verso zona Policlinico / Ingegneria. Durata reale 14-16 min."
+    },
+    "osrm_demo_server_comparison": {
+      "distance_m": 3351.9,
+      "duration_min": 6.0,
+      "duration_sec": 358.5,
+      "calculated_speed_kmh": 33.66,
+      "is_reliable": false,
+      "service": "Project OSRM Demo Server (router.project-osrm.org)",
+      "api_endpoint": "http://router.project-osrm.org/route/v1/foot/10.926072,44.646192;10.949232,44.629227?overview=false",
+      "date": "2026-10-23",
+      "unreliability_reason": "Il server demo router.project-osrm.org esegue unicamente il profilo automobilistico (velocit\u00e0 ~34 km/h), anche con prefisso /foot."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": true,
+      "realistic_for_daily_commute": false,
+      "assessment_notes": "Durata pedonale stimata: 44.0 min per 3.29 km. NON realistico per spostamento urbano quotidiano 'stessa citt\u00e0': 44 min a tratta (quasi 1h e mezza a/r) costringe lo studente a partire con un'ora di anticipo. La bicicletta (13-15 min) \u00e8 lo standard di mobilit\u00e0 tipico della citt\u00e0 di Modena."
+    },
+    "walk_minutes": 44,
+    "bike_minutes": 19
+  },
+  {
+    "id": "modena_nord_to_dief",
+    "name": "Modena Nord (Sacca / Via Delle Suore) a DIEF",
+    "segment_type": "intra_city",
+    "origin": {
+      "id": "modena_nord",
+      "name": "Modena Nord (Quartiere Sacca)",
+      "address": "Via delle Suore 100, 41122 Modena",
+      "city": "Modena",
+      "lat": 44.659861,
+      "lon": 10.926981
+    },
+    "destination": {
+      "id": "dief",
+      "name": "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)",
+      "address": "Via Pietro Vivarelli 10, 41125 Modena",
+      "city": "Modena",
+      "lat": 44.629227,
+      "lon": 10.949232
+    },
+    "straight_line_distance_m": 3834.3,
+    "walking": {
+      "distance_m": 4840.6,
+      "duration_min": 64.3,
+      "duration_sec": 3855.4,
+      "calculated_speed_kmh": 4.52,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.926981,44.659861;10.949232,44.629227?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Attraversamento della ferrovia tramite sottopasso stazione / Viale Mazzini, transito nel centro storico / circonvallazione e prosecuzione su Via Vignolese fino al campus DIEF."
+    },
+    "cycling": {
+      "distance_m": 6356.8,
+      "duration_min": 17.4,
+      "duration_sec": 1041.6,
+      "calculated_speed_kmh": 21.97,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.926981,44.659861;10.949232,44.629227?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Itinerario ciclabile attraverso la rete ciclabile nord-sud (sottopassi ciclabili della ferrovia, ciclabile Modena Est - Morane). Durata effettiva 18-22 min."
+    },
+    "osrm_demo_server_comparison": {
+      "distance_m": 5067.8,
+      "duration_min": 8.2,
+      "duration_sec": 493.9,
+      "calculated_speed_kmh": 36.94,
+      "is_reliable": false,
+      "service": "Project OSRM Demo Server (router.project-osrm.org)",
+      "api_endpoint": "http://router.project-osrm.org/route/v1/foot/10.926981,44.659861;10.949232,44.629227?overview=false",
+      "date": "2026-10-23",
+      "unreliability_reason": "Il server demo router.project-osrm.org esegue unicamente il profilo automobilistico (velocit\u00e0 ~37 km/h), anche con prefisso /foot."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": true,
+      "realistic_for_daily_commute": false,
+      "assessment_notes": "Durata pedonale stimata: 64.3 min (oltre 1 ora di cammino!) per 4.84 km. TOTALMENTE IRREALISTICO a piedi come spostamento quotidiano: richiederebbe oltre 2 ore al giorno di cammino solo per andare e tornare da lezione. Per lo scenario 'stessa citt\u00e0' da quartieri periferici come Sacca/Modena Nord al DIEF, la bicicletta (17-22 min) \u00e8 l'unico mezzo attivo sostenibile e realistico."
+    },
+    "walk_minutes": 65,
+    "bike_minutes": 26
+  },
+  {
+    "id": "modena_fs_to_economia_biagi",
+    "name": "Modena FS a Dipartimento di Economia 'Marco Biagi' (Foro Boario)",
+    "segment_type": "train_last_mile",
+    "origin": {
+      "id": "modena_fs",
+      "name": "Stazione di Modena FS",
+      "address": "Piazza Dante Alighieri, 41121 Modena",
+      "city": "Modena",
+      "lat": 44.653998,
+      "lon": 10.930751
+    },
+    "destination": {
+      "id": "economia_biagi",
+      "name": "Dipartimento di Economia 'Marco Biagi' (Foro Boario)",
+      "address": "Via Jacopo Berengario 51, 41121 Modena",
+      "city": "Modena",
+      "lat": 44.6500719,
+      "lon": 10.9230943
+    },
+    "straight_line_distance_m": 741.5,
+    "walk_minutes": 14,
+    "bike_minutes": 5,
+    "walking": {
+      "distance_m": 1040.7,
+      "duration_min": 13.86,
+      "duration_sec": 831.8,
+      "calculated_speed_kmh": 4.51,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.930751,44.653998;10.9230943,44.6500719?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Percorso pedonale lungo Piazza Dante, Viale Monte Kosica, Via Fontanelli e Via Berengario fino al Foro Boario."
+    },
+    "cycling": {
+      "distance_m": 1078.2,
+      "duration_min": 4.77,
+      "duration_sec": 286.4,
+      "calculated_speed_kmh": 13.56,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.930751,44.653998;10.9230943,44.6500719?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Tragitto ciclabile pianeggiante attraverso Viale Monte Kosica e pista ciclabile Parco Novi Sad fino a Via Berengario. Calcolo standard: 1.08 km / 15 km/h = 4.3 min -> 5 min."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": false,
+      "realistic_for_daily_commute": true,
+      "assessment_notes": "Durata pedonale: 14 min (~1 km). Molto vicino alla stazione FS di Modena, perfettamente fattibile a piedi ogni giorno."
+    }
+  },
+  {
+    "id": "modena_fs_to_giurisprudenza",
+    "name": "Modena FS a Dipartimento di Giurisprudenza (Complesso San Geminiano)",
+    "segment_type": "train_last_mile",
+    "origin": {
+      "id": "modena_fs",
+      "name": "Stazione di Modena FS",
+      "address": "Piazza Dante Alighieri, 41121 Modena",
+      "city": "Modena",
+      "lat": 44.653998,
+      "lon": 10.930751
+    },
+    "destination": {
+      "id": "giurisprudenza",
+      "name": "Dipartimento di Giurisprudenza (Complesso San Geminiano)",
+      "address": "Via San Geminiano 3, 41121 Modena",
+      "city": "Modena",
+      "lat": 44.6433902,
+      "lon": 10.9259537
+    },
+    "straight_line_distance_m": 1240.2,
+    "walk_minutes": 21,
+    "bike_minutes": 10,
+    "walking": {
+      "distance_m": 1561.8,
+      "duration_min": 20.93,
+      "duration_sec": 1255.5,
+      "calculated_speed_kmh": 4.48,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-foot",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-foot/route/v1/driving/10.930751,44.653998;10.9259537,44.6433902?overview=false",
+      "profile": "foot (pedestrian network, sidewalks, pedestrian areas, zebra crossings)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-foot",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Percorso pedonale lungo Corso Vittorio Emanuele II, Piazza Roma (Palazzo Ducale), Via Farini, Via Emilia Centro e Via San Geminiano."
+    },
+    "cycling": {
+      "distance_m": 2266.5,
+      "duration_min": 6.34,
+      "duration_sec": 380.5,
+      "calculated_speed_kmh": 21.45,
+      "is_reliable": true,
+      "service": "OSM FOSSGIS OSRM routed-bike",
+      "api_endpoint": "https://routing.openstreetmap.de/routed-bike/route/v1/driving/10.930751,44.653998;10.9259537,44.6433902?overview=false",
+      "profile": "bike (cycleways, residential streets, cycle tracks, bicycle-accessible paths)",
+      "date": "2026-10-23",
+      "source": "https://routing.openstreetmap.de/routed-bike",
+      "license": "ODbL 1.0 (\u00a9 OpenStreetMap contributors)",
+      "notes": "Itinerario ciclabile attraverso la viabilit\u00e0 ciclabile del centro storico / ZTL. Calcolo standard: 2.27 km / 15 km/h = 9.07 min -> 10 min."
+    },
+    "walking_feasibility_assessment": {
+      "is_over_30_min": false,
+      "realistic_for_daily_commute": true,
+      "assessment_notes": "Durata pedonale: 21 min (~1.56 km). Attraversamento diretto del centro storico; fattibile a piedi o in 10 minuti di bici."
+    }
+  }
+]

@@ -1,0 +1,567 @@
+@import 'tailwindcss';
+@config "../../tailwind.config.ts";
+
+:root {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #80c9a8;
+  outline-offset: 2px;
+}
+::selection {
+  background: #c9ead9;
+  color: #123b31;
+}
+
+.app-header {
+  @apply sticky top-0 z-30 border-b border-white/60 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90;
+}
+.brand-mark {
+  @apply flex h-10 w-10 items-center justify-center rounded-2xl bg-pine text-white shadow-lg shadow-pine/20;
+}
+.status-pill {
+  @apply inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300;
+}
+.status-pill i {
+  @apply h-1.5 w-1.5 rounded-full bg-amber-400;
+}
+.status-online i {
+  @apply bg-emerald-500;
+}
+.demo-pill {
+  @apply hidden rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-bold tracking-wide text-amber-800 sm:inline-flex dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200;
+}
+.hero-section {
+  @apply overflow-hidden bg-gradient-to-br from-[#edf8f2] via-[#f4faf6] to-[#e5f2ed] dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/40;
+}
+.hero-kicker {
+  @apply inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-pine shadow-sm dark:bg-slate-800 dark:text-emerald-300;
+}
+.hero-title {
+  @apply text-2xl font-black leading-[1.08] tracking-tight text-ink sm:mt-5 sm:text-5xl lg:text-[3.2rem];
+}
+@media (prefers-color-scheme: dark) {
+  .hero-title {
+    color: #f8fafc;
+  }
+}
+.hero-title span {
+  @apply text-pine dark:text-emerald-300;
+}
+.hero-chip {
+  @apply rounded-full border border-emerald-900/10 bg-white/70 px-3 py-1.5 dark:border-white/10 dark:bg-slate-800/80;
+}
+.hero-illustration {
+  @apply relative hidden h-64 overflow-hidden rounded-[2rem] border border-white/80 bg-gradient-to-br from-[#d8f1e5] to-[#b9e2d1] shadow-card sm:block lg:h-56;
+}
+.dark .hero-illustration {
+  background: linear-gradient(135deg, #123a34, #173e3a);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.hero-orbit {
+  @apply absolute rounded-full border border-white/50;
+}
+.orbit-one {
+  width: 270px;
+  height: 270px;
+  right: 33px;
+  top: -78px;
+}
+.orbit-two {
+  width: 200px;
+  height: 200px;
+  right: 68px;
+  top: -42px;
+}
+.hero-station,
+.hero-campus {
+  @apply absolute z-10 flex items-center justify-center rounded-[1.3rem] bg-white text-pine shadow-xl;
+}
+.hero-station {
+  left: 14%;
+  top: 34%;
+  height: 68px;
+  width: 68px;
+}
+.hero-campus {
+  right: 15%;
+  top: 51%;
+  height: 58px;
+  width: 58px;
+  color: #dc8550;
+}
+.hero-route {
+  @apply absolute left-[29%] right-[31%] top-[56%] h-1 rounded-full bg-pine/30;
+}
+.hero-route span {
+  @apply absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-pine;
+}
+.hero-route span:nth-child(1) {
+  left: 18%;
+}
+.hero-route span:nth-child(2) {
+  left: 52%;
+}
+.hero-route span:nth-child(3) {
+  right: 8%;
+}
+.hero-time {
+  @apply absolute left-1/2 top-[25%] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-bold text-ink shadow-lg;
+}
+.hero-hill {
+  @apply absolute bottom-[-82px] h-40 w-72 rounded-[50%] bg-white/40;
+}
+.hill-one {
+  left: -40px;
+}
+.hill-two {
+  right: -60px;
+  bottom: -105px;
+  background: #95ceb6;
+  opacity: 0.7;
+}
+.form-card,
+.schedule-card,
+.result-card,
+.map-card {
+  @apply rounded-[1.5rem] border border-slate-200/80 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900;
+}
+.form-card {
+  @apply p-5 sm:p-7;
+}
+.schedule-card {
+  @apply p-5 sm:p-6;
+}
+.section-kicker {
+  @apply text-xs font-bold uppercase tracking-[.14em] text-pine dark:text-emerald-300;
+}
+.field-label {
+  @apply mb-2 block text-sm font-semibold text-ink dark:text-slate-100;
+}
+.field-hint {
+  @apply text-xs text-slate-600 dark:text-slate-400;
+}
+.field-input {
+  @apply block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-ink shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-pine focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:hover:border-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-950;
+}
+.field-input-icon {
+  @apply pl-10;
+}
+.input-with-icon {
+  @apply relative;
+}
+.field-icon {
+  @apply pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400;
+}
+.campus-options {
+  @apply absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900;
+}
+.campus-options[hidden] {
+  display: none;
+}
+.campus-option {
+  @apply flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left text-sm text-ink dark:text-white;
+}
+.campus-option[aria-selected='true'] {
+  @apply font-semibold text-pine dark:text-emerald-300;
+}
+.map-view-switch {
+  @apply inline-flex shrink-0 rounded-xl bg-slate-100 p-1 text-xs font-semibold dark:bg-slate-800;
+}
+.map-view-switch button {
+  @apply rounded-lg px-3 py-1.5 text-slate-700 dark:text-slate-300;
+}
+.map-view-switch .map-view-active {
+  @apply bg-white text-ink shadow-sm dark:bg-slate-950 dark:text-white;
+}
+.campus-toggle {
+  @apply absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-slate-600 hover:text-ink dark:text-slate-400 dark:hover:text-white;
+}
+.campus-option-active {
+  @apply bg-emerald-50 dark:bg-slate-800;
+}
+.mode-button {
+  @apply flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:text-ink dark:text-slate-300;
+}
+.mode-button-active {
+  @apply bg-white text-pine shadow-sm dark:bg-slate-700 dark:text-emerald-300;
+}
+.origin-option {
+  @apply flex w-full items-center gap-3 rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-medium text-slate-700 transition hover:border-emerald-300 dark:border-slate-700 dark:text-slate-200 dark:hover:border-emerald-700;
+}
+.origin-option-active {
+  @apply border-pine bg-emerald-50/70 text-ink dark:border-emerald-600 dark:bg-emerald-950/50 dark:text-white;
+}
+.origin-radio {
+  @apply h-4 w-4 rounded-full border border-slate-400;
+}
+.origin-option-active .origin-radio {
+  @apply border-[5px] border-pine dark:border-emerald-400;
+}
+.primary-button {
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-pine px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pine/20 transition hover:bg-[#0d5d4d] disabled:cursor-wait disabled:opacity-70 dark:bg-emerald-600 dark:hover:bg-emerald-500;
+}
+.submit-bar {
+  @apply sticky bottom-0 z-10 -mx-5 -mb-5 rounded-b-[1.5rem] bg-white/95 px-5 pt-3 pb-5 backdrop-blur dark:bg-slate-900/95 sm:-mx-7 sm:-mb-7 sm:px-7 sm:pb-7 lg:static lg:m-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none;
+}
+.secondary-button {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-pine/30 bg-white px-4 py-2.5 text-sm font-semibold text-pine transition hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-950;
+}
+.loading-dot {
+  @apply inline-block h-3 w-3 animate-pulse rounded-full bg-current;
+}
+.result-placeholder {
+  @apply flex min-h-[330px] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-slate-300 bg-white/70 p-8 text-center dark:border-slate-700 dark:bg-slate-900/60;
+}
+.placeholder-art {
+  @apply flex h-16 w-16 items-center justify-center rounded-3xl bg-mint text-pine dark:bg-emerald-950 dark:text-emerald-300;
+}
+.placeholder-art-muted {
+  @apply bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400;
+}
+.result-banner {
+  @apply rounded-t-[1.5rem] bg-gradient-to-br from-pine to-[#228568] p-5 text-white sm:p-6;
+}
+.result-eyebrow {
+  @apply text-xs font-bold uppercase tracking-[.12em] text-white;
+}
+.result-title {
+  @apply mt-2 text-4xl font-black tracking-tight sm:text-5xl;
+}
+.result-title span {
+  @apply whitespace-nowrap;
+}
+.timeline {
+  @apply relative;
+}
+.timeline-item {
+  @apply relative flex gap-3;
+}
+.timeline-item:not(:last-child)::before {
+  content: '';
+  @apply absolute bottom-0 left-5 top-10 w-px border-l border-dashed border-emerald-300 dark:border-emerald-800;
+}
+.timeline-icon {
+  @apply relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint text-pine dark:bg-emerald-950 dark:text-emerald-300;
+}
+.timeline-icon-train {
+  @apply bg-[#fff0e4] text-[#a95c2f] dark:bg-amber-950 dark:text-amber-200;
+}
+.warning-note {
+  @apply flex gap-2.5 rounded-xl bg-amber-50 px-3.5 py-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200;
+}
+.warning-mark {
+  @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200 font-bold text-amber-900 dark:bg-amber-900 dark:text-amber-100;
+}
+.error-icon {
+  @apply flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-xl font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300;
+}
+.skeleton {
+  @apply animate-pulse bg-slate-200 dark:bg-slate-800;
+}
+.map-card {
+  @apply overflow-hidden;
+}
+.map-frame {
+  @apply h-64 bg-slate-100 sm:h-72;
+}
+.map-loading {
+  @apply flex h-full items-center justify-center gap-2 text-sm text-slate-600;
+}
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.map-legend {
+  @apply inline-flex items-center gap-1.5 font-medium;
+}
+.map-legend i {
+  @apply h-2.5 w-2.5 rounded-full;
+}
+.map-line {
+  @apply inline-block w-5 rounded-full;
+}
+.map-line-train {
+  height: 4px;
+  background: #126e5b;
+}
+.map-line-active {
+  height: 0;
+  border-top: 2px dashed #334155;
+}
+@media (prefers-color-scheme: dark) {
+  .map-line-active {
+    border-top-color: #cbd5e1;
+  }
+}
+/* Permanent marker labels (Leaflet tooltips): compact and legible on tiles. */
+.leaflet-tooltip.map-label {
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #0f172a;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Slid to stay inside the map (round 5, point 2): the tip would point aside. */
+.leaflet-tooltip.map-label--shifted::before {
+  display: none;
+}
+.next-class {
+  @apply flex items-center justify-between gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 dark:border-emerald-900 dark:bg-emerald-950/50;
+}
+.schedule-icon {
+  @apply flex h-10 w-10 items-center justify-center rounded-xl bg-mint text-pine dark:bg-emerald-950 dark:text-emerald-300;
+}
+.lesson-time {
+  @apply flex h-10 min-w-[58px] items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-bold tabular-nums text-ink dark:bg-slate-800 dark:text-white;
+}
+.icon-button {
+  @apply flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950;
+}
+.app-footer {
+  @apply border-t border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950;
+}
+
+/* ---- Phase 5: layout and new components ---- */
+.planner-grid {
+  @apply flex flex-col gap-6 pt-4 sm:pt-0;
+}
+@media (min-width: 1024px) {
+  .planner-grid {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.88fr) minmax(0, 1.12fr);
+    grid-template-areas:
+      'form result'
+      'form map'
+      'schedule map';
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    column-gap: 1.75rem;
+    row-gap: 1.5rem;
+  }
+  .planner-result {
+    grid-area: result;
+  }
+  .planner-form {
+    grid-area: form;
+  }
+  .planner-map {
+    grid-area: map;
+  }
+  .planner-schedule {
+    grid-area: schedule;
+  }
+}
+.segmented {
+  @apply grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800;
+}
+.segmented-option {
+  @apply flex min-h-14 flex-col items-center justify-center rounded-xl px-2 py-2 text-sm text-slate-700 transition hover:text-ink dark:text-slate-300;
+}
+.segmented-active {
+  @apply bg-white text-pine shadow-sm dark:bg-slate-700 dark:text-emerald-300;
+}
+.home-chip {
+  @apply flex items-center gap-3 rounded-xl border border-pine/40 bg-emerald-50/70 px-3.5 py-2.5 dark:border-emerald-700 dark:bg-emerald-950/50;
+}
+.chip-button {
+  @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-2 py-2 text-xs font-semibold text-slate-800 transition hover:border-pine hover:text-pine dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200;
+}
+.chip-button-active {
+  @apply border-sky-600 bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100;
+}
+.address-results {
+  @apply divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900;
+}
+.address-option {
+  @apply block min-h-11 w-full px-3.5 py-2.5 text-left text-sm text-ink hover:bg-emerald-50 dark:text-white dark:hover:bg-slate-800;
+}
+.alert-box {
+  @apply flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-sm leading-5 text-amber-950 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-100;
+}
+.ticket-badge {
+  @apply inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-950;
+}
+/* Holidays (round 5, point 4): one notice at the top, a short chip on each run. */
+.festive-notice {
+  @apply flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-sm leading-5 text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100;
+}
+.festive-chip {
+  @apply inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-full border border-amber-400 bg-white px-2 py-0.5 align-middle text-xs font-bold text-amber-950;
+}
+/* Bike suggestion inside the result banner, next to the title (round 5, point 3). */
+.suggestion-callout {
+  @apply mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-white px-3.5 py-3 leading-5 text-ink shadow-sm ring-2 ring-amber-300 dark:bg-slate-900 dark:text-white dark:ring-amber-400;
+}
+.suggestion-button {
+  @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-pine px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#0d5d4d] dark:bg-emerald-600 dark:hover:bg-emerald-500;
+}
+.proposal-note {
+  @apply flex items-start gap-2 rounded-xl bg-slate-100 px-3.5 py-2.5 text-sm leading-5 text-slate-800 dark:bg-slate-800 dark:text-slate-200;
+}
+.train-chip {
+  @apply ml-2 rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-bold tabular-nums text-slate-800 dark:bg-slate-800 dark:text-slate-100;
+}
+.stat-label {
+  @apply text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400;
+}
+.calendar-note {
+  @apply mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-950 dark:bg-amber-950/50 dark:text-amber-100;
+}
+.calendar-note summary {
+  @apply flex cursor-pointer items-center gap-1.5 font-semibold;
+}
+.calendar-note p {
+  @apply mt-1.5 leading-5;
+}
+.nearby-card {
+  @apply rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900;
+}
+.nearby-card summary {
+  @apply cursor-pointer list-none;
+}
+.nearby-card summary::-webkit-details-marker {
+  display: none;
+}
+.nearby-card[open] {
+  @apply border-pine/40;
+}
+.cursor-crosshair {
+  cursor: crosshair;
+}
+/* Reserve the answer's space so the form below never jumps when it arrives (CLS). */
+/* Fieldsets default to min-width: min-content, which lets long labels widen the page. */
+fieldset {
+  min-width: 0;
+}
+
+/* Toggletip ("?") next to a label or a stat. */
+.help-tip {
+  @apply relative inline-flex align-middle;
+}
+.help-tip-button {
+  @apply ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-slate-600 hover:text-pine focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-pine dark:text-slate-400 dark:hover:text-emerald-300;
+}
+.help-tip-bubble {
+  width: min(15rem, calc(100vw - 3rem));
+  @apply absolute top-7 z-30 rounded-xl bg-ink px-3 py-2 text-xs font-normal normal-case leading-5 tracking-normal text-white shadow-xl dark:bg-slate-700;
+}
+.help-tip-start {
+  left: -0.25rem;
+}
+.help-tip-end {
+  right: -0.25rem;
+}
+.help-tip-bubble[hidden] {
+  display: none;
+}
+.time-select {
+  @apply grid grid-cols-[1fr_auto_1fr] items-center gap-1.5;
+}
+
+.result-stats {
+  @apply grid grid-cols-2 border-b border-slate-200 dark:border-slate-700;
+}
+.result-stats > div {
+  @apply min-w-0 border-slate-200 p-4 dark:border-slate-700;
+}
+.result-stats > div:nth-child(odd) {
+  @apply border-r;
+}
+.result-stats > div:nth-child(n + 3) {
+  @apply border-t;
+}
+.stat-value {
+  @apply mt-1 text-xl font-bold text-ink dark:text-white;
+}
+.result-card-nested {
+  @apply shadow-none;
+}
+.calc-note {
+  @apply flex gap-2 rounded-2xl border border-sky-200 bg-sky-50 p-3 text-sm leading-6 text-sky-950 dark:border-sky-900 dark:bg-sky-950/60 dark:text-sky-100;
+}
+.realtime-box {
+  @apply rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900;
+}
+.realtime-link {
+  @apply flex flex-col text-sm text-ink hover:text-pine dark:text-white dark:hover:text-emerald-300;
+}
+.chip-button {
+  @apply inline-flex items-center gap-1 rounded-full border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-800 hover:border-pine hover:text-pine dark:border-slate-600 dark:text-slate-200;
+}
+.result-actions {
+  @apply flex flex-wrap gap-2;
+}
+.action-button {
+  @apply inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-ink hover:border-pine hover:text-pine dark:border-slate-600 dark:bg-slate-900 dark:text-white;
+}
+.return-trip {
+  @apply rounded-2xl border border-emerald-200 bg-mint/50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30;
+}
+
+.date-readout {
+  @apply -mt-2 flex min-h-6 flex-wrap items-center gap-2 text-sm text-slate-700 dark:text-slate-300;
+}
+.today-badge {
+  @apply rounded-full bg-pine px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white dark:bg-emerald-400 dark:text-slate-950;
+}
+
+/*
+ * The loading skeleton takes the height of the real form (measured with the
+ * default values), so the result below it does not jump when the catalog
+ * arrives (CLS). Values per width range: 360-399 / 400-639 / 640-1023 /
+ * 1024-1279 / >= 1280 px.
+ */
+.form-skeleton {
+  min-height: 984px;
+}
+@media (min-width: 400px) {
+  .form-skeleton {
+    min-height: 964px;
+  }
+}
+@media (min-width: 640px) {
+  .form-skeleton {
+    min-height: 880px;
+  }
+}
+@media (min-width: 1024px) {
+  .form-skeleton {
+    min-height: 944px;
+  }
+}
+@media (min-width: 1280px) {
+  .form-skeleton {
+    min-height: 896px;
+  }
+}
