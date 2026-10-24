@@ -10,7 +10,7 @@ from engine.validity import TimetableValidity
 
 router = APIRouter(prefix="/api", tags=["Monitoring"])
 
-API_VERSION = "0.6.0"
+API_VERSION = "0.7.0"
 
 
 @router.get(
