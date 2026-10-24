@@ -111,7 +111,12 @@ function RouteMarkers({ points }: { points: RoutePoint[] }) {
   }, [relayout]);
   useMapEvents({ zoomend: relayout, moveend: relayout, resize: relayout });
 
-  return points.map((point, index) => {
+  // SVG paints in order: big markers (home, campus) first, so a station
+  // marker a few hundred metres away stays visible on top at low zoom.
+  const paintOrder = points
+    .map((point, index) => ({ point, index }))
+    .sort((a, b) => markerRadius(b.point) - markerRadius(a.point));
+  return paintOrder.map(({ point, index }) => {
     const placement = placements?.[index] ?? { side: point.labelSide, permanent: true };
     return (
       <CircleMarker
