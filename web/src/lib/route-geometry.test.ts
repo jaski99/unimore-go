@@ -6,7 +6,6 @@ import {
   assignLabelSides,
   buildRoute,
   nearestStation,
-  shortCampusName,
   stationForStop,
   type RoutePoint,
 } from './route-geometry';
@@ -115,13 +114,6 @@ describe('route geometry', () => {
     const values = { ...base, direction: 'return' as const };
     const route = buildRoute(values, stations, dief, undefined);
     expect(route.points.map((point) => point.role)).toEqual(['campus', 'to_station']);
-  });
-});
-
-describe('shortCampusName', () => {
-  it('usa la sigla tra parentesi quando c’è', () => {
-    expect(shortCampusName("Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)")).toBe('DIEF');
-    expect(shortCampusName('Palazzo Dossetti')).toBe('Palazzo Dossetti');
   });
 });
 

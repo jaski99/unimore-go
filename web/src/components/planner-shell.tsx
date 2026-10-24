@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Campus, HealthResponse, Station } from '@/lib/api/types';
+import type { Campus, HealthResponse, ModeSuggestion, Station } from '@/lib/api/types';
 import { apiConfig } from '@/lib/api/config';
 import { createPlanService } from '@/lib/api/plan-service';
 import type { LessonPrefill } from '@/lib/lesson-prefill';
@@ -11,9 +11,12 @@ import {
   validatePlannerValues,
   type PlannerValues,
 } from '@/lib/plan-request';
-import { buildRoute, shortCampusName } from '@/lib/route-geometry';
+import { shortCampusName } from '@/lib/campus-name';
+import { buildRoute } from '@/lib/route-geometry';
 import { LocalStorageScheduleStore } from '@/lib/schedule-store';
-import { addMinutesClamped, formatShortDate, todayInRome } from '@/lib/time-format';
+import { proposalText, proposeLessonEnd, shouldOfferReturn } from '@/lib/return-trip';
+import { scrollToElement } from '@/lib/scroll';
+import { formatShortDate, todayInRome } from '@/lib/time-format';
 import { isCompleteSearch, parseSearch, serializeSearch, type UrlSearch } from '@/lib/url-state';
 import { usePlan } from '@/hooks/use-plan';
 import { shareUrl, useHistorySearch } from '@/hooks/use-history-search';
@@ -47,6 +50,8 @@ interface PlannedSearch {
   values: PlannerValues;
   /** Lesson end of the return view, once requested. */
   returnTime?: string;
+  /** A return search whose lesson end was proposed by the link (start + 2 h). */
+  proposedEnd?: string;
 }
 
 export function PlannerShell() {
@@ -118,10 +123,10 @@ export function PlannerShell() {
 
   /** Run a search; the return view is planned too when a lesson end is given. */
   const runSearch = useCallback(
-    (searchValues: PlannerValues, lessonEnd?: string) => {
+    (searchValues: PlannerValues, lessonEnd?: string, proposedEnd?: string) => {
       if (validatePlannerValues(searchValues)) return false;
       const withReturn = searchValues.direction === 'outbound' ? lessonEnd : undefined;
-      setPlanned({ values: searchValues, returnTime: withReturn });
+      setPlanned({ values: searchValues, returnTime: withReturn, proposedEnd });
       setMapView('outbound');
       void outbound.submit(buildPlanRequest(searchValues));
       if (withReturn) {
@@ -144,7 +149,8 @@ export function PlannerShell() {
     const parsed = parseSearch(search);
     const next = Object.keys(parsed.patch).length ? apply(parsed.patch) : values;
     setLinkNotice('');
-    if (linkIsValid(parsed) && runSearch(next, parsed.returnTime)) return;
+    if (linkIsValid(parsed) && runSearch(next, parsed.returnTime, parsed.proposal?.lessonEnd))
+      return;
     clearSearch();
   });
 
@@ -153,35 +159,46 @@ export function PlannerShell() {
     if (!ready || catalogLoading || catalogError || linkHandled.current) return;
     linkHandled.current = true;
     if (!urlSearch) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off run of the opened link.
-    const started = linkIsValid(urlSearch) && runSearch(values, urlSearch.returnTime);
+    const started =
+      linkIsValid(urlSearch) &&
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-off run of the opened link.
+      runSearch(values, urlSearch.returnTime, urlSearch.proposal?.lessonEnd);
     if (!started) setLinkNotice(INVALID_LINK_MESSAGE);
   }, [ready, catalogLoading, catalogError, urlSearch, linkIsValid, runSearch, values]);
 
+  /** Run `next`, record it in the history and bring the answer into view. */
+  function planAndShow(next: PlannerValues) {
+    if (!runSearch(next)) return;
+    push(serializeSearch(next));
+    focusResult.current = true;
+    // Round 4, point 9: on phones the answer is below the form.
+    if (isNarrowViewport()) scrollToElement('result');
+  }
+
   function handleSubmit() {
     setLinkNotice('');
-    if (!runSearch(values)) return;
-    push(serializeSearch(values));
-    focusResult.current = true;
-    if (isNarrowViewport())
-      document.getElementById('result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    planAndShow(values);
+  }
+
+  /** "Usa la bici" (round 4, point 2): same search with the suggested mode. */
+  function handleUseSuggestion(suggestion: ModeSuggestion) {
+    if (!planned) return;
+    update({ mode: suggestion.mode });
+    planAndShow({ ...planned.values, mode: suggestion.mode });
   }
 
   // The answer is announced by moving focus to its title (no extra scroll:
-  // on narrow screens the smooth scroll above already brings it into view).
+  // on narrow screens the scroll above already brings it into view).
   useEffect(() => {
     if (!focusResult.current || outbound.status === 'loading' || outbound.status === 'idle') return;
     focusResult.current = false;
     document.getElementById('result-title')?.focus({ preventScroll: true });
   }, [outbound.status]);
 
-  const defaultReturnTime = planned ? addMinutesClamped(planned.values.time, 120) : '12:00';
+  const defaultReturnTime = planned ? proposeLessonEnd(planned.values.time) : '12:00';
   const effectiveReturnTime = returnTime ?? defaultReturnTime;
   // Review B7: a proposed lesson end is never silent.
-  const returnTimeHint =
-    returnTime === null
-      ? `Proposta: inizio lezione + 2 ore (${defaultReturnTime}). Modificala con l’orario reale di fine lezione.`
-      : undefined;
+  const returnTimeHint = returnTime === null ? proposalText(defaultReturnTime) : undefined;
 
   function handleReturn() {
     if (!planned) return;
@@ -260,8 +277,14 @@ export function PlannerShell() {
         time: planned.values.time,
         campusName: campusName(planned.values.campusId),
         marginMin: planned.values.marginMin,
+        proposal: planned.proposedEnd ? proposalText(planned.proposedEnd) : undefined,
       }
     : undefined;
+  // The form says the lesson end is a proposal until the user changes it.
+  const timeHint =
+    planned?.proposedEnd && values.direction === 'return' && values.time === planned.proposedEnd
+      ? proposalText(planned.proposedEnd)
+      : undefined;
   const link = planned ? shareUrl(serializeSearch(planned.values, planned.returnTime)) : '';
   const destination = (values_: PlannerValues | undefined) => {
     const campus = campuses.find((item) => item.id === values_?.campusId);
@@ -269,9 +292,8 @@ export function PlannerShell() {
   };
   const mainItinerary = outbound.result?.itineraries[0];
   const returnItinerary = back.result?.itineraries[0];
-  const showReturn =
-    planned?.values.direction === 'outbound' &&
-    (outbound.status === 'success' || outbound.status === 'empty');
+  // Round 4, point 3: only under a valid outbound answer.
+  const showReturn = shouldOfferReturn(planned?.values.direction, outbound.status, outbound.result);
 
   return (
     <main className="min-h-screen bg-canvas text-ink dark:bg-slate-950 dark:text-slate-100">
@@ -414,6 +436,7 @@ export function PlannerShell() {
               onPickOnMap={() => setPicking((current) => !current)}
               pickingOnMap={picking}
               prefillNote={prefillMessage(prefill)}
+              timeHint={timeHint}
             />
           )}
         </section>
@@ -424,6 +447,7 @@ export function PlannerShell() {
             error={outbound.error}
             onRetry={outbound.retry}
             context={context}
+            onUseSuggestion={handleUseSuggestion}
             actions={
               mainItinerary && planned ? (
                 <ResultActions

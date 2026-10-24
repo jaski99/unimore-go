@@ -6,6 +6,8 @@ import { CampusSearch } from './campus-search';
 
 const { campuses } = fixtures;
 const dief = campuses.find((campus) => campus.id === 'dief')!;
+const SHORT = 'DIEF · Modena';
+const FULL = `${dief.name} · ${dief.city}`;
 const setup = (selectedId = 'dief') => {
   const onChange = vi.fn();
   render(
@@ -21,11 +23,11 @@ describe('CampusSearch', () => {
   it('al focus mostra TUTTE le sedi anche con un valore già scelto, che resta visibile', async () => {
     const user = userEvent.setup();
     const { input } = setup();
-    expect(input).toHaveValue(`${dief.name} · ${dief.city}`);
+    expect(input).toHaveValue(SHORT);
     expect(input).toHaveAttribute('aria-expanded', 'false');
     await user.click(input);
     expect(input).toHaveAttribute('aria-expanded', 'true');
-    expect(input).toHaveValue(`${dief.name} · ${dief.city}`);
+    expect(input).toHaveValue(SHORT);
     expect(screen.getAllByRole('option')).toHaveLength(campuses.length);
     expect(screen.getByRole('option', { selected: true })).toHaveTextContent(dief.name);
     expect(input).toHaveAttribute('aria-activedescendant', 'campus-option-dief');
@@ -71,7 +73,7 @@ describe('CampusSearch', () => {
     await user.keyboard('zzz');
     expect(screen.getByRole('status')).toHaveTextContent('Nessuna sede trovata');
     await user.tab();
-    expect(input).toHaveValue(`${dief.name} · ${dief.city}`);
+    expect(input).toHaveValue(SHORT);
   });
 
   it('il pulsante freccia apre e chiude l’elenco completo; il clic sceglie', async () => {
@@ -91,7 +93,7 @@ describe('CampusSearch', () => {
   it('al focus (tastiera o tocco) seleziona tutto il testo, anche dopo il rendering (punto 10)', async () => {
     const user = userEvent.setup();
     const { input } = setup();
-    const label = `${dief.name} · ${dief.city}`;
+    const label = SHORT;
     await user.tab();
     expect(input).toHaveFocus();
     await waitFor(() => {
@@ -100,14 +102,32 @@ describe('CampusSearch', () => {
     });
   });
 
-  it('il nome completo della sede scelta resta leggibile sotto il campo, senza troncamenti', () => {
+  it('dopo la scelta mostra il nome breve; nome completo in elenco, tooltip e descrizione (round 4)', async () => {
+    const user = userEvent.setup();
     const { input } = setup();
-    const full = document.getElementById('campus-selected');
-    expect(full).toHaveTextContent(`Sede scelta: ${dief.name} · ${dief.city}`);
-    expect(full).toBeVisible();
-    expect(input).toHaveAttribute('title', `${dief.name} · ${dief.city}`);
-    expect(input).toHaveAccessibleDescription(
-      expect.stringContaining(`Sede scelta: ${dief.name} · ${dief.city}`),
+    expect(input).toHaveValue(SHORT);
+    expect(input).toHaveAttribute('title', FULL);
+    expect(input).toHaveAccessibleDescription(expect.stringContaining(`Sede scelta: ${FULL}`));
+    // No visible duplicate under the field any more: the readout is for screen readers.
+    expect(document.getElementById('campus-selected')).toHaveClass('sr-only');
+    await user.click(input);
+    expect(screen.getByRole('option', { selected: true })).toHaveTextContent(dief.name);
+  });
+
+  it('scegliendo un’altra sede il campo mostra il suo nome breve', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <CampusSearch campuses={campuses} selectedId="dief" onChange={onChange} />,
     );
+    const input = screen.getByRole('combobox', { name: 'Sede UNIMORE' });
+    await user.click(input);
+    await user.keyboard('Dossetti');
+    await user.keyboard('{Enter}');
+    expect(onChange).toHaveBeenCalledWith('palazzo_dossetti');
+    rerender(
+      <CampusSearch campuses={campuses} selectedId="palazzo_dossetti" onChange={onChange} />,
+    );
+    expect(input).toHaveValue('Palazzo Dossetti · Reggio Emilia');
   });
 });

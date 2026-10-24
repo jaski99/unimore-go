@@ -46,4 +46,28 @@ describe('ItineraryTimeline', () => {
     render(<ItineraryTimeline itinerary={zero} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(1);
   });
+
+  it('etichetta "Circolazione nei festivi da verificare" accanto al treno non confermato', () => {
+    const sunday: Itinerary = {
+      ...demo,
+      legs: demo.legs.map((leg) =>
+        leg.type === 'train' ? { ...leg, train: { ...leg.train!, festive_unverified: true } } : leg,
+      ),
+    };
+    const { rerender } = render(<ItineraryTimeline itinerary={sunday} />);
+    const train = screen.getAllByRole('listitem')[1];
+    expect(train).toHaveTextContent('Circolazione nei festivi da verificare');
+    rerender(<ItineraryTimeline itinerary={demo} />);
+    expect(screen.queryByText('Circolazione nei festivi da verificare')).not.toBeInTheDocument();
+  });
+
+  it('durate oltre l’ora in ore e minuti (round 4, punto 1)', () => {
+    const long: Itinerary = {
+      ...demo,
+      legs: [{ ...demo.legs[2], type: 'walk', minutes: 75 }],
+    };
+    render(<ItineraryTimeline itinerary={long} />);
+    expect(screen.getByRole('listitem')).toHaveTextContent('· 1 h 15 min');
+    expect(screen.getByRole('listitem')).not.toHaveTextContent('75 min');
+  });
 });

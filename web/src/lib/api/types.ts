@@ -71,6 +71,8 @@ export interface TrainDetails {
   different_ticket?: boolean;
   /** PDF page the run comes from. */
   source?: string;
+  /** Sunday/holiday run whose festive service the data does not confirm (v0.7). */
+  festive_unverified?: boolean;
 }
 
 export interface Leg {
@@ -125,12 +127,22 @@ export interface Calculation {
   summary: string;
 }
 
+/** A faster mode for the same trip (v0.7). */
+export interface ModeSuggestion {
+  mode: 'bike';
+  minutes: number;
+  /** "In bici circa 22 min (a piedi 53 min)." */
+  message: string;
+}
+
 /** Response of POST /api/plan. */
 export interface PlanResponse {
   planner?: PlannerName;
   itineraries: Itinerary[];
   nearby?: NearbySolution[];
   calculation?: Calculation | null;
+  /** Same city, walk over 20 min: the bike with its own time (v0.7). */
+  suggestion?: ModeSuggestion | null;
   notices?: Notice[];
   /** Legacy v0.4 list: "non in tempo reale" first, then the notices. */
   warnings: string[];

@@ -31,6 +31,8 @@ interface PlanFormProps {
   pickingOnMap: boolean;
   /** Note shown when the form was prefilled from the weekly schedule. */
   prefillNote?: string;
+  /** Under the lesson time, e.g. a lesson end proposed by a link. */
+  timeHint?: string;
 }
 
 export function PlanForm({
@@ -47,6 +49,7 @@ export function PlanForm({
   onPickOnMap,
   pickingOnMap,
   prefillNote,
+  timeHint,
 }: PlanFormProps) {
   const isReturn = values.direction === 'return';
   const error = validatePlannerValues(values);
@@ -116,6 +119,7 @@ export function PlanForm({
           label={isReturn ? 'Fine lezione' : 'Inizio lezione'}
           value={values.time}
           onChange={(time) => onChange({ time })}
+          description={timeHint}
         />
       </div>
       <p id="date-readout" className="date-readout" aria-live="polite">

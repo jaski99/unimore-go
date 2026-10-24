@@ -1,4 +1,5 @@
 import type { Campus, Itinerary, Leg, Station } from '@/lib/api/types';
+import { shortCampusName } from '@/lib/campus-name';
 import type { PlannerValues } from '@/lib/plan-request';
 
 export type LatLon = [number, number];
@@ -37,11 +38,6 @@ export const ROLE_LABELS: Record<PointRole, string> = {
   to_station: 'Stazione arrivo',
   campus: 'Sede',
 };
-
-/** "Dipartimento di Ingegneria 'Enzo Ferrari' (DIEF)" -> "DIEF"; names without an acronym stay. */
-export function shortCampusName(name: string): string {
-  return name.match(/\(([^)]+)\)\s*$/)?.[1] ?? name;
-}
 
 const squared = (a: LatLon, b: LatLon) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
 const fold = (value: string) =>

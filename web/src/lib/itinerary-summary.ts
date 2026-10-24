@@ -11,6 +11,13 @@ export function needsDifferentTicket(itinerary: Itinerary): boolean {
   return itinerary.legs.some((leg) => leg.train?.different_ticket);
 }
 
+/** Shown next to a train whose Sunday/holiday service the timetable does not confirm. */
+export const FESTIVE_UNVERIFIED_LABEL = 'Circolazione nei festivi da verificare';
+
+export function hasUnverifiedFestive(itinerary: Itinerary): boolean {
+  return itinerary.legs.some((leg) => leg.train?.festive_unverified);
+}
+
 export function hasCalendarNotes(itinerary: Itinerary): boolean {
   return itinerary.legs.some((leg) => (leg.notes?.length ?? 0) > 0);
 }

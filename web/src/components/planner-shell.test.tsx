@@ -323,6 +323,90 @@ describe('PlannerShell: mobile ed errori', () => {
   });
 });
 
+describe('PlannerShell: round 4', () => {
+  it('"E per tornare?" compare solo sotto un’andata valida (punto 3)', async () => {
+    const user = userEvent.setup();
+    service.createPlan.mockResolvedValueOnce({ ...demo, itineraries: [], calculation: null });
+    render(<PlannerShell />);
+    await user.click(await formReady());
+    await screen.findByRole('heading', { level: 2, name: 'Nessun treno utile' });
+    expect(screen.queryByRole('region', { name: 'E per tornare?' })).not.toBeInTheDocument();
+
+    // Out of the timetable: an alert, no itinerary, no return either.
+    service.createPlan.mockResolvedValueOnce({
+      ...demo,
+      itineraries: [],
+      calculation: null,
+      notices: [{ code: 'out_of_validity', level: 'warning', message: 'Data fuori dall’orario.' }],
+    });
+    await user.click(screen.getByRole('button', { name: /Calcola quando uscire/ }));
+    expect(await screen.findByText('Data fuori dall’orario.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'E per tornare?' })).not.toBeInTheDocument();
+
+    service.createPlan.mockResolvedValueOnce(demo);
+    await user.click(screen.getByRole('button', { name: /Calcola quando uscire/ }));
+    expect(await screen.findByRole('region', { name: 'E per tornare?' })).toBeInTheDocument();
+  });
+
+  it('link verso=ritorno senza ritorno: calcola subito con la fine proposta e lo dice (punto 5)', async () => {
+    service.createPlan.mockResolvedValue({ ...demo, planner: 'depart_after' });
+    window.history.replaceState(
+      null,
+      '',
+      '/?sede=dief&stazione=reggio_fs&data=2026-10-26&ora=09%3A00&mezzo=bici&verso=ritorno',
+    );
+    render(<PlannerShell />);
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledOnce());
+    expect(service.createPlan.mock.calls[0][0]).toMatchObject({
+      campus_id: 'dief',
+      depart_after: '2026-10-26T11:00:00+01:00',
+    });
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Parti alle 07:39' }),
+    ).toBeInTheDocument();
+    const proposal =
+      'Proposta: inizio lezione + 2 ore (11:00). Modificala con l’orario reale di fine lezione.';
+    expect(screen.getByText(proposal, { selector: '.proposal-note span' })).toBeVisible();
+    expect(screen.getByRole('group', { name: 'Fine lezione' })).toHaveAccessibleDescription(
+      proposal,
+    );
+    expect(screen.queryByText(INVALID_LINK_MESSAGE)).not.toBeInTheDocument();
+  });
+
+  it('"Usa la bici" ricalcola lo stesso tragitto in bici (punto 2)', async () => {
+    const user = userEvent.setup();
+    service.createPlan.mockResolvedValueOnce({
+      ...demo,
+      suggestion: { mode: 'bike', minutes: 22, message: 'In bici circa 22 min (a piedi 53 min).' },
+    });
+    window.history.replaceState(null, '', SHARED); // mezzo=piedi
+    render(<PlannerShell />);
+    expect(await screen.findByText('In bici circa 22 min (a piedi 53 min).')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Usa la bici' }));
+    await waitFor(() => expect(service.createPlan).toHaveBeenCalledTimes(2));
+    expect(service.createPlan.mock.calls[0][0]).toMatchObject({ mode: 'walk' });
+    expect(service.createPlan.mock.calls[1][0]).toMatchObject({
+      mode: 'bike',
+      campus_id: 'palazzo_dossetti',
+    });
+    expect(window.location.search).toContain('mezzo=bici');
+    expect(screen.queryByRole('button', { name: 'Usa la bici' })).not.toBeInTheDocument();
+  });
+
+  it('su mobile con riduzione del movimento lo scorrimento è immediato (punto 9)', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('max-width') || query.includes('prefers-reduced-motion'),
+    }));
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    render(<PlannerShell />);
+    await user.click(await formReady());
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(scroll.mock.contexts[0]).toBe(document.getElementById('result'));
+  });
+});
+
 describe('prefillMessage', () => {
   const lesson = { id: 'x', weekday: 1 as const, time: '10:30', campusId: 'dief' };
   it('descrive la lezione precompilata dall’orario', () => {

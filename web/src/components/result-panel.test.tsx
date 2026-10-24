@@ -84,12 +84,18 @@ describe('ResultPanel', () => {
       <ResultPanel status="success" result={response} error={null} onRetry={vi.fn()} />,
     );
     expect(screen.getByRole('heading', { level: 2, name: 'Parti alle 07:39' })).toBeInTheDocument();
-    // B8: a self-explaining name instead of "Tempo dopo la lezione", plus a tooltip.
-    expect(screen.queryByText('Tempo dopo la lezione')).not.toBeInTheDocument();
-    expect(screen.getByText('Tempo per uscire dall’aula')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Che cos’è: Tempo per uscire dall’aula' }));
+    // Round 4, point 7: self-explaining name plus a one-line tooltip.
+    expect(screen.queryByText('Tempo per uscire dall’aula')).not.toBeInTheDocument();
+    expect(screen.getByText('Minuti per lasciare la sede dopo la lezione')).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Che cos’è: Minuti per lasciare la sede dopo la lezione',
+      }),
+    );
     expect(
-      screen.getByText(/tempo per uscire dall’aula e raggiungere l’uscita, più l’eventuale attesa/),
+      screen.getByText(
+        'Tempo tra la fine della lezione e l’uscita dalla sede per prendere questo treno.',
+      ),
     ).toBeVisible();
     rerender(
       <ResultPanel status="success" result={response} error={null} onRetry={vi.fn()} nested />,
@@ -328,5 +334,98 @@ describe('ResultPanel: round 3', () => {
     expect(within(card).getByText(/^arrivo 08:18$/)).toBeInTheDocument();
     expect(within(card).getAllByText(/4 min prima/)).toHaveLength(1);
     expect(card).not.toHaveTextContent(/ritardo/);
+  });
+
+  it('domenica: etichetta festivi accanto al treno e nelle alternative (round 4, punto 4)', () => {
+    const flag = (itinerary: Itinerary): Itinerary => ({
+      ...itinerary,
+      legs: itinerary.legs.map((leg) =>
+        leg.type === 'train' ? { ...leg, train: { ...leg.train!, festive_unverified: true } } : leg,
+      ),
+    });
+    const sunday: PlanResponse = {
+      ...demo,
+      itineraries: [flag(demo.itineraries[0]), flag(demo.itineraries[0])],
+    };
+    render(
+      <ResultPanel
+        status="success"
+        result={sunday}
+        error={null}
+        onRetry={vi.fn()}
+        context={context}
+      />,
+    );
+    const banner = document.querySelector('.result-banner')!;
+    expect(
+      within(banner as HTMLElement).getByText('Circolazione nei festivi da verificare'),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/circolazione nei festivi da verificare/, { selector: 'summary span' }),
+    ).toBeInTheDocument();
+  });
+
+  it('senza flag nessuna etichetta festivi; attese lunghe in ore e minuti', () => {
+    const longWait: PlanResponse = {
+      ...demo,
+      itineraries: [
+        {
+          ...demo.itineraries[0],
+          legs: demo.itineraries[0].legs.map((leg) =>
+            leg.type === 'wait' ? { ...leg, minutes: 65 } : leg,
+          ),
+        },
+      ],
+    };
+    render(<ResultPanel status="success" result={longWait} error={null} onRetry={vi.fn()} />);
+    expect(screen.queryByText(/festivi da verificare/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/· 1 h 5 min in stazione/)).toBeInTheDocument();
+  });
+
+  it('suggerimento bici: messaggio e pulsante "Usa la bici" (round 4, punto 2)', async () => {
+    const user = userEvent.setup();
+    const onUse = vi.fn();
+    const suggestion = {
+      mode: 'bike' as const,
+      minutes: 22,
+      message: 'In bici circa 22 min (a piedi 53 min).',
+    };
+    const { rerender } = render(
+      <ResultPanel
+        status="success"
+        result={{ ...demo, suggestion }}
+        error={null}
+        onRetry={vi.fn()}
+        onUseSuggestion={onUse}
+      />,
+    );
+    expect(screen.getByText(suggestion.message)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Usa la bici' }));
+    expect(onUse).toHaveBeenCalledWith(suggestion);
+    rerender(
+      <ResultPanel
+        status="success"
+        result={{ ...demo, suggestion: null }}
+        error={null}
+        onRetry={vi.fn()}
+        onUseSuggestion={onUse}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Usa la bici' })).not.toBeInTheDocument();
+  });
+
+  it('una fine lezione proposta è sempre dichiarata, anche senza treni (round 4, punto 5)', () => {
+    const proposal =
+      'Proposta: inizio lezione + 2 ore (11:00). Modificala con l’orario reale di fine lezione.';
+    render(
+      <ResultPanel
+        status="empty"
+        result={{ ...demo, itineraries: [], calculation: null }}
+        error={null}
+        onRetry={vi.fn()}
+        context={{ ...context, planner: 'depart_after', time: '11:00', proposal }}
+      />,
+    );
+    expect(screen.getByText(proposal)).toBeVisible();
   });
 });

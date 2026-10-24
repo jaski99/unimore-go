@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Campus } from '@/lib/api/types';
+import { campusFullLabel, campusShortLabel } from '@/lib/campus-name';
 import { Icon } from './icons';
 
 interface CampusSearchProps {
@@ -10,11 +11,10 @@ interface CampusSearchProps {
   onChange: (id: string) => void;
 }
 
-const labelOf = (campus: Campus) => `${campus.name} · ${campus.city}`;
-
 /**
  * Editable combobox with list autocomplete (WAI-ARIA APG pattern). The input
- * keeps showing the selected campus; focusing it opens the full list (the
+ * shows the selected campus by its short name ("DIEF · Modena", round 4
+ * point 6); the full name is in the list, the tooltip and the description; focusing it opens the full list (the
  * text is selected, so typing replaces it and filters). Escape or leaving
  * the field restores the selected label.
  */
@@ -93,8 +93,8 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
           aria-activedescendant={active ? `campus-option-${active.id}` : undefined}
           aria-describedby={selected ? 'campus-selected campus-search-hint' : 'campus-search-hint'}
           autoComplete="off"
-          title={selected ? labelOf(selected) : undefined}
-          value={query ?? (selected ? labelOf(selected) : '')}
+          title={selected ? campusFullLabel(selected) : undefined}
+          value={query ?? (selected ? campusShortLabel(selected) : '')}
           placeholder="Cerca una sede…"
           onFocus={(event) => {
             selectAll(event.currentTarget);
@@ -154,9 +154,9 @@ export function CampusSearch({ campuses, selectedId, onChange }: CampusSearchPro
         </button>
       </div>
       {selected && (
-        // The input cuts long names: the full one stays readable here (point 10).
-        <p id="campus-selected" className="field-hint break-words">
-          Sede scelta: {labelOf(selected)}
+        // The input shows the short name: screen readers also get the full one.
+        <p id="campus-selected" className="sr-only">
+          Sede scelta: {campusFullLabel(selected)}
         </p>
       )}
       <p id="campus-search-hint" className="sr-only">

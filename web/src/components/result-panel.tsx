@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import type { PlanResponse, PlannerName } from '@/lib/api/types';
+import type { ModeSuggestion, PlanResponse, PlannerName } from '@/lib/api/types';
 import type { PlanStatus } from '@/hooks/use-plan';
 import {
   describeSlack,
+  FESTIVE_UNVERIFIED_LABEL,
   hasCalendarNotes,
+  hasUnverifiedFestive,
   leaveVerb,
   needsDifferentTicket,
   slackCaption,
@@ -15,12 +17,14 @@ import { groupNotices, noticesOf } from '@/lib/notices';
 import { formatClock, formatDuration, formatShortDate } from '@/lib/time-format';
 import { HelpTip } from './help-tip';
 import { Icon } from './icons';
-import { ItineraryTimeline, TicketBadge } from './itinerary-timeline';
+import { FestiveBadge, ItineraryTimeline, TicketBadge } from './itinerary-timeline';
 import { NearbySolutions } from './nearby-solutions';
 import { AlertList, CalculationNote, InfoList, RealtimeBox } from './result-notices';
 
-/** Review B8: says what the minutes are for, instead of "Tempo dopo la lezione". */
-const RETURN_SLACK_LABEL = 'Tempo per uscire dall’aula';
+/** Round 4, point 7: says what the minutes are for (was "Tempo per uscire dall’aula"). */
+export const RETURN_SLACK_LABEL = 'Minuti per lasciare la sede dopo la lezione';
+export const RETURN_SLACK_HELP =
+  'Tempo tra la fine della lezione e l’uscita dalla sede per prendere questo treno.';
 
 export interface ResultContext {
   planner: PlannerName;
@@ -29,6 +33,8 @@ export interface ResultContext {
   campusName?: string;
   /** Minimum margin chosen by the user (explains the "Anticipo" stat). */
   marginMin?: number;
+  /** "Proposta: inizio lezione + 2 ore (11:00)…" when the lesson end was proposed. */
+  proposal?: string;
 }
 
 interface ResultPanelProps {
@@ -43,6 +49,8 @@ interface ResultPanelProps {
   footer?: ReactNode;
   /** Heading level offset for a nested panel (the return under the outbound). */
   nested?: boolean;
+  /** "Usa la bici": re-plan with the suggested mode (round 4, point 2). */
+  onUseSuggestion?: (suggestion: ModeSuggestion) => void;
 }
 
 export function ResultPanel({
@@ -54,6 +62,7 @@ export function ResultPanel({
   actions,
   footer,
   nested = false,
+  onUseSuggestion,
 }: ResultPanelProps) {
   if (status === 'idle') return nested ? null : <EmptyPrompt />;
   if (status === 'loading') return <LoadingSkeleton />;
@@ -77,6 +86,7 @@ export function ResultPanel({
         planner={planner}
         result={result}
         requestDate={context?.date}
+        proposal={context?.proposal}
         groups={groups}
         titleId={titleId}
         footer={footer}
@@ -107,7 +117,7 @@ export function ResultPanel({
         </Title>
         <p className="mt-1 text-sm text-white">
           {train
-            ? `${trainLabel(train)} alle ${formatClock(train.depart)} da ${train.from}${wait ? ` · ${wait} min in stazione` : ''}`
+            ? `${trainLabel(train)} alle ${formatClock(train.depart)} da ${train.from}${wait ? ` · ${formatDuration(wait)} in stazione` : ''}`
             : `Diretto ${itinerary.legs[0]?.type === 'bike' ? 'in bici' : 'a piedi'}, senza treno`}
         </p>
         {context?.campusName && (
@@ -116,9 +126,10 @@ export function ResultPanel({
             {context.campusName}
           </p>
         )}
-        {needsDifferentTicket(itinerary) && (
-          <p className="mt-3">
-            <TicketBadge />
+        {(needsDifferentTicket(itinerary) || hasUnverifiedFestive(itinerary)) && (
+          <p className="mt-3 flex flex-wrap gap-2">
+            {needsDifferentTicket(itinerary) && <TicketBadge />}
+            {hasUnverifiedFestive(itinerary) && <FestiveBadge />}
           </p>
         )}
       </div>
@@ -132,8 +143,8 @@ export function ResultPanel({
             {isReturn ? RETURN_SLACK_LABEL : 'Anticipo'}
             <HelpTip label={isReturn ? RETURN_SLACK_LABEL : 'Anticipo'} align="end">
               {isReturn
-                ? 'Minuti tra la fine della lezione e il momento in cui devi lasciare la sede per questo treno: tempo per uscire dall’aula e raggiungere l’uscita, più l’eventuale attesa prima di partire.'
-                : `Minuti tra l’arrivo in sede e l’inizio della lezione. Comprende l’anticipo minimo che hai scelto${context?.marginMin !== undefined ? ` (${context.marginMin} min)` : ''}.`}
+                ? RETURN_SLACK_HELP
+                : `Minuti tra l’arrivo in sede e l’inizio della lezione. Comprende l’anticipo minimo che hai scelto${context?.marginMin !== undefined ? ` (${formatDuration(context.marginMin)})` : ''}.`}
             </HelpTip>
           </dt>
           <dd className="stat-value text-pine dark:text-emerald-300">
@@ -162,6 +173,10 @@ export function ResultPanel({
         )}
       </dl>
       <div className="space-y-4 p-5 sm:p-6">
+        {context?.proposal && <ProposalNote text={context.proposal} />}
+        {result?.suggestion && onUseSuggestion && (
+          <SuggestionBox suggestion={result.suggestion} onUse={onUseSuggestion} />
+        )}
         {actions}
         <CalculationNote calculation={result?.calculation} />
         <AlertList notices={groups.alerts} />
@@ -188,6 +203,9 @@ export function ResultPanel({
                         ? ` · ${formatDuration(option.duration_min)}`
                         : ''}
                       {needsDifferentTicket(option) ? ' · biglietto diverso' : ''}
+                      {hasUnverifiedFestive(option)
+                        ? ` · ${FESTIVE_UNVERIFIED_LABEL.toLocaleLowerCase('it')}`
+                        : ''}
                       {hasCalendarNotes(option) ? ' · calendario da verificare' : ''}
                     </span>
                   </summary>
@@ -204,6 +222,35 @@ export function ResultPanel({
         {footer}
       </div>
     </section>
+  );
+}
+
+/** Same-city walk over 20 min: the bike, with one button to re-plan (round 4, point 2). */
+function SuggestionBox({
+  suggestion,
+  onUse,
+}: {
+  suggestion: ModeSuggestion;
+  onUse: (suggestion: ModeSuggestion) => void;
+}) {
+  return (
+    <div className="suggestion-box">
+      <Icon name="bike" className="h-5 w-5 shrink-0" />
+      <p className="flex-1">{suggestion.message}</p>
+      <button type="button" className="secondary-button" onClick={() => onUse(suggestion)}>
+        Usa la bici
+      </button>
+    </div>
+  );
+}
+
+/** A proposed lesson end is never silent (round 4, point 5). */
+function ProposalNote({ text }: { text: string }) {
+  return (
+    <p className="proposal-note">
+      <Icon name="clock" className="h-4 w-4 shrink-0" />
+      <span>{text}</span>
+    </p>
   );
 }
 
@@ -264,12 +311,14 @@ function EmptyResult({
   planner,
   result,
   requestDate,
+  proposal,
   groups,
   titleId,
   footer,
   nested,
 }: {
   nested: boolean;
+  proposal?: string;
   planner: PlannerName;
   result: PlanResponse | null;
   requestDate?: string;
@@ -301,6 +350,7 @@ function EmptyResult({
         </p>
       )}
       <div className="w-full max-w-md space-y-4 text-left">
+        {proposal && <ProposalNote text={proposal} />}
         <AlertList notices={groups.alerts} />
         <NearbySolutions
           nearby={result?.nearby ?? []}
