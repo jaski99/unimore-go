@@ -3,6 +3,31 @@
 All notable changes to UnimoreGo. Format inspired by [Keep a Changelog](https://keepachangelog.com/);
 versions follow the API version reported by `GET /api/health`.
 
+## [0.7.0] — 2026-10-24 · tag `v0.7-final`
+
+Final polish, round 4 (`P8_followup.txt`). Per-point status and measurements: [`docs/review-phase5.md`](docs/review-phase5.md#round-4--v07-v07-final).
+
+### Changed
+- **Durations (point 1).** Over 59 minutes every duration reads "4 h 32 min" (exactly 60: "1 h"), in API texts (`engine/durations.py`, `format_minutes`) and in the web app (`formatDuration`), with the same test table (0, 59, 60, 61, 272). The "late" wording follows suit: "meno dei 10 min" under an hour, "meno di 1 h" from 60.
+- **Campus field (point 6).** Once chosen it shows the short name, "DIEF · Modena"; the full name stays in the list, the `title` tooltip and the screen-reader description.
+- **Return label (point 7).** "Tempo per uscire dall'aula" is now "Minuti per lasciare la sede dopo la lezione", with a one-line toggletip.
+- **Return links (point 5).** `verso=ritorno` without `ritorno=` proposes the lesson end (start + 2 h), plans at once and shows "Proposta: inizio lezione + 2 ore (HH:MM)…". `ora` is always the lesson start and `ritorno` always the lesson end; return searches are written `verso=ritorno&ritorno=HH:MM`. **Behaviour change:** an old v0.6 `verso=ritorno&ora=13:00` link now reads 13:00 as the lesson start and proposes 15:00.
+- **Map labels (point 8).** Labels are placed in screen pixels after every zoom/move (`lib/label-layout.ts`): each takes the first free side (above, below, right, left) that covers no other label or marker, otherwise it becomes a hover/tap tooltip. Markers are painted largest first, so a station marker is never hidden under the campus or home marker (Reggio: Palazzo Dossetti and Reggio Emilia FS are about 600 m apart, about 4 px at low mobile zoom).
+
+### Added
+- **Bike suggestion (point 2).** In the same city, a walk over 20 min adds `suggestion` to the answer, e.g. Modena FS → DIEF "In bici circa 22 min (a piedi 53 min)." (OSRM distance at 15 km/h), with a "Usa la bici" button that re-plans by bike.
+- **Festive label (point 4).** On Sundays and holidays, a train run whose festive service is not verified in the data (no †/Ⓑ/Ⓒ day symbol and no note naming the day) has `train.festive_unverified = true` and the label "Circolazione nei festivi da verificare" next to it, on top of the general notice. Tested on the engine rule and on the API mapper.
+- **Mobile auto-scroll (point 9).** After Calcola the page scrolls to the result: smooth, or instant with `prefers-reduced-motion` (the CSS `scroll-behavior: smooth` on `<html>` is also turned off then).
+- **E2E.** A round-4 flow (16 checks), an iPhone 12 and Pixel 7 matrix (outbound, return, no train, out of validity: 22 checks per device, including reduced motion and no horizontal scroll, with `--shots-dir` screenshots), and three new axe states (bike suggestion, festive label, proposed end).
+
+### Fixed
+- **"E per tornare?" (point 3)** appears only under an outbound result with an itinerary, never with "Nessun treno utile" or out of validity.
+- **Reduced motion.** `scrollIntoView({behavior: 'auto'})` still scrolled smoothly because of the CSS default; it now uses `'instant'`. Found by the new E2E check.
+
+### Verified
+- **Docker (point 10).** In the sandbox (Docker 26.1.5): `docker build -f Dockerfile.api` succeeds and the container's `/api/health` answers `"version":"0.7.0"`; `docker-compose up -d --build` brings the API to healthy and the web app answers 200.
+- pytest 307 (coverage 99%), vitest 200, ruff, tsc, eslint, prettier, `next build`, smoke test, E2E (cases 8/8, flows 6/6, mobile 4/4, axe 10 states with 0 violations), Lighthouse mobile 96 / 100 / 100 (first attempt).
+
 ## [0.6.0] — 2026-10-24 · tag `v0.6-review`
 
 Commuter review, round 3 (`P7_followup.txt`). Per-point status, reasons and measurements: [`docs/review-phase5.md`](docs/review-phase5.md#round-3--v06-v06-review).
