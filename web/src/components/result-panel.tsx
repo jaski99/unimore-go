@@ -3,7 +3,6 @@ import type { ModeSuggestion, PlanResponse, PlannerName } from '@/lib/api/types'
 import type { PlanStatus } from '@/hooks/use-plan';
 import {
   describeSlack,
-  FESTIVE_UNVERIFIED_LABEL,
   hasCalendarNotes,
   hasUnverifiedFestive,
   leaveVerb,
@@ -13,11 +12,13 @@ import {
   trainLabel,
   trainLeg,
 } from '@/lib/itinerary-summary';
+import { festiveSummary } from '@/lib/festive-summary';
 import { groupNotices, noticesOf } from '@/lib/notices';
 import { formatClock, formatDuration, formatShortDate } from '@/lib/time-format';
 import { HelpTip } from './help-tip';
 import { Icon } from './icons';
-import { FestiveBadge, ItineraryTimeline, TicketBadge } from './itinerary-timeline';
+import { FestiveChip, FestiveNotice } from './festive-notice';
+import { ItineraryTimeline, TicketBadge } from './itinerary-timeline';
 import { ModeSuggestionCallout } from './mode-suggestion';
 import { NearbySolutions } from './nearby-solutions';
 import { AlertList, CalculationNote, InfoList, RealtimeBox } from './result-notices';
@@ -97,6 +98,11 @@ export function ResultPanel({
 
   const train = trainLeg(itinerary);
   const wait = stationWaitMinutes(itinerary);
+  // Round 5, point 4: one holiday notice at the top replaces the long one below.
+  const festive = festiveSummary(noticesOf(result), result!.itineraries);
+  const infos = festive
+    ? groups.infos.filter((notice) => notice.code !== 'festive_day')
+    : groups.infos;
   const isReturn = planner === 'depart_after';
   const Title = nested ? 'h3' : 'h2';
 
@@ -134,10 +140,9 @@ export function ResultPanel({
             onUse={onUseSuggestion}
           />
         )}
-        {(needsDifferentTicket(itinerary) || hasUnverifiedFestive(itinerary)) && (
+        {needsDifferentTicket(itinerary) && (
           <p className="mt-3 flex flex-wrap gap-2">
-            {needsDifferentTicket(itinerary) && <TicketBadge />}
-            {hasUnverifiedFestive(itinerary) && <FestiveBadge />}
+            <TicketBadge />
           </p>
         )}
       </div>
@@ -181,6 +186,7 @@ export function ResultPanel({
         )}
       </dl>
       <div className="space-y-4 p-5 sm:p-6">
+        {festive && <FestiveNotice summary={festive} />}
         {context?.proposal && <ProposalNote text={context.proposal} />}
         {actions}
         <CalculationNote calculation={result?.calculation} />
@@ -208,9 +214,12 @@ export function ResultPanel({
                         ? ` · ${formatDuration(option.duration_min)}`
                         : ''}
                       {needsDifferentTicket(option) ? ' · biglietto diverso' : ''}
-                      {hasUnverifiedFestive(option)
-                        ? ` · ${FESTIVE_UNVERIFIED_LABEL.toLocaleLowerCase('it')}`
-                        : ''}
+                      {hasUnverifiedFestive(option) && (
+                        <>
+                          {' '}
+                          <FestiveChip />
+                        </>
+                      )}
                       {hasCalendarNotes(option) ? ' · calendario da verificare' : ''}
                     </span>
                   </summary>
@@ -222,7 +231,7 @@ export function ResultPanel({
             })}
           </div>
         )}
-        <InfoList notices={groups.infos} />
+        <InfoList notices={infos} />
         {train && <RealtimeBox train={train} notice={groups.realtime} />}
         {footer}
       </div>

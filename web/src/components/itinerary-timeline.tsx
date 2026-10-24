@@ -1,10 +1,7 @@
 import type { Itinerary, Leg } from '@/lib/api/types';
-import {
-  DIFFERENT_TICKET_LABEL,
-  FESTIVE_UNVERIFIED_LABEL,
-  trainLabel,
-} from '@/lib/itinerary-summary';
+import { DIFFERENT_TICKET_LABEL, trainLabel } from '@/lib/itinerary-summary';
 import { formatClock, formatDuration } from '@/lib/time-format';
+import { FestiveChip } from './festive-notice';
 import { Icon } from './icons';
 
 const labels: Record<Leg['type'], string> = {
@@ -24,16 +21,6 @@ export function TicketBadge() {
     <span className="ticket-badge">
       <Icon name="ticket" className="h-3.5 w-3.5" />
       {DIFFERENT_TICKET_LABEL}
-    </span>
-  );
-}
-
-/** Next to a train whose Sunday/holiday service is not confirmed by the timetable. */
-export function FestiveBadge() {
-  return (
-    <span className="festive-badge">
-      <Icon name="alert" className="h-3.5 w-3.5" />
-      {FESTIVE_UNVERIFIED_LABEL}
     </span>
   );
 }
@@ -68,7 +55,7 @@ export function ItineraryTimeline({ itinerary }: { itinerary: Itinerary }) {
             {(leg.train?.different_ticket || leg.train?.festive_unverified) && (
               <p className="mt-2 flex flex-wrap gap-2">
                 {leg.train.different_ticket && <TicketBadge />}
-                {leg.train.festive_unverified && <FestiveBadge />}
+                {leg.train.festive_unverified && <FestiveChip />}
               </p>
             )}
             {leg.train && (

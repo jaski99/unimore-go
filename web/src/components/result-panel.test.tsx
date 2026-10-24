@@ -336,16 +336,28 @@ describe('ResultPanel: round 3', () => {
     expect(card).not.toHaveTextContent(/ritardo/);
   });
 
-  it('domenica: etichetta festivi accanto al treno e nelle alternative (round 4, punto 4)', () => {
+  it('domenica: un solo avviso festivi in alto, sulle corse solo il badge breve (round 5, punto 4)', async () => {
+    const user = userEvent.setup();
     const flag = (itinerary: Itinerary): Itinerary => ({
       ...itinerary,
       legs: itinerary.legs.map((leg) =>
         leg.type === 'train' ? { ...leg, train: { ...leg.train!, festive_unverified: true } } : leg,
       ),
     });
+    const festiveDay = {
+      code: 'festive_day',
+      level: 'info' as const,
+      message:
+        'Dom 25 ott 2026: orario festivo, servizio ridotto. Valgono solo le corse che il PDF Trenitalia indica per i festivi. Verifica su Trenitalia prima di partire.',
+    };
     const sunday: PlanResponse = {
       ...demo,
-      itineraries: [flag(demo.itineraries[0]), flag(demo.itineraries[0])],
+      itineraries: [
+        flag(demo.itineraries[0]),
+        flag(demo.itineraries[0]),
+        flag(demo.itineraries[0]),
+      ],
+      notices: [festiveDay],
     };
     render(
       <ResultPanel
@@ -356,13 +368,30 @@ describe('ResultPanel: round 3', () => {
         context={context}
       />,
     );
-    const banner = document.querySelector('.result-banner')!;
-    expect(
-      within(banner as HTMLElement).getByText('Circolazione nei festivi da verificare'),
-    ).toBeVisible();
-    expect(
-      screen.getByText(/circolazione nei festivi da verificare/, { selector: 'summary span' }),
-    ).toBeInTheDocument();
+    // One short notice at the top of the card body, before the actions and the route.
+    const notices = document.querySelectorAll('.festive-notice');
+    expect(notices).toHaveLength(1);
+    expect(notices[0]).toHaveTextContent(
+      'Giorno festivo, servizio ridotto: le corse «Festivo?» vanno verificate su Trenitalia.',
+    );
+    expect(notices[0].parentElement!.firstElementChild).toBe(notices[0]);
+    // The long API text lives only under "Dettagli" (no second notice below).
+    const long = screen.getByText(festiveDay.message);
+    expect(long).not.toBeVisible();
+    expect(screen.getAllByText(festiveDay.message)).toHaveLength(1);
+    await user.click(screen.getByText('Dettagli'));
+    expect(long).toBeVisible();
+    // Runs: a short chip each (main train + two alternatives), the full wording never visible.
+    const banner = document.querySelector('.result-banner') as HTMLElement;
+    expect(banner).not.toHaveTextContent(/festiv/i);
+    expect(screen.getAllByText('Festivo?', { selector: '.festive-chip span' }).length).toBe(5);
+    for (const full of screen.getAllByText('Circolazione nei festivi da verificare')) {
+      expect(full).toHaveClass('sr-only');
+    }
+    expect(document.querySelectorAll('.festive-chip')[0]).toHaveAttribute(
+      'title',
+      expect.stringContaining('circolazione nei festivi da verificare'),
+    );
   });
 
   it('senza flag nessuna etichetta festivi; attese lunghe in ore e minuti', () => {

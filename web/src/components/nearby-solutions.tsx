@@ -1,13 +1,13 @@
 import type { NearbySolution, PlannerName } from '@/lib/api/types';
 import {
   describeSlack,
-  FESTIVE_UNVERIFIED_LABEL,
   hasUnverifiedFestive,
   leaveVerb,
   trainLabel,
   trainLeg,
 } from '@/lib/itinerary-summary';
 import { formatClock, formatShortDate } from '@/lib/time-format';
+import { FestiveChip } from './festive-notice';
 import { ItineraryTimeline } from './itinerary-timeline';
 
 const titles = { previous: 'Soluzione precedente', next: 'Soluzione successiva' } as const;
@@ -44,9 +44,12 @@ export function NearbySolutions({
                 {/* Slack across different days is meaningless ("33 h prima"); a label
                     already states it in one coherent sentence (review B4). */}
                 {otherDay || label ? '' : ` · ${describeSlack(planner, itinerary.slack_min)}`}
-                {hasUnverifiedFestive(itinerary)
-                  ? ` · ${FESTIVE_UNVERIFIED_LABEL.toLocaleLowerCase('it')}`
-                  : ''}
+                {hasUnverifiedFestive(itinerary) && (
+                  <>
+                    {' '}
+                    <FestiveChip />
+                  </>
+                )}
               </span>
               {label && (
                 <span className="mt-1 block text-xs text-slate-700 dark:text-slate-300">

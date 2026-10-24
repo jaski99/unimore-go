@@ -412,8 +412,12 @@ select:focus-visible {
 .ticket-badge {
   @apply inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-950;
 }
-.festive-badge {
-  @apply inline-flex items-center gap-1 rounded-full border border-amber-400 bg-white px-2.5 py-0.5 text-xs font-bold text-amber-950;
+/* Holidays (round 5, point 4): one notice at the top, a short chip on each run. */
+.festive-notice {
+  @apply flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-sm leading-5 text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100;
+}
+.festive-chip {
+  @apply inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-full border border-amber-400 bg-white px-2 py-0.5 align-middle text-xs font-bold text-amber-950;
 }
 /* Bike suggestion inside the result banner, next to the title (round 5, point 3). */
 .suggestion-callout {
