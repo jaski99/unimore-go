@@ -381,7 +381,10 @@ describe('PlannerShell: round 4', () => {
     });
     window.history.replaceState(null, '', SHARED); // mezzo=piedi
     render(<PlannerShell />);
-    expect(await screen.findByText('In bici circa 22 min (a piedi 53 min).')).toBeVisible();
+    const callout = await screen.findByRole('group', { name: 'Suggerimento: bici' });
+    expect(callout).toHaveTextContent('In bici circa 22 min');
+    // Round 5, point 3: the suggestion never changes the chosen mode by itself.
+    expect(screen.getByRole('button', { name: 'A piedi' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(screen.getByRole('button', { name: 'Usa la bici' }));
     await waitFor(() => expect(service.createPlan).toHaveBeenCalledTimes(2));
     expect(service.createPlan.mock.calls[0][0]).toMatchObject({ mode: 'walk' });

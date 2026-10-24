@@ -18,6 +18,7 @@ import { formatClock, formatDuration, formatShortDate } from '@/lib/time-format'
 import { HelpTip } from './help-tip';
 import { Icon } from './icons';
 import { FestiveBadge, ItineraryTimeline, TicketBadge } from './itinerary-timeline';
+import { ModeSuggestionCallout } from './mode-suggestion';
 import { NearbySolutions } from './nearby-solutions';
 import { AlertList, CalculationNote, InfoList, RealtimeBox } from './result-notices';
 
@@ -126,6 +127,13 @@ export function ResultPanel({
             {context.campusName}
           </p>
         )}
+        {result?.suggestion && onUseSuggestion && (
+          <ModeSuggestionCallout
+            suggestion={result.suggestion}
+            itinerary={itinerary}
+            onUse={onUseSuggestion}
+          />
+        )}
         {(needsDifferentTicket(itinerary) || hasUnverifiedFestive(itinerary)) && (
           <p className="mt-3 flex flex-wrap gap-2">
             {needsDifferentTicket(itinerary) && <TicketBadge />}
@@ -174,9 +182,6 @@ export function ResultPanel({
       </dl>
       <div className="space-y-4 p-5 sm:p-6">
         {context?.proposal && <ProposalNote text={context.proposal} />}
-        {result?.suggestion && onUseSuggestion && (
-          <SuggestionBox suggestion={result.suggestion} onUse={onUseSuggestion} />
-        )}
         {actions}
         <CalculationNote calculation={result?.calculation} />
         <AlertList notices={groups.alerts} />
@@ -222,25 +227,6 @@ export function ResultPanel({
         {footer}
       </div>
     </section>
-  );
-}
-
-/** Same-city walk over 20 min: the bike, with one button to re-plan (round 4, point 2). */
-function SuggestionBox({
-  suggestion,
-  onUse,
-}: {
-  suggestion: ModeSuggestion;
-  onUse: (suggestion: ModeSuggestion) => void;
-}) {
-  return (
-    <div className="suggestion-box">
-      <Icon name="bike" className="h-5 w-5 shrink-0" />
-      <p className="flex-1">{suggestion.message}</p>
-      <button type="button" className="secondary-button" onClick={() => onUse(suggestion)}>
-        Usa la bici
-      </button>
-    </div>
   );
 }
 

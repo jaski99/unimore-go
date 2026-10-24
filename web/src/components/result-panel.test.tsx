@@ -399,7 +399,12 @@ describe('ResultPanel: round 3', () => {
         onUseSuggestion={onUse}
       />,
     );
-    expect(screen.getByText(suggestion.message)).toBeVisible();
+    // Round 5, point 3: highlighted under the title, chosen mode unchanged until the click.
+    const callout = screen.getByRole('group', { name: 'Suggerimento: bici' });
+    expect(callout).toHaveTextContent('In bici circa 22 min');
+    expect(onUse).not.toHaveBeenCalled();
+    const banner = screen.getByRole('heading', { level: 2 }).closest('.result-banner');
+    expect(banner).toContainElement(callout);
     await user.click(screen.getByRole('button', { name: 'Usa la bici' }));
     expect(onUse).toHaveBeenCalledWith(suggestion);
     rerender(
