@@ -1,7 +1,7 @@
 'use client';
 
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CircleMarker,
   MapContainer,
@@ -11,7 +11,8 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { LatLon, PointRole, Route } from '@/lib/route-geometry';
+import { layoutLabels, tooltipOffset, type LabelPlacement } from '@/lib/label-layout';
+import type { LatLon, PointRole, Route, RoutePoint } from '@/lib/route-geometry';
 
 /** Marker colours; keep in sync with the legend in map-panel.tsx. */
 export const ROLE_COLORS: Record<PointRole, string> = {
@@ -53,30 +54,7 @@ export function MapInner({ route, picking, onPick }: MapInnerProps) {
           }
         />
       ))}
-      {route.points.map((point) => (
-        <CircleMarker
-          key={`${point.role}-${point.labelSide}`}
-          center={point.position}
-          radius={point.role === 'home' || point.role === 'campus' ? 9 : 7}
-          pathOptions={{
-            color: '#ffffff',
-            weight: 2,
-            fillColor: ROLE_COLORS[point.role],
-            fillOpacity: 1,
-          }}
-        >
-          {/* Permanent labels, readable without hovering (touch); above or below the
-              marker so that nearby markers do not cover each other (B5). */}
-          <Tooltip
-            permanent
-            direction={point.labelSide}
-            offset={point.labelSide === 'top' ? [0, -8] : [0, 8]}
-            className="map-label"
-          >
-            {point.label}
-          </Tooltip>
-        </CircleMarker>
-      ))}
+      <RouteMarkers points={route.points} />
       <FitAndResize
         positions={positions}
         labelBelow={route.points.some((point) => point.labelSide === 'bottom')}
@@ -84,6 +62,83 @@ export function MapInner({ route, picking, onPick }: MapInnerProps) {
       <PickHandler picking={picking} onPick={onPick} />
     </MapContainer>
   );
+}
+
+const markerRadius = (point: RoutePoint) =>
+  point.role === 'home' || point.role === 'campus' ? 9 : 7;
+
+/** Size of a label as rendered by `.leaflet-tooltip.map-label` (globals.css). */
+let measureContext: CanvasRenderingContext2D | null | undefined;
+function labelSize(text: string): { width: number; height: number } {
+  if (measureContext === undefined)
+    measureContext = document.createElement('canvas').getContext('2d');
+  let textWidth = text.length * 6.2;
+  if (measureContext) {
+    measureContext.font = `600 11px ${getComputedStyle(document.body).fontFamily}`;
+    textWidth = measureContext.measureText(text).width;
+  }
+  // padding 6+6, border 1+1, max-width 220 (ellipsis); line 11 x 1.3 + padding 2+2 + border.
+  return { width: Math.min(220, Math.ceil(textWidth) + 14), height: 20 };
+}
+
+/**
+ * Markers with labels placed in screen space (round 4, point 8): re-laid out
+ * on zoom/move/resize so close markers (Reggio: station and campus) never get
+ * overlapping labels; a label with no free side becomes a hover/tap tooltip.
+ */
+function RouteMarkers({ points }: { points: RoutePoint[] }) {
+  const map = useMap();
+  const [placements, setPlacements] = useState<LabelPlacement[] | null>(null);
+  const relayout = useCallback(() => {
+    const size = map.getSize();
+    if (!size.x || !size.y) return;
+    const anchors = points.map((point) => {
+      const pixel = map.latLngToContainerPoint(point.position);
+      return {
+        x: pixel.x,
+        y: pixel.y,
+        radius: markerRadius(point),
+        preferred: point.labelSide,
+        ...labelSize(point.label),
+      };
+    });
+    setPlacements(layoutLabels(anchors, { width: size.x, height: size.y }));
+  }, [map, points]);
+  useEffect(() => {
+    // After the frame: markers and fitBounds have settled.
+    const frame = requestAnimationFrame(relayout);
+    return () => cancelAnimationFrame(frame);
+  }, [relayout]);
+  useMapEvents({ zoomend: relayout, moveend: relayout, resize: relayout });
+
+  return points.map((point, index) => {
+    const placement = placements?.[index] ?? { side: point.labelSide, permanent: true };
+    return (
+      <CircleMarker
+        // Remount when the side changes: Leaflet reads tooltip options once.
+        key={`${point.role}-${placement.side}-${placement.permanent}`}
+        center={point.position}
+        radius={markerRadius(point)}
+        pathOptions={{
+          color: '#ffffff',
+          weight: 2,
+          fillColor: ROLE_COLORS[point.role],
+          fillOpacity: 1,
+        }}
+      >
+        {/* Permanent labels, readable without hovering (touch); a crowded label
+            opens on hover or tap instead of covering another one. */}
+        <Tooltip
+          permanent={placement.permanent}
+          direction={placement.side}
+          offset={tooltipOffset(placement.side)}
+          className="map-label"
+        >
+          {point.label}
+        </Tooltip>
+      </CircleMarker>
+    );
+  });
 }
 
 function FitAndResize({ positions, labelBelow }: { positions: LatLon[]; labelBelow: boolean }) {
