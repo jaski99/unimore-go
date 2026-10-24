@@ -21,6 +21,7 @@ import { isCompleteSearch, parseSearch, serializeSearch, type UrlSearch } from '
 import { usePlan } from '@/hooks/use-plan';
 import { shareUrl, useHistorySearch } from '@/hooks/use-history-search';
 import { usePlannerValues } from '@/hooks/use-planner-values';
+import { ApiStatus } from './api-status';
 import { Icon } from './icons';
 import { MapPanel, type MapView } from './map-panel';
 import { PlanForm } from './plan-form';
@@ -314,16 +315,11 @@ export function PlannerShell() {
             </span>
           </a>
           <div className="flex items-center gap-2">
-            <span className={`status-pill ${health?.status === 'ok' ? 'status-online' : ''}`}>
-              <i />
-              {demoMode
-                ? 'Dati registrati'
-                : health?.status === 'ok'
-                  ? 'API collegata'
-                  : catalogLoading
-                    ? 'Connessione…'
-                    : 'API non raggiungibile'}
-            </span>
+            <ApiStatus
+              demoMode={demoMode}
+              online={health?.status === 'ok'}
+              loading={catalogLoading}
+            />
             {demoMode && <span className="demo-pill">MODALITÀ MOCK</span>}
           </div>
         </div>
