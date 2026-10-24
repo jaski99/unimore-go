@@ -7,13 +7,17 @@
    shared link, Copia link), return trip, campus combobox, .ics download,
    labelled map, merged notices.
 3. Mobile 375x667 and 414x896: result and map right under the button, no
-   horizontal scroll (also with help bubbles open).
+   horizontal scroll (also with help bubbles open). Round 4: iPhone 12
+   (390x844) and Pixel 7 (412x915) for andata, ritorno, nessun treno and fuori
+   range, auto-scroll to the answer (also with reduced motion), no horizontal
+   scroll; screenshots with --shots-dir.
 4. axe-core (web/node_modules/axe-core) on several states: 0 violations.
 
 Each check uses a fresh browser context (empty localStorage).
 
 Requires: pip install playwright && python -m playwright install chromium
-Usage:    python scripts/e2e_ui.py [WEB_URL] [--screenshot PATH] [--only cases|flows|mobile|axe]
+Usage:    python scripts/e2e_ui.py [WEB_URL] [--screenshot PATH] [--shots-dir DIR]
+                                   [--only cases|flows|mobile|axe]
 """
 
 from __future__ import annotations
@@ -566,12 +570,108 @@ def flow_round3_texts(browser: Browser, url: str) -> dict[str, bool]:
     return checks
 
 
+def flow_round4(browser: Browser, url: str) -> dict[str, bool]:
+    """Round 4: durations, bike suggestion, return rules, festive label, deep link, labels."""
+    context, page, errors = new_page(browser)
+    base = url.rstrip("/")
+    requests = plan_requests(page)
+
+    def open_link(query: str, heading: re.Pattern[str] | str) -> str:
+        page.goto(f"{base}/?{query}", wait_until="networkidle")
+        expect(page.get_by_role("heading", level=2, name=heading)).to_be_visible(timeout=15000)
+        return page.locator("#result").inner_text()
+
+    return_box = page.get_by_role("region", name="E per tornare?")
+    checks: dict[str, bool] = {}
+    # Point 5: verso=ritorno without ritorno= -> start + 2 h, planned at once, said.
+    text = open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-10-26&ora=09%3A00&mezzo=bici&verso=ritorno",
+        re.compile(r"^Parti alle"),
+    )
+    checks["deep link: depart_after 11:00"] = (
+        requests[-1].get("depart_after", "").startswith("2026-10-26T11:00")
+    )
+    checks["deep link: Proposta shown"] = "Proposta: inizio lezione + 2 ore (11:00)" in text
+    # Point 7: the renamed stat.
+    # inner_text() applies the uppercase text-transform of .stat-label.
+    checks["return stat renamed"] = "minuti per lasciare la sede dopo la lezione" in text.lower()
+    # Point 6: short campus name in the field, full name in the tooltip.
+    combo = page.get_by_role("combobox", name=re.compile("Sede UNIMORE"))
+    checks["campus field short name"] = combo.input_value() == "DIEF · Modena"
+    checks["campus tooltip full name"] = "Enzo Ferrari" in (combo.get_attribute("title") or "")
+    # Point 2: same city on foot (53 min) -> bike suggestion, one tap re-plans.
+    text = open_link(
+        "sede=dief&stazione=modena_fs&data=2026-10-26&ora=09%3A00&mezzo=piedi&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    checks["bike suggestion shown"] = bool(
+        re.search(r"In bici circa \d+ min \(a piedi 53 min\)", text)
+    )
+    with page.expect_response(lambda r: r.url.endswith("/api/plan")):
+        page.get_by_role("button", name="Usa la bici").click()
+    expect(page.get_by_role("button", name="Usa la bici")).to_have_count(0, timeout=15000)
+    checks["Usa la bici re-plans by bike"] = (
+        requests[-1].get("mode") == "bike" and "mezzo=bici" in page.url
+    )
+    # Point 1: hours and minutes in API texts.
+    text = open_link(
+        "sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-25&ora=04%3A00&mezzo=piedi&verso=andata",
+        "Nessun treno utile",
+    )
+    page.locator("#result details.nearby-card summary").first.click()
+    checks["2 h 32 min, not 152 min"] = "2 h 32 min prima" in text and "152 min" not in text
+    # Point 3: no return offer without a valid outbound answer.
+    checks["no return box without train"] = return_box.count() == 0
+    open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-12-20&ora=08%3A30&mezzo=bici&verso=andata",
+        "Nessun treno utile",
+    )
+    checks["no return box out of range"] = return_box.count() == 0
+    # Point 4: Sunday, unmarked runs carry the label next to the train.
+    text = open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-10-25&ora=08%3A30&mezzo=bici&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    banner = page.locator(".result-banner").inner_text()
+    checks["Sunday: festive label by the train"] = (
+        "Circolazione nei festivi da verificare" in banner
+    )
+    checks["Sunday: return box offered"] = return_box.count() == 1
+    open_link(
+        "sede=dief&stazione=reggio_fs&data=2026-10-26&ora=08%3A30&mezzo=bici&verso=andata",
+        re.compile(r"^Esci alle"),
+    )
+    checks["Monday: no festive label"] = (
+        "festivi da verificare" not in page.locator("#result").inner_text()
+    )
+    # Point 8: Reggio, station and campus close together, labels apart.
+    for name, query in (
+        (
+            "andata",
+            "sede=palazzo_dossetti&stazione=modena_fs&data=2026-10-26&ora=09%3A00&mezzo=piedi&verso=andata",
+        ),
+        (
+            "ritorno",
+            "sede=campus_san_lazzaro&stazione=modena_fs&data=2026-10-26&mezzo=bici&verso=ritorno&ritorno=13%3A00",
+        ),
+    ):
+        open_link(query, re.compile(r"^(Esci|Parti) alle"))
+        labels = map_labels(page)
+        checks[f"Reggio {name}: 3 labels, no overlap"] = len(labels) == 3 and not labels_overlap(
+            page
+        )
+    checks["no console errors"] = not errors
+    context.close()
+    return checks
+
+
 FLOWS: list[Callable[[Browser, str], dict[str, bool]]] = [
     flow_on_demand_and_history,
     flow_shared_link_b1,
     flow_return_trip_and_ics,
     flow_combobox_map_notices,
     flow_round3_texts,
+    flow_round4,
 ]
 
 # ---------------------------------------------------------------- mobile
@@ -652,6 +752,84 @@ def mobile_check(
     return checks
 
 
+# Round 4, point 9: real phone profiles, four outcomes each.
+DEVICES = ["iPhone 12", "Pixel 7"]
+DEVICE_SCENARIOS: list[tuple[str, Case, str]] = [
+    ("andata", Case("andata", date="2026-10-26"), r"^Esci alle"),
+    ("ritorno", Case("ritorno", date="2026-10-26", time="13:00", return_trip=True), r"^Parti alle"),
+    (
+        "nessun-treno",
+        Case(
+            "nessun treno",
+            date="2026-10-25",
+            time="06:00",
+            campus_query="Dossetti",
+            station="modena_fs",
+            mode="A piedi",
+        ),
+        r"^Nessun treno utile$",
+    ),
+    ("fuori-range", Case("fuori range", date="2026-12-20"), r"^Nessun treno utile$"),
+]
+
+
+def device_check(
+    browser: Browser, url: str, device: dict, name: str, shots_dir: str | None
+) -> dict[str, bool]:
+    profile = {k: v for k, v in device.items() if k != "default_browser_type"}
+    height = profile["viewport"]["height"]
+    checks: dict[str, bool] = {}
+    for scenario, case, heading_name in DEVICE_SCENARIOS:
+        context = browser.new_context(locale="it-IT", **profile)
+        page = context.new_page()
+        errors: list[str] = []
+        page.on("pageerror", lambda e, errors=errors: errors.append(str(e)))
+        page.goto(url, wait_until="networkidle")
+        fill_form(page, case)
+        page.evaluate("window.scrollTo(0, 0)")
+        verb = "partire" if case.return_trip else "uscire"
+        with page.expect_response(lambda r: r.url.endswith("/api/plan")):
+            page.get_by_role("button", name=f"Calcola quando {verb}").tap()
+        heading = page.get_by_role("heading", level=2, name=re.compile(heading_name))
+        expect(heading).to_be_visible(timeout=15000)
+        page.wait_for_timeout(1300)  # smooth scroll to the answer
+        box = heading.bounding_box()
+        checks[f"{scenario}: scrolled to the answer"] = bool(box) and 0 <= box["y"] < height * 0.5
+        checks[f"{scenario}: focus on the title"] = (
+            page.evaluate("document.activeElement?.id") == "result-title"
+        )
+        checks[f"{scenario}: no h-scroll"] = no_horizontal_scroll(page)
+        offers_return = page.get_by_role("region", name="E per tornare?").count() == 1
+        checks[f"{scenario}: return box only after a found outbound"] = offers_return == (
+            scenario == "andata"
+        )
+        if scenario == "fuori-range":
+            checks[f"{scenario}: validity alert"] = (
+                "dopo la fine di validità" in page.locator("#result").inner_text()
+            )
+        checks[f"{scenario}: no page errors"] = not errors
+        if shots_dir:
+            Path(shots_dir).mkdir(parents=True, exist_ok=True)
+            slug = name.lower().replace(" ", "-")
+            page.screenshot(path=f"{shots_dir}/{slug}_{scenario}.png")
+        context.close()
+    # Reduced motion: the jump is immediate (no smooth scroll to wait for).
+    context = browser.new_context(locale="it-IT", reduced_motion="reduce", **profile)
+    page = context.new_page()
+    page.goto(url, wait_until="networkidle")
+    page.locator("#lesson-date").fill("2026-10-26")
+    page.evaluate("window.scrollTo(0, 0)")
+    with page.expect_response(lambda r: r.url.endswith("/api/plan")):
+        page.get_by_role("button", name="Calcola quando uscire").tap()
+    heading = page.get_by_role("heading", level=2, name=re.compile(r"^Esci alle"))
+    expect(heading).to_be_visible(timeout=15000)
+    page.wait_for_timeout(150)
+    box = heading.bounding_box()
+    checks["reduced motion: answer in view at once"] = bool(box) and 0 <= box["y"] < height * 0.5
+    context.close()
+    return checks
+
+
 # ---------------------------------------------------------------- axe
 
 
@@ -726,6 +904,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("web_url", nargs="?", default="http://localhost:3000")
     parser.add_argument("--screenshot", default=None)
+    parser.add_argument("--shots-dir", default=None, help="mobile device screenshots")
     parser.add_argument("--only", choices=["cases", "flows", "mobile", "axe"], default=None)
     args = parser.parse_args()
     url = args.web_url
@@ -749,6 +928,9 @@ def main() -> int:
             totals["mobile"] = [
                 report(f"mobile {w}x{h}", mobile_check(browser, url, w, h, args.screenshot))
                 for w, h in MOBILE_VIEWPORTS
+            ] + [
+                report(name, device_check(browser, url, pw.devices[name], name, args.shots_dir))
+                for name in DEVICES
             ]
         if want("axe"):
             totals["axe"] = [report("axe-core", axe_states(browser, url))]
