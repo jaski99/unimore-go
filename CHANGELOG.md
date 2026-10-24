@@ -3,6 +3,25 @@
 All notable changes to UnimoreGo. Format inspired by [Keep a Changelog](https://keepachangelog.com/);
 versions follow the API version reported by `GET /api/health`.
 
+## [0.7.1] — 2026-10-24 · tag `v0.7.1-final`
+
+Final small fixes, round 5 (`P9_followup.txt`). No API change apart from the version. Per-point status and measurements: [`docs/review-phase5.md`](docs/review-phase5.md#round-5--v071-v071-final).
+
+### Fixed
+- **"E per tornare?" (point 1).** One rule, `isValidOutbound()` in `lib/return-trip.ts` (an itinerary found **and** a date covered by the timetable), now decides the box, the return result and the return map. A same-city walk out of validity (e.g. Modena FS → DIEF on 20/12) no longer offers the return, also with `ritorno=` in the link.
+- **Map labels on phones (point 2).** At 390–500 px "Stazione arrivo · Modena FS" (Rubiera → DIEF) was cut by the map edge (46 px at 390). Labels are now kept inside the map: below 480 px they read "Partenza · …", "Arrivo · …", "Sede · …"; widths get a 1.08 safety factor for phone fonts; a label that would leave the map slides along its side, and the zoom and attribution controls count as occupied areas.
+- **Header (point 5).** "Connessione…" shows only if the health check takes more than 500 ms (`useDelayedFlag`, `ApiStatus`); while waiting the pill keeps its space (`visibility: hidden`), so there is no layout shift.
+
+### Changed
+- **Bike suggestion (point 3).** When walking in the same city takes over 20 min, a highlighted card inside the result banner reads "In bici circa 22 min — A piedi 53 min, il mezzo che hai scelto." with a prominent "Usa la bici" button. The chosen mode is not changed until the button is pressed.
+- **Holidays (point 4).** One short notice on top of the result ("Festivo, servizio ridotto: verifica le corse «Festivo?».", two lines at 390 px) with the long text under "Dettagli"; each run shows a small "Festivo?" chip with a tooltip, and the full wording stays for screen readers.
+
+### Added
+- **E2E.** A round-5 flow (20 checks) and a map-label check at 390/412/460/500 px (24 checks: labels inside the map, no overlap with each other or with the controls), with before/after screenshots. Against `v0.7-final` they fail as expected (8/20 and 18/24).
+
+### Verified
+- pytest 307 (coverage 98%), vitest 228 (43 files), ruff, tsc, eslint, prettier, `next build`, smoke test, E2E (cases 8/8, flows 7/7, mobile 4/4, map labels 24/24, axe 10 states with 0 violations), Lighthouse mobile 95 / 100 / 100 (single attempt).
+
 ## [0.7.0] — 2026-10-24 · tag `v0.7-final`
 
 Final polish, round 4 (`P8_followup.txt`). Per-point status and measurements: [`docs/review-phase5.md`](docs/review-phase5.md#round-4--v07-v07-final).

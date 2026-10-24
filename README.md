@@ -29,7 +29,7 @@ Opzioni (v0.5):
 
 Stazioni coperte: **Reggio Emilia FS, Rubiera, Modena FS** (la home lo dice sotto «Da dove parti», con il periodo di validità). Altre stazioni verranno aggiunte solo con orari verificabili ([`data/SOURCES.md`](data/SOURCES.md)).
 
-Cosa fa la pagina (v0.7):
+Cosa fa la pagina (v0.7.1):
 
 - **Nessun risultato non richiesto.** Il calcolo parte solo con **Calcola** oppure aprendo un link condiviso completo.
 - **Cosa si ricorda.** Dopo il reload restano sede, stazione, modo e anticipo (`localStorage`, mai la data). Il giorno è sempre **oggi**, con il badge «Oggi» e il pulsante «Torna a oggi». L'orario settimanale può precompilare la lezione.
@@ -39,8 +39,10 @@ Cosa fa la pagina (v0.7):
 - **Domenica/festivi senza treni utili:** propone lo stesso orario nel giorno feriale precedente/successivo, spiegato. Con un treno trovato aggiunge comunque «orario festivo, servizio ridotto: verifica su Trenitalia».
 - **Primo treno dopo l'orario:** un solo testo coerente, per esempio «arrivi in sede 4 min prima dell'inizio della lezione, meno dei 10 min di anticipo che hai scelto» oppure «arrivi in sede 7 min in ritardo».
 - **Durate in ore e minuti (v0.7):** oltre i 59 minuti «4 h 32 min», mai «272 min», negli avvisi dell'API come nel sito (una sola regola per lato: `engine/durations.py` e `formatDuration`). Esempio: domenica 25/10, lezione alle 04:00, Modena FS → Palazzo Dossetti a piedi; la soluzione vicina dice: «Ultimo treno utile del giorno: arrivi in sede 2 h 32 min prima dell'inizio della lezione.»
-- **Stessa città, lunga camminata (v0.7):** se a piedi servono più di 20 minuti la risposta suggerisce la bici con il suo tempo (OSRM a 15 km/h), per esempio Modena FS → DIEF: «In bici circa 22 min (a piedi 53 min).» Il pulsante **«Usa la bici»** ricalcola subito in bici.
-- **Festivi, treno per treno (v0.7):** di domenica e nei festivi (es. 8/12) le corse senza un calendario festivo verificato nei dati hanno, accanto al treno, l'etichetta **«Circolazione nei festivi da verificare»**, oltre all'avviso generale. Le corse con simbolo †, Ⓑ o Ⓒ, o con una nota che nomina il giorno, non la hanno.
+- **Stessa città, lunga camminata (v0.7):** se a piedi servono più di 20 minuti la risposta suggerisce la bici con il suo tempo (OSRM a 15 km/h), per esempio Modena FS → DIEF: «In bici circa 22 min (a piedi 53 min).» Il pulsante **«Usa la bici»** ricalcola subito in bici. **v0.7.1:** il suggerimento è un riquadro evidenziato subito sotto il titolo del risultato; il mezzo scelto non cambia finché non premi il pulsante.
+- **Festivi, treno per treno (v0.7):** di domenica e nei festivi (es. 8/12) le corse senza un calendario festivo verificato nei dati hanno, accanto al treno, l'etichetta **«Circolazione nei festivi da verificare»**, oltre all'avviso generale. Le corse con simbolo †, Ⓑ o Ⓒ, o con una nota che nomina il giorno, non la hanno. **v0.7.1:** un solo avviso breve in cima al risultato (testo completo in «Dettagli») e, sulle corse, il chip **«Festivo?»** con il significato nel tooltip.
+- **Ritorno solo con un'andata valida (v0.7.1):** «E per tornare?» compare solo con un itinerario trovato in una data coperta dall'orario, anche per la camminata nella stessa città.
+- **Mappa su telefono (v0.7.1):** sotto 480 px le etichette sono brevi («Partenza · Reggio Emilia FS») e restano sempre dentro la mappa, lontane dai controlli.
 - **Date in italiano ovunque,** nel formato «lun 26 ott 2026» (Intl it-IT nel sito, stesso testo negli avvisi dell'API).
 - **Ritardi e scioperi.** Riquadro con il numero del treno («Copia numero») e i link a ViaggiaTreno e all'infomobilità Trenitalia. ViaggiaTreno non documenta un formato di link per singolo treno, quindi il numero va incollato nella sua ricerca.
 - **«E per tornare?» / «Calcola il ritorno»** compare solo sotto un'andata con un itinerario trovato (non con «Nessun treno utile» né fuori validità), con le stesse impostazioni: vista andata + ritorno. La fine lezione proposta (inizio + 2 ore) è dichiarata («Proposta: …») finché non la modifichi; la statistica **«Minuti per lasciare la sede dopo la lezione»** ha un aiuto di una riga.
@@ -216,7 +218,7 @@ Options (v0.5):
 
 Covered stations: **Reggio Emilia FS, Rubiera, Modena FS**. The home page lists them, with the validity window, under "Da dove parti". More stations will only be added with verifiable timetables ([`data/SOURCES.md`](data/SOURCES.md)).
 
-What the page does (v0.7):
+What the page does (v0.7.1):
 
 - **No unrequested result.** Nothing is planned until **Calcola** is pressed or a complete shared link is opened.
 - **What is remembered.** After a reload, campus, station, mode and margin are kept (`localStorage`, never the date). The date always starts at **today**, labelled "Oggi", with a "Torna a oggi" button. The weekly schedule can prefill the lesson.
@@ -226,8 +228,10 @@ What the page does (v0.7):
 - **Sundays/holidays without useful trains** get the same time on the previous/next working day, explained. With a train found, "orario festivo, servizio ridotto: verifica su Trenitalia" is still added.
 - **First train after the deadline:** one coherent text, either "4 min before the lesson, less than the chosen 10-min margin" or "X min late".
 - **Durations in hours and minutes (v0.7):** over 59 minutes it is "4 h 32 min", never "272 min", in API notices and in the web app alike (one rule per side: `engine/durations.py` and `formatDuration`).
-- **Same city, long walk (v0.7):** when walking takes more than 20 min, the answer suggests the bike with its own time (OSRM at 15 km/h), e.g. Modena FS → DIEF "In bici circa 22 min (a piedi 53 min)."; the **"Usa la bici"** button re-plans by bike.
-- **Holidays, train by train (v0.7):** on Sundays and holidays (e.g. 8/12), runs whose festive service is not verified in the data show **"Circolazione nei festivi da verificare"** next to the train, on top of the general notice; runs marked †, Ⓑ or Ⓒ, or with a note naming the day, do not.
+- **Same city, long walk (v0.7):** when walking takes more than 20 min, the answer suggests the bike with its own time (OSRM at 15 km/h), e.g. Modena FS → DIEF "In bici circa 22 min (a piedi 53 min)."; the **"Usa la bici"** button re-plans by bike. **v0.7.1:** the suggestion is a highlighted card right under the result title; the chosen mode does not change until you press the button.
+- **Holidays, train by train (v0.7):** on Sundays and holidays (e.g. 8/12), runs whose festive service is not verified in the data show **"Circolazione nei festivi da verificare"** next to the train, on top of the general notice; runs marked †, Ⓑ or Ⓒ, or with a note naming the day, do not. **v0.7.1:** one short notice on top of the result (full text under "Dettagli") and a small **"Festivo?"** chip on each run, explained in its tooltip.
+- **Return only after a valid outbound (v0.7.1):** "E per tornare?" appears only with an itinerary on a date covered by the timetable, also for a same-city walk.
+- **Map on phones (v0.7.1):** below 480 px labels are short ("Partenza · Reggio Emilia FS") and always stay inside the map, clear of the controls.
 - **Italian dates everywhere,** formatted "lun 26 ott 2026" (Intl it-IT in the web app, the same text in API notices). The return lesson end proposed (start + 2 h) is labelled ("Proposta: …") until changed; "Minuti per lasciare la sede dopo la lezione" has a one-line toggletip.
 - **Map:** labels are laid out in pixels on every zoom/move (above, below, right or left of the marker), so they cover neither other labels nor markers, also in Reggio where station and campus are close; with no room a label becomes a hover/tap tooltip; the legend lists only what is drawn; after "Calcola il ritorno" the map draws the return, with an Andata/Ritorno switch.
 - **Mobile (checked with iPhone 12 and Pixel 7 profiles):** a sticky Calcola button while filling the form; after Calcola, automatic scroll to the result (instant with reduced motion) and focus on its title. The campus field shows the short name ("DIEF · Modena") once chosen; the full name is in the list, the tooltip and the screen-reader description.

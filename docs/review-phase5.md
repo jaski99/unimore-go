@@ -259,3 +259,41 @@ Brief: `P8_followup.txt` (rifinitura finale; nessun bug medio/alto trovato dall'
 - **Mappa in linea d'aria** (A5) e **nessun link ViaggiaTreno per treno** (C2): motivi nel round 3.
 - **Festivi:** 372 corse su 402 non hanno simbolo di giorno; di domenica e nei festivi mostrano «Circolazione nei festivi da verificare» perché la legenda non lo conferma in modo esplicito.
 - **Zoom mobile minimo a Reggio:** stazione e Palazzo Dossetti quasi coincidono; il marker della stazione resta sopra e l'anello della sede resta visibile.
+
+# Round 5 — v0.7.1 (`v0.7.1-final`)
+
+Brief: `P9_followup.txt` (5 ritocchi a bassa gravità prima della consegna). Base: `v0.7-final` (73d3f91). Test per ogni modulo toccato. Nessun push, nessun remote.
+
+## Numeri finali
+
+| Verifica | Risultato |
+|---|---|
+| pytest + coverage | **307 passed**, coverage **98 %** (nessuna modifica al motore; solo la versione) |
+| ruff check / format | puliti |
+| smoke (`scripts/smoke.sh`) | ok |
+| vitest | **43 file, 228 test** (round 4: 37 / 200) |
+| tsc, eslint, prettier | puliti |
+| `next build` | ok |
+| E2E (`scripts/e2e_ui.py`) | casi **8/8**, flussi **7/7** (nuovo: round 5, 20 controlli), mobile **4/4** (13 + 13, iPhone 12 e Pixel 7 22 + 22), etichette mappa **24/24** (nuovo, 390/412/460/500 px), axe **10/10 stati, 0 violazioni** |
+| Stessi controlli su `v0.7-final` | round 5 **8/20**, etichette mappa **18/24**: i nuovi test colgono i difetti segnalati |
+| Lighthouse mobile (1 tentativo su 1) | Performance **95**, Accessibilità **100**, Best practices **100**; LCP 2,0 s, TBT 240 ms, CLS 0 |
+
+## Punti → stato
+
+| # | Punto | Stato | Cosa è stato fatto / motivo | Test |
+|---|---|---|---|---|
+| 1 | «E per tornare?» coerente | **fatto** | Causa: con stessa città a piedi fuori validità l'API restituisce comunque la camminata (1 itinerario + `out_of_validity`), e il box contava solo gli itinerari. Ora un solo criterio, `isValidOutbound()` (`lib/return-trip.ts`, su `isOutOfValidity()` di `lib/notices.ts`): itinerario trovato **e** data coperta dall'orario. Lo usano box, risultato e mappa del ritorno. | `return-trip.test.ts`, `notices.test.ts`, `planner-shell.test.tsx` (repro 20/12, anche con `ritorno=`); E2E «same city 20/12: no return box / no return map» a 390 px |
+| 2 | Mappa mobile: etichette dentro | **fatto** | `lib/label-layout.ts`: larghezza stimata × 1,08 (font dei telefoni), etichette brevi sotto 480 px («Partenza · Reggio Emilia FS», «Arrivo · Modena FS», «Sede · DIEF»), scorrimento lungo il lato scelto se l'etichetta uscirebbe (`slidesInside`), controlli zoom/attribuzione trattati come aree occupate; `route-geometry.ts` fornisce `shortLabel`. Prima: «Stazione arrivo · Modena FS» tagliata di 61/46/35/26/11 px a 360/390/412/430/460 px. Dopo: 0 tagli, 0 sovrapposizioni. | `label-layout.test.ts`, `route-geometry.test.ts`, `map-panel.test.tsx`; E2E «map labels 390-500 px» (24 controlli), screenshot prima/dopo in `round5-screenshots/` (fuori dal repo) |
+| 3 | Bici più visibile | **fatto** | `lib/mode-suggestion.ts` + `ModeSuggestionCallout`: riquadro nel banner del risultato, subito sotto il titolo, «In bici circa 22 min» / «A piedi 53 min, il mezzo che hai scelto.» e pulsante «Usa la bici» (≥ 44 px). Il mezzo scelto resta «A piedi» finché non si preme il pulsante. | `mode-suggestion.test.ts`, `mode-suggestion.test.tsx`, `result-panel.test.tsx`, `planner-shell.test.tsx`; E2E «bike callout in the banner», «chosen mode unchanged» |
+| 4 | Festivi: un solo avviso | **fatto** | `lib/festive-summary.ts` unisce l'avviso festivo dell'API e le corse non verificate in un titolo breve (≤ 60 caratteri, 2 righe a 390 px) con il testo lungo in «Dettagli» (`FestiveNotice`); sulle corse solo il chip «Festivo?» con tooltip (`FestiveChip`), testo completo per i lettori di schermo. Dom 25/10 Reggio → DIEF: 1 avviso, 5 chip (corsa principale e alternative). | `festive-summary.test.ts`, `festive-notice.test.tsx`, `result-panel.test.tsx`; E2E «one festive notice», «full wording not repeated on runs», «Dettagli opens the long text» |
+| 5 | Header senza flash «Connessione…» | **fatto** | `hooks/use-delayed-flag.ts` + `ApiStatus`: «Connessione…» solo se il controllo dura più di 500 ms; nell'attesa la pillola è `invisible` (occupa lo spazio, `aria-hidden`), quindi nessuno spostamento. «API collegata», «API non raggiungibile» e «Dati registrati» compaiono subito. Su `v0.7-final` l'E2E vede il flash a ogni avvio. | `use-delayed-flag.test.tsx`, `api-status.test.tsx`; E2E «never shows Connessione… on a fast start» (campionato a ogni frame), «height constant», «slow API shows Connessione… after 500 ms» |
+| 6 | Versione 0.7.1, CHANGELOG, review | **fatto** | 0.7.1 in `pyproject.toml`, `/api/health`, `web/package.json`; voce `[0.7.1]` nel CHANGELOG; questa sezione; README IT/EN aggiornato. | `test_health.py`, `test_export_mock_fixtures.py` |
+| 7 | Batteria completa | **fatto** | Numeri nella tabella sopra; Lighthouse al primo e unico tentativo. | — |
+| 8 | Tag `v0.7.1-final` + bundle | dopo questo commit | Tag annotato su `main`, `unimore-go-v0.7.1-final.bundle` con `--all`, verificato con un clone. | `git bundle verify`, clone + test |
+
+## Limiti noti dopo il round 5
+
+- **Non in tempo reale:** orari pianificati dal PDF Trenitalia valido 17/10–12/12/2026; ritardi e scioperi tramite i link ViaggiaTreno e Infomobilità.
+- **Mappa in linea d'aria** (A5) e **nessun link ViaggiaTreno per treno** (C2): motivi nel round 3.
+- **Festivi:** 372 corse su 402 non hanno simbolo di giorno; di domenica e nei festivi hanno il chip «Festivo?» perché la legenda non conferma in modo esplicito che circolano.
+- **Etichette mappa:** la larghezza è stimata con il canvas e un margine dell'8 %; con font di sistema molto più larghi un'etichetta può ancora diventare tooltip (mai tagliata: in quel caso resta il tocco sul marker).
