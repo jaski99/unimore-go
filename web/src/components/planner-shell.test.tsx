@@ -402,7 +402,7 @@ describe('PlannerShell: round 4', () => {
     Element.prototype.scrollIntoView = scroll;
     render(<PlannerShell />);
     await user.click(await formReady());
-    expect(scroll).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' });
     expect(scroll.mock.contexts[0]).toBe(document.getElementById('result'));
   });
 });

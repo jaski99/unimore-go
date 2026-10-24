@@ -24,7 +24,7 @@ describe('scroll', () => {
 
   it('rispetta prefers-reduced-motion', () => {
     mockReducedMotion(true);
-    expect(scrollBehavior()).toBe('auto');
+    expect(scrollBehavior()).toBe('instant');
   });
 
   it('porta l’elemento in cima alla vista', () => {
@@ -33,7 +33,7 @@ describe('scroll', () => {
     const target = document.getElementById('result')!;
     target.scrollIntoView = vi.fn();
     scrollToElement('result');
-    expect(target.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' });
     expect(() => scrollToElement('missing')).not.toThrow();
   });
 });
