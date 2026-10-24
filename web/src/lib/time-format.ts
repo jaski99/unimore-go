@@ -105,13 +105,17 @@ export function formatShortDate(date: string): string {
   return SHORT_DATE.format(new Date(`${date}T12:00:00Z`));
 }
 
-/** "45 min", "1 h", "2 h 05 min" */
+/**
+ * The one duration format of the UI: "45 min", "1 h", "4 h 32 min" (never
+ * "272 min"). Same rules as the API texts (engine/durations.py format_minutes).
+ * Negative values are shown as their size: the caption says before/after.
+ */
 export function formatDuration(minutes: number): string {
   const total = Math.abs(Math.round(minutes));
   const hours = Math.floor(total / 60);
   const rest = total % 60;
   if (!hours) return `${rest} min`;
-  return rest ? `${hours} h ${String(rest).padStart(2, '0')} min` : `${hours} h`;
+  return rest ? `${hours} h ${rest} min` : `${hours} h`;
 }
 
 /** True when the YYYY-MM-DD date is today in Europe/Rome. */
