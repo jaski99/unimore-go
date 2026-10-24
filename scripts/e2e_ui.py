@@ -887,6 +887,30 @@ def axe_states(browser: Browser, url: str) -> dict[str, bool]:
         timeout=15000
     )
     record("home origin, no train, out of validity", page)
+    # Round 4 states: bike suggestion, festive label, proposed lesson end.
+    base = url.rstrip("/")
+    for name, query, heading in (
+        (
+            "bike suggestion",
+            "sede=dief&stazione=modena_fs&data=2026-10-26&ora=09%3A00&mezzo=piedi&verso=andata",
+            r"^Esci alle",
+        ),
+        (
+            "Sunday festive label",
+            "sede=dief&stazione=reggio_fs&data=2026-10-25&ora=08%3A30&mezzo=bici&verso=andata",
+            r"^Esci alle",
+        ),
+        (
+            "return with proposed lesson end",
+            "sede=dief&stazione=reggio_fs&data=2026-10-26&ora=09%3A00&mezzo=bici&verso=ritorno",
+            r"^Parti alle",
+        ),
+    ):
+        page.goto(f"{base}/?{query}", wait_until="networkidle")
+        expect(page.get_by_role("heading", level=2, name=re.compile(heading))).to_be_visible(
+            timeout=15000
+        )
+        record(name, page)
     context.close()
     return checks
 
